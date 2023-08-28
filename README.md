@@ -4,13 +4,13 @@ Welcome to our GitHub repository for EE4002D AY23/24!
 
 
 ## Project Roles:
-Hardware design         - @
+Hardware design         - @ieaxls
 
-Software implementation - @
+Software implementation - @ShreshthSarda
 
-Simulation & tuning     - @
+Simulation & tuning     - @XeYaRiQu
 
-Theoretical analysis    - @
+Theoretical analysis    - @jersst
 
 
 ## Deliverables:

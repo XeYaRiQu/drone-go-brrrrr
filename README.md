@@ -43,6 +43,8 @@ https://electronicslovers.com/2018/11/build-arduino-quadcopter-with-complete-sou
 
 https://dronenodes.com/drone-motors-brushless-guide/
 
+https://dronesgator.com/how-to-choose-a-drone-propeller/
+
 
 ## Given literature:
 https://doi.org/10.1155/2020/8829329

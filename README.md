@@ -41,6 +41,12 @@ https://www.hackster.io/akarsh98/diy-arduino-based-quadcopter-drone-948153
 
 https://electronicslovers.com/2018/11/build-arduino-quadcopter-with-complete-source-code-and-circuit-diagram.html
 
+https://dronenodes.com/drone-motors-brushless-guide/
+
+https://dronesgator.com/how-to-choose-a-drone-propeller/
+
+https://dronenodes.com/how-to-build-a-drone/
+
 
 ## Given literature:
 https://doi.org/10.1155/2020/8829329

@@ -21,8 +21,11 @@ Theoretical analysis    - @jersst
 
 
 ## Tasks:
-- [ ] Literature review and initial testbed design
-- [ ] Finalise testbed design and purchase components
+- [x] Literature review
+- [x] Finalise testbed design
+- [x] Purchase components
+- [ ] Assemble testbed
+- [ ] Assemble drone
 - [ ] To be added
 
 

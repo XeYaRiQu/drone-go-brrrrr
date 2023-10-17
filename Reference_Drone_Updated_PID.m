@@ -2,7 +2,7 @@
 G = 9.81 ;      % m/s^2 (Gravitational Field Strength)
 M = 0.468 ;    %kg (Mass of Drone)
 L = 0.330    ;  %m (Length of Drone)
-Jr = 3.357 * 10^-5 ;  % kg m^2
+Jr = 3.357 * 10^-5 ;  % kg m^2 (Inertia Constant) %% find more info on this one
 kt = 2.980 * 10^-6 ;  % Thrust Coefficient
 kb = 1.140 * 10^-7 ; % Drag Coefficient
 l = 0.150 ;  % metres - This is the distance between the rotor and the center of mass of the quadcopter
@@ -15,6 +15,9 @@ kdz = 0.25 ; %Is this air resistance under the Z axis?
 phi = pi;
 theta = pi;
 psi = pi;
+kp = 0.35; %Proportional Gain Parameter for PID Control
+ki = 0.20 ; % Integral Gain Parameter for PID Control
+kd = 0.75 ; % Derivative Gain Parameter for PID Control
 
 
 
@@ -87,10 +90,10 @@ W_inertial_frame = dot(inv(Wn),Wb);
 %Motor 2 and 4 are chosen to be on the pitch axis
 %i = 1 and i = 3 supposed to be on the clockwise direction
 i = 1:4;
-w1 = 20 ;%Radians/second 
-w2 = 30 ; %Radians/ Second
-w3 = 20; %Radians / Second
-w4 = 30; % Radians/ Second
+w1 =10 ;%Radians/second 
+w2 = 20; %Radians/ Second
+w3 = 30; %Radians / Second
+w4 = 40; % Radians/ Second
 %Total angular velocity of all 4 rotors;
 Wr = -w1 +w2-w3+w4; 
 
@@ -136,10 +139,38 @@ Thrust = kt *((w1)^2 + (w2)^2 + (w3)^2 +(w4)^2);
 Thrust_b =  [ 0 ; 0 ; Thrust];
 
 %Skipping from Equation 20 onwards 
-%Start from Equation 23
+% This is the direct equation 
+%Solving for Angular Velocities of the rotor
+
+
 
 %General form of PID Controller
 %Quadcopter System Stabilization
+
+% create Equation 23
+%e(t) - error state
+% r(t) = desired state
+%y(t) = current/ actual state
+%u(t) = control input needed for state
+%syms e(t) r(t) y(t) u(t)
+
+%e(t) = r(t) - y(t);
+%u(t) = kp*e(t) + ki 
+
+%Equation 26
+angular_velocity_all_rotors = [(w1)^2 ; (w2)^2; (w3)^2 ; (w4)^2];
+length_thrust_drag_matrix = [kt       kt       kt      kt ;
+                                                 0       -l*kt   0      l*kt;
+                                                 -l*kt   0       l*kt  0;
+                                                 -kb     kb     -kb    kb;];
+angular_velocity_tau_with_thrust = [ Thrust; tau_phi ; tau_theta ; tau_psi;];
+
+angular_velocity_all_rotors = inv(length_thrust_drag_matrix) * angular_velocity_tau_with_thrust;
+
+
+
+
+
 
 
 

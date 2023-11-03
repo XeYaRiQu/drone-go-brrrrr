@@ -67,8 +67,8 @@ z_desired = xyz_desired(3);
 %Initialise differentiated x_desired = 0
 %Velocity of X_desired
 x_desired_dot = 0;
-%Acceleration of X_desired
-x_desired_dotdot = 0;
+%Acceleration of X_desired - don need linear acceleration
+%x_desired_dotdot = 0;
 %Placing into vector on Part 4
 x_desired_dot = xyz_desired(4);
 
@@ -99,7 +99,7 @@ s_x = kpx*error_x + kdx*error_x_dot + kix*sampletime*sum_error_x;
 %Velocity of Y_desired
 y_desired_dot = 0;
 %Acceleration of Y_desired
-y_desired_dotdot = 0;
+%y_desired_dotdot = 0;
 %Placing into vector on Part 5
 y_desired_dot = xyz_desired(5);
 
@@ -124,8 +124,8 @@ s_y = kpy*error_y + kdy*error_y_dot + kiy*sampletime*sum_error_y;
 %Initialise differentiated Z_desired = 0
 %Velocity of Z_desired
 z_desired_dot = 0;
-%Acceleration of Z_desired
-z_desired_dotdot = 0;
+%Acceleration of Z_desired - not needed
+%z_desired_dotdot = 0;
 %Placing into vector on Part 6
 z_desired_dot = xyz_desired(6);
 

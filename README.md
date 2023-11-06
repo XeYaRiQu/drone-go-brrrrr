@@ -4,11 +4,11 @@ Welcome to our GitHub repository for EE4002D AY23/24!
 
 
 ## Project Roles:
-Hardware design         - @ieaxls
+Hardware design         - @XeYaRiQu
 
 Software implementation - @ShreshthSarda
 
-Simulation & tuning     - @XeYaRiQu
+Simulation & tuning     - @ieaxls
 
 Theoretical analysis    - @jersst
 
@@ -26,15 +26,14 @@ Theoretical analysis    - @jersst
 - [x] Purchase components
 - [ ] Assemble testbed
 - [ ] Assemble drone
-- [ ] To be added
+- [ ] Set up simulation infrastructure
+- [ ] Get preliminary simulation
 
 
 ## Workflow:
 main - All finalised and validated work (code, designs, etc.) will be checked-in here by creating a PR from the dev branch.
 
-dev - Primary development branch for validation and testing purposes. Check-in stuff here by creating a PR from the working branches.
-
-other branches - Primary working branches for each project area.
+dev - Primary development branch.
 
 
 ## Useful references:

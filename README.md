@@ -58,6 +58,7 @@ https://www.speedgoat.com/products-services/real-time-target-machines
 https://www.mathworks.com/videos/how-to-design-and-model-a-quadcopter-prototype-with-simulink-and-arduino-1494618375170.html
 
 Paper (By Prof Zhao Lin) : 
+
 https://core.ac.uk/download/pdf/36739356.pdf
 
 https://www.researchgate.net/publication/264422628_Rapid_Prototyping_of_Quadrotor_Controllers_Using_MATLAB_RTW_and_dsPICs

@@ -1,0 +1,370 @@
+[0.543s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build']
+[0.543s] DEBUG:colcon:Parsed command line arguments: Namespace(log_base=None, log_level=None, verb_name='build', build_base='build', install_base='install', merge_install=False, symlink_install=False, test_result_base=None, continue_on_error=False, executor='parallel', parallel_workers=16, event_handlers=None, ignore_user_meta=False, metas=['./colcon.meta'], base_paths=['.'], packages_ignore=None, packages_ignore_regex=None, paths=None, packages_up_to=None, packages_up_to_regex=None, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_select_by_dep=None, packages_skip_by_dep=None, packages_skip_up_to=None, packages_select_build_failed=False, packages_skip_build_finished=False, packages_select_test_failures=False, packages_skip_test_passed=False, packages_select=None, packages_skip=None, packages_select_regex=None, packages_skip_regex=None, packages_start=None, packages_end=None, cmake_args=None, cmake_target=None, cmake_target_skip_unavailable=False, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, ament_cmake_args=None, catkin_cmake_args=None, catkin_skip_building_tests=False, mixin_files=None, mixin=None, verb_parser=<colcon_mixin.mixin.mixin_argument.MixinArgumentDecorator object at 0x7ff896c53280>, verb_extension=<colcon_core.verb.build.BuildVerb object at 0x7ff896c53460>, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0x7ff896c53460>>, mixin_verb=('build',))
+[0.566s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.566s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.566s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.566s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.566s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[0.566s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.566s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/home/user/catkin_ws/src'
+[0.566s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.566s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[0.566s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[0.566s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[0.566s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[0.566s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[0.566s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[0.567s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[0.567s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[0.573s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['cmake', 'python']
+[0.573s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'cmake'
+[0.573s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python'
+[0.573s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['python_setup_py']
+[0.573s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python_setup_py'
+[0.573s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extensions ['ignore', 'ignore_ament_install']
+[0.573s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extension 'ignore'
+[0.573s] Level 1:colcon.colcon_core.package_identification:_identify(build) ignored
+[0.573s] Level 1:colcon.colcon_core.package_identification:_identify(description) by extensions ['ignore', 'ignore_ament_install']
+[0.573s] Level 1:colcon.colcon_core.package_identification:_identify(description) by extension 'ignore'
+[0.573s] Level 1:colcon.colcon_core.package_identification:_identify(description) by extension 'ignore_ament_install'
+[0.573s] Level 1:colcon.colcon_core.package_identification:_identify(description) by extensions ['colcon_pkg']
+[0.573s] Level 1:colcon.colcon_core.package_identification:_identify(description) by extension 'colcon_pkg'
+[0.573s] Level 1:colcon.colcon_core.package_identification:_identify(description) by extensions ['colcon_meta']
+[0.573s] Level 1:colcon.colcon_core.package_identification:_identify(description) by extension 'colcon_meta'
+[0.573s] Level 1:colcon.colcon_core.package_identification:_identify(description) by extensions ['ros']
+[0.573s] Level 1:colcon.colcon_core.package_identification:_identify(description) by extension 'ros'
+[0.575s] DEBUG:colcon.colcon_core.package_identification:Package 'description' with type 'ros.ament_cmake' and name 'description'
+[0.575s] Level 1:colcon.colcon_core.package_identification:_identify(gazebo) by extensions ['ignore', 'ignore_ament_install']
+[0.575s] Level 1:colcon.colcon_core.package_identification:_identify(gazebo) by extension 'ignore'
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(gazebo) by extension 'ignore_ament_install'
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(gazebo) by extensions ['colcon_pkg']
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(gazebo) by extension 'colcon_pkg'
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(gazebo) by extensions ['colcon_meta']
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(gazebo) by extension 'colcon_meta'
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(gazebo) by extensions ['ros']
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(gazebo) by extension 'ros'
+[0.576s] DEBUG:colcon.colcon_core.package_identification:Package 'gazebo' with type 'ros.ament_cmake' and name 'gazebo'
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extensions ['ignore', 'ignore_ament_install']
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extension 'ignore'
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(install) ignored
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(launch) by extensions ['ignore', 'ignore_ament_install']
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(launch) by extension 'ignore'
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(launch) by extension 'ignore_ament_install'
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(launch) by extensions ['colcon_pkg']
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(launch) by extension 'colcon_pkg'
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(launch) by extensions ['colcon_meta']
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(launch) by extension 'colcon_meta'
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(launch) by extensions ['ros']
+[0.576s] Level 1:colcon.colcon_core.package_identification:_identify(launch) by extension 'ros'
+[0.576s] DEBUG:colcon.colcon_core.package_identification:Package 'launch' with type 'ros.ament_cmake' and name 'launches'
+[0.577s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extensions ['ignore', 'ignore_ament_install']
+[0.577s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extension 'ignore'
+[0.577s] Level 1:colcon.colcon_core.package_identification:_identify(log) ignored
+[0.577s] Level 1:colcon.colcon_core.package_identification:_identify(messages) by extensions ['ignore', 'ignore_ament_install']
+[0.577s] Level 1:colcon.colcon_core.package_identification:_identify(messages) by extension 'ignore'
+[0.577s] Level 1:colcon.colcon_core.package_identification:_identify(messages) by extension 'ignore_ament_install'
+[0.577s] Level 1:colcon.colcon_core.package_identification:_identify(messages) by extensions ['colcon_pkg']
+[0.577s] Level 1:colcon.colcon_core.package_identification:_identify(messages) by extension 'colcon_pkg'
+[0.577s] Level 1:colcon.colcon_core.package_identification:_identify(messages) by extensions ['colcon_meta']
+[0.577s] Level 1:colcon.colcon_core.package_identification:_identify(messages) by extension 'colcon_meta'
+[0.577s] Level 1:colcon.colcon_core.package_identification:_identify(messages) by extensions ['ros']
+[0.577s] Level 1:colcon.colcon_core.package_identification:_identify(messages) by extension 'ros'
+[0.577s] DEBUG:colcon.colcon_core.package_identification:Package 'messages' with type 'ros.ament_cmake' and name 'messages'
+[0.577s] Level 1:colcon.colcon_core.package_identification:_identify(navigation) by extensions ['ignore', 'ignore_ament_install']
+[0.577s] Level 1:colcon.colcon_core.package_identification:_identify(navigation) by extension 'ignore'
+[0.577s] Level 1:colcon.colcon_core.package_identification:_identify(navigation) by extension 'ignore_ament_install'
+[0.577s] Level 1:colcon.colcon_core.package_identification:_identify(navigation) by extensions ['colcon_pkg']
+[0.577s] Level 1:colcon.colcon_core.package_identification:_identify(navigation) by extension 'colcon_pkg'
+[0.577s] Level 1:colcon.colcon_core.package_identification:_identify(navigation) by extensions ['colcon_meta']
+[0.577s] Level 1:colcon.colcon_core.package_identification:_identify(navigation) by extension 'colcon_meta'
+[0.577s] Level 1:colcon.colcon_core.package_identification:_identify(navigation) by extensions ['ros']
+[0.577s] Level 1:colcon.colcon_core.package_identification:_identify(navigation) by extension 'ros'
+[0.577s] DEBUG:colcon.colcon_core.package_identification:Package 'navigation' with type 'ros.ament_cmake' and name 'navigation'
+[0.577s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[0.577s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[0.578s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[0.578s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[0.578s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[0.613s] Level 5:colcon.colcon_core.verb:set package 'description' build argument 'cmake_args' from command line to 'None'
+[0.613s] Level 5:colcon.colcon_core.verb:set package 'description' build argument 'cmake_target' from command line to 'None'
+[0.613s] Level 5:colcon.colcon_core.verb:set package 'description' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.613s] Level 5:colcon.colcon_core.verb:set package 'description' build argument 'cmake_clean_cache' from command line to 'False'
+[0.613s] Level 5:colcon.colcon_core.verb:set package 'description' build argument 'cmake_clean_first' from command line to 'False'
+[0.613s] Level 5:colcon.colcon_core.verb:set package 'description' build argument 'cmake_force_configure' from command line to 'False'
+[0.613s] Level 5:colcon.colcon_core.verb:set package 'description' build argument 'ament_cmake_args' from command line to 'None'
+[0.613s] Level 5:colcon.colcon_core.verb:set package 'description' build argument 'catkin_cmake_args' from command line to 'None'
+[0.613s] Level 5:colcon.colcon_core.verb:set package 'description' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.613s] DEBUG:colcon.colcon_core.verb:Building package 'description' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/user/catkin_ws/src/build/description', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/user/catkin_ws/src/install/description', 'merge_install': False, 'path': '/home/user/catkin_ws/src/description', 'symlink_install': False, 'test_result_base': None}
+[0.619s] Level 5:colcon.colcon_core.verb:set package 'gazebo' build argument 'cmake_args' from command line to 'None'
+[0.619s] Level 5:colcon.colcon_core.verb:set package 'gazebo' build argument 'cmake_target' from command line to 'None'
+[0.619s] Level 5:colcon.colcon_core.verb:set package 'gazebo' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.619s] Level 5:colcon.colcon_core.verb:set package 'gazebo' build argument 'cmake_clean_cache' from command line to 'False'
+[0.619s] Level 5:colcon.colcon_core.verb:set package 'gazebo' build argument 'cmake_clean_first' from command line to 'False'
+[0.619s] Level 5:colcon.colcon_core.verb:set package 'gazebo' build argument 'cmake_force_configure' from command line to 'False'
+[0.619s] Level 5:colcon.colcon_core.verb:set package 'gazebo' build argument 'ament_cmake_args' from command line to 'None'
+[0.619s] Level 5:colcon.colcon_core.verb:set package 'gazebo' build argument 'catkin_cmake_args' from command line to 'None'
+[0.619s] Level 5:colcon.colcon_core.verb:set package 'gazebo' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.619s] DEBUG:colcon.colcon_core.verb:Building package 'gazebo' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/user/catkin_ws/src/build/gazebo', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/user/catkin_ws/src/install/gazebo', 'merge_install': False, 'path': '/home/user/catkin_ws/src/gazebo', 'symlink_install': False, 'test_result_base': None}
+[0.626s] Level 5:colcon.colcon_core.verb:set package 'launches' build argument 'cmake_args' from command line to 'None'
+[0.626s] Level 5:colcon.colcon_core.verb:set package 'launches' build argument 'cmake_target' from command line to 'None'
+[0.626s] Level 5:colcon.colcon_core.verb:set package 'launches' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.626s] Level 5:colcon.colcon_core.verb:set package 'launches' build argument 'cmake_clean_cache' from command line to 'False'
+[0.626s] Level 5:colcon.colcon_core.verb:set package 'launches' build argument 'cmake_clean_first' from command line to 'False'
+[0.626s] Level 5:colcon.colcon_core.verb:set package 'launches' build argument 'cmake_force_configure' from command line to 'False'
+[0.626s] Level 5:colcon.colcon_core.verb:set package 'launches' build argument 'ament_cmake_args' from command line to 'None'
+[0.626s] Level 5:colcon.colcon_core.verb:set package 'launches' build argument 'catkin_cmake_args' from command line to 'None'
+[0.626s] Level 5:colcon.colcon_core.verb:set package 'launches' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.626s] DEBUG:colcon.colcon_core.verb:Building package 'launches' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/user/catkin_ws/src/build/launches', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/user/catkin_ws/src/install/launches', 'merge_install': False, 'path': '/home/user/catkin_ws/src/launch', 'symlink_install': False, 'test_result_base': None}
+[0.632s] Level 5:colcon.colcon_core.verb:set package 'messages' build argument 'cmake_args' from command line to 'None'
+[0.632s] Level 5:colcon.colcon_core.verb:set package 'messages' build argument 'cmake_target' from command line to 'None'
+[0.632s] Level 5:colcon.colcon_core.verb:set package 'messages' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.632s] Level 5:colcon.colcon_core.verb:set package 'messages' build argument 'cmake_clean_cache' from command line to 'False'
+[0.632s] Level 5:colcon.colcon_core.verb:set package 'messages' build argument 'cmake_clean_first' from command line to 'False'
+[0.632s] Level 5:colcon.colcon_core.verb:set package 'messages' build argument 'cmake_force_configure' from command line to 'False'
+[0.632s] Level 5:colcon.colcon_core.verb:set package 'messages' build argument 'ament_cmake_args' from command line to 'None'
+[0.632s] Level 5:colcon.colcon_core.verb:set package 'messages' build argument 'catkin_cmake_args' from command line to 'None'
+[0.632s] Level 5:colcon.colcon_core.verb:set package 'messages' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.632s] DEBUG:colcon.colcon_core.verb:Building package 'messages' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/user/catkin_ws/src/build/messages', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/user/catkin_ws/src/install/messages', 'merge_install': False, 'path': '/home/user/catkin_ws/src/messages', 'symlink_install': False, 'test_result_base': None}
+[0.638s] Level 5:colcon.colcon_core.verb:set package 'navigation' build argument 'cmake_args' from command line to 'None'
+[0.638s] Level 5:colcon.colcon_core.verb:set package 'navigation' build argument 'cmake_target' from command line to 'None'
+[0.638s] Level 5:colcon.colcon_core.verb:set package 'navigation' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.638s] Level 5:colcon.colcon_core.verb:set package 'navigation' build argument 'cmake_clean_cache' from command line to 'False'
+[0.638s] Level 5:colcon.colcon_core.verb:set package 'navigation' build argument 'cmake_clean_first' from command line to 'False'
+[0.638s] Level 5:colcon.colcon_core.verb:set package 'navigation' build argument 'cmake_force_configure' from command line to 'False'
+[0.638s] Level 5:colcon.colcon_core.verb:set package 'navigation' build argument 'ament_cmake_args' from command line to 'None'
+[0.638s] Level 5:colcon.colcon_core.verb:set package 'navigation' build argument 'catkin_cmake_args' from command line to 'None'
+[0.638s] Level 5:colcon.colcon_core.verb:set package 'navigation' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.638s] DEBUG:colcon.colcon_core.verb:Building package 'navigation' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/user/catkin_ws/src/build/navigation', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/user/catkin_ws/src/install/navigation', 'merge_install': False, 'path': '/home/user/catkin_ws/src/navigation', 'symlink_install': False, 'test_result_base': None}
+[0.644s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[0.651s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[0.651s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/user/catkin_ws/src/description' with build type 'ament_cmake'
+[0.651s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/user/catkin_ws/src/description'
+[0.659s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[0.659s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.659s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.674s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/user/catkin_ws/src/gazebo' with build type 'ament_cmake'
+[0.674s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/user/catkin_ws/src/gazebo'
+[0.680s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.680s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.694s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/user/catkin_ws/src/launch' with build type 'ament_cmake'
+[0.694s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/user/catkin_ws/src/launch'
+[0.701s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.701s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.715s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/user/catkin_ws/src/messages' with build type 'ament_cmake'
+[0.715s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/user/catkin_ws/src/messages'
+[0.721s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.721s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.735s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/user/catkin_ws/src/navigation' with build type 'ament_cmake'
+[0.735s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/user/catkin_ws/src/navigation'
+[0.741s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.741s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.757s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/user/catkin_ws/src/build/description': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /home/user/catkin_ws/src/build/description -- -j16 -l16
+[0.759s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/user/catkin_ws/src/build/gazebo': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /home/user/catkin_ws/src/build/gazebo -- -j16 -l16
+[0.760s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/user/catkin_ws/src/build/launches': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /home/user/catkin_ws/src/build/launches -- -j16 -l16
+[0.762s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/user/catkin_ws/src/build/messages': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /home/user/catkin_ws/src/build/messages -- -j16 -l16
+[0.764s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/user/catkin_ws/src/build/navigation': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /home/user/catkin_ws/src/build/navigation -- -j16 -l16
+[0.780s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/user/catkin_ws/src/build/description' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /home/user/catkin_ws/src/build/description -- -j16 -l16
+[0.781s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/user/catkin_ws/src/build/gazebo' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /home/user/catkin_ws/src/build/gazebo -- -j16 -l16
+[0.782s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/user/catkin_ws/src/build/launches' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /home/user/catkin_ws/src/build/launches -- -j16 -l16
+[0.782s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/user/catkin_ws/src/build/messages' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /home/user/catkin_ws/src/build/messages -- -j16 -l16
+[0.784s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/user/catkin_ws/src/build/navigation' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /home/user/catkin_ws/src/build/navigation -- -j16 -l16
+[0.797s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/user/catkin_ws/src/build/description': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /home/user/catkin_ws/src/build/description
+[0.798s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/user/catkin_ws/src/build/launches': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /home/user/catkin_ws/src/build/launches
+[0.798s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/user/catkin_ws/src/build/messages': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /home/user/catkin_ws/src/build/messages
+[0.799s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/user/catkin_ws/src/build/navigation': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /home/user/catkin_ws/src/build/navigation
+[0.800s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/user/catkin_ws/src/build/gazebo': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /home/user/catkin_ws/src/build/gazebo
+[0.803s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(description)
+[0.804s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/user/catkin_ws/src/build/description' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /home/user/catkin_ws/src/build/description
+[0.813s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/description' for CMake module files
+[0.813s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/description' for CMake config files
+[0.813s] Level 1:colcon.colcon_core.shell:create_environment_hook('description', 'cmake_prefix_path')
+[0.820s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/user/catkin_ws/src/install/description/share/description/hook/cmake_prefix_path.ps1'
+[0.821s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/user/catkin_ws/src/install/description/share/description/hook/cmake_prefix_path.dsv'
+[0.821s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/user/catkin_ws/src/install/description/share/description/hook/cmake_prefix_path.sh'
+[0.821s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/description/bin'
+[0.821s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/description/lib/pkgconfig/description.pc'
+[0.823s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/description/lib/python3.10/site-packages'
+[0.823s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/description/bin'
+[0.829s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/description/share/description/package.ps1'
+[0.830s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/user/catkin_ws/src/install/description/share/description/package.dsv'
+[0.830s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/description/share/description/package.sh'
+[0.830s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/description/share/description/package.bash'
+[0.831s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/description/share/description/package.zsh'
+[0.831s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/user/catkin_ws/src/install/description/share/colcon-core/packages/description)
+[0.833s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(launches)
+[0.833s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/user/catkin_ws/src/build/launches' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /home/user/catkin_ws/src/build/launches
+[0.839s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/launches' for CMake module files
+[0.840s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/launches' for CMake config files
+[0.840s] Level 1:colcon.colcon_core.shell:create_environment_hook('launches', 'cmake_prefix_path')
+[0.846s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/user/catkin_ws/src/install/launches/share/launches/hook/cmake_prefix_path.ps1'
+[0.847s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/user/catkin_ws/src/install/launches/share/launches/hook/cmake_prefix_path.dsv'
+[0.847s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/user/catkin_ws/src/install/launches/share/launches/hook/cmake_prefix_path.sh'
+[0.847s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/launches/bin'
+[0.847s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/launches/lib/pkgconfig/launches.pc'
+[0.847s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/launches/lib/python3.10/site-packages'
+[0.847s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/launches/bin'
+[0.854s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/launches/share/launches/package.ps1'
+[0.854s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/user/catkin_ws/src/install/launches/share/launches/package.dsv'
+[0.854s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/launches/share/launches/package.sh'
+[0.854s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/launches/share/launches/package.bash'
+[0.855s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/launches/share/launches/package.zsh'
+[0.855s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/user/catkin_ws/src/install/launches/share/colcon-core/packages/launches)
+[0.855s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(messages)
+[0.856s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/user/catkin_ws/src/build/messages' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /home/user/catkin_ws/src/build/messages
+[0.862s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/messages' for CMake module files
+[0.862s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/messages' for CMake config files
+[0.862s] Level 1:colcon.colcon_core.shell:create_environment_hook('messages', 'cmake_prefix_path')
+[0.869s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/user/catkin_ws/src/install/messages/share/messages/hook/cmake_prefix_path.ps1'
+[0.869s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/user/catkin_ws/src/install/messages/share/messages/hook/cmake_prefix_path.dsv'
+[0.869s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/user/catkin_ws/src/install/messages/share/messages/hook/cmake_prefix_path.sh'
+[0.869s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/messages/bin'
+[0.869s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/messages/lib/pkgconfig/messages.pc'
+[0.870s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/messages/lib/python3.10/site-packages'
+[0.870s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/messages/bin'
+[0.876s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/messages/share/messages/package.ps1'
+[0.876s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/user/catkin_ws/src/install/messages/share/messages/package.dsv'
+[0.876s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/messages/share/messages/package.sh'
+[0.876s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/messages/share/messages/package.bash'
+[0.877s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/messages/share/messages/package.zsh'
+[0.877s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/user/catkin_ws/src/install/messages/share/colcon-core/packages/messages)
+[0.877s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(navigation)
+[0.878s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/user/catkin_ws/src/build/navigation' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /home/user/catkin_ws/src/build/navigation
+[0.884s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/navigation' for CMake module files
+[0.884s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/navigation' for CMake config files
+[0.884s] Level 1:colcon.colcon_core.shell:create_environment_hook('navigation', 'cmake_prefix_path')
+[0.891s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/user/catkin_ws/src/install/navigation/share/navigation/hook/cmake_prefix_path.ps1'
+[0.891s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/user/catkin_ws/src/install/navigation/share/navigation/hook/cmake_prefix_path.dsv'
+[0.891s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/user/catkin_ws/src/install/navigation/share/navigation/hook/cmake_prefix_path.sh'
+[0.891s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/navigation/bin'
+[0.891s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/navigation/lib/pkgconfig/navigation.pc'
+[0.891s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/navigation/lib/python3.10/site-packages'
+[0.892s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/navigation/bin'
+[0.898s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/navigation/share/navigation/package.ps1'
+[0.898s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/user/catkin_ws/src/install/navigation/share/navigation/package.dsv'
+[0.898s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/navigation/share/navigation/package.sh'
+[0.898s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/navigation/share/navigation/package.bash'
+[0.899s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/navigation/share/navigation/package.zsh'
+[0.899s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/user/catkin_ws/src/install/navigation/share/colcon-core/packages/navigation)
+[0.899s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(gazebo)
+[0.900s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/user/catkin_ws/src/build/gazebo' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /home/user/catkin_ws/src/build/gazebo
+[0.906s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/gazebo' for CMake module files
+[0.906s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/gazebo' for CMake config files
+[0.906s] Level 1:colcon.colcon_core.shell:create_environment_hook('gazebo', 'cmake_prefix_path')
+[0.913s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/user/catkin_ws/src/install/gazebo/share/gazebo/hook/cmake_prefix_path.ps1'
+[0.913s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/user/catkin_ws/src/install/gazebo/share/gazebo/hook/cmake_prefix_path.dsv'
+[0.913s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/user/catkin_ws/src/install/gazebo/share/gazebo/hook/cmake_prefix_path.sh'
+[0.913s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/gazebo/bin'
+[0.913s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/gazebo/lib/pkgconfig/gazebo.pc'
+[0.913s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/gazebo/lib/python3.10/site-packages'
+[0.913s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/gazebo/bin'
+[0.920s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/gazebo/share/gazebo/package.ps1'
+[0.920s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/user/catkin_ws/src/install/gazebo/share/gazebo/package.dsv'
+[0.920s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/gazebo/share/gazebo/package.sh'
+[0.921s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/gazebo/share/gazebo/package.bash'
+[0.921s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/gazebo/share/gazebo/package.zsh'
+[0.921s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/user/catkin_ws/src/install/gazebo/share/colcon-core/packages/gazebo)
+[0.928s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(description)
+[0.934s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/description' for CMake module files
+[0.935s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/description' for CMake config files
+[0.935s] Level 1:colcon.colcon_core.shell:create_environment_hook('description', 'cmake_prefix_path')
+[0.941s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/user/catkin_ws/src/install/description/share/description/hook/cmake_prefix_path.ps1'
+[0.941s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/user/catkin_ws/src/install/description/share/description/hook/cmake_prefix_path.dsv'
+[0.941s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/user/catkin_ws/src/install/description/share/description/hook/cmake_prefix_path.sh'
+[0.942s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/description/bin'
+[0.942s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/description/lib/pkgconfig/description.pc'
+[0.942s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/description/lib/python3.10/site-packages'
+[0.942s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/description/bin'
+[0.955s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/description/share/description/package.ps1'
+[0.956s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/user/catkin_ws/src/install/description/share/description/package.dsv'
+[0.956s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/description/share/description/package.sh'
+[0.956s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/description/share/description/package.bash'
+[0.956s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/description/share/description/package.zsh'
+[0.957s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/user/catkin_ws/src/install/description/share/colcon-core/packages/description)
+[0.964s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(launches)
+[0.970s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/launches' for CMake module files
+[0.970s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/launches' for CMake config files
+[0.971s] Level 1:colcon.colcon_core.shell:create_environment_hook('launches', 'cmake_prefix_path')
+[0.977s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/user/catkin_ws/src/install/launches/share/launches/hook/cmake_prefix_path.ps1'
+[0.977s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/user/catkin_ws/src/install/launches/share/launches/hook/cmake_prefix_path.dsv'
+[0.977s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/user/catkin_ws/src/install/launches/share/launches/hook/cmake_prefix_path.sh'
+[0.978s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/launches/bin'
+[0.978s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/launches/lib/pkgconfig/launches.pc'
+[0.978s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/launches/lib/python3.10/site-packages'
+[0.978s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/launches/bin'
+[0.984s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/launches/share/launches/package.ps1'
+[0.984s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/user/catkin_ws/src/install/launches/share/launches/package.dsv'
+[0.985s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/launches/share/launches/package.sh'
+[0.985s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/launches/share/launches/package.bash'
+[0.985s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/launches/share/launches/package.zsh'
+[0.985s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/user/catkin_ws/src/install/launches/share/colcon-core/packages/launches)
+[0.992s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(messages)
+[0.998s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/messages' for CMake module files
+[0.998s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/messages' for CMake config files
+[0.999s] Level 1:colcon.colcon_core.shell:create_environment_hook('messages', 'cmake_prefix_path')
+[1.005s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/user/catkin_ws/src/install/messages/share/messages/hook/cmake_prefix_path.ps1'
+[1.005s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/user/catkin_ws/src/install/messages/share/messages/hook/cmake_prefix_path.dsv'
+[1.005s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/user/catkin_ws/src/install/messages/share/messages/hook/cmake_prefix_path.sh'
+[1.006s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/messages/bin'
+[1.006s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/messages/lib/pkgconfig/messages.pc'
+[1.006s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/messages/lib/python3.10/site-packages'
+[1.006s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/messages/bin'
+[1.012s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/messages/share/messages/package.ps1'
+[1.012s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/user/catkin_ws/src/install/messages/share/messages/package.dsv'
+[1.013s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/messages/share/messages/package.sh'
+[1.013s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/messages/share/messages/package.bash'
+[1.013s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/messages/share/messages/package.zsh'
+[1.013s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/user/catkin_ws/src/install/messages/share/colcon-core/packages/messages)
+[1.020s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(navigation)
+[1.026s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/navigation' for CMake module files
+[1.026s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/navigation' for CMake config files
+[1.027s] Level 1:colcon.colcon_core.shell:create_environment_hook('navigation', 'cmake_prefix_path')
+[1.033s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/user/catkin_ws/src/install/navigation/share/navigation/hook/cmake_prefix_path.ps1'
+[1.033s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/user/catkin_ws/src/install/navigation/share/navigation/hook/cmake_prefix_path.dsv'
+[1.033s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/user/catkin_ws/src/install/navigation/share/navigation/hook/cmake_prefix_path.sh'
+[1.033s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/navigation/bin'
+[1.033s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/navigation/lib/pkgconfig/navigation.pc'
+[1.034s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/navigation/lib/python3.10/site-packages'
+[1.034s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/navigation/bin'
+[1.040s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/navigation/share/navigation/package.ps1'
+[1.040s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/user/catkin_ws/src/install/navigation/share/navigation/package.dsv'
+[1.040s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/navigation/share/navigation/package.sh'
+[1.041s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/navigation/share/navigation/package.bash'
+[1.041s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/navigation/share/navigation/package.zsh'
+[1.041s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/user/catkin_ws/src/install/navigation/share/colcon-core/packages/navigation)
+[1.048s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(gazebo)
+[1.054s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/gazebo' for CMake module files
+[1.055s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/gazebo' for CMake config files
+[1.055s] Level 1:colcon.colcon_core.shell:create_environment_hook('gazebo', 'cmake_prefix_path')
+[1.061s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/user/catkin_ws/src/install/gazebo/share/gazebo/hook/cmake_prefix_path.ps1'
+[1.061s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/user/catkin_ws/src/install/gazebo/share/gazebo/hook/cmake_prefix_path.dsv'
+[1.061s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/user/catkin_ws/src/install/gazebo/share/gazebo/hook/cmake_prefix_path.sh'
+[1.062s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/gazebo/bin'
+[1.062s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/gazebo/lib/pkgconfig/gazebo.pc'
+[1.062s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/gazebo/lib/python3.10/site-packages'
+[1.062s] Level 1:colcon.colcon_core.environment:checking '/home/user/catkin_ws/src/install/gazebo/bin'
+[1.068s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/gazebo/share/gazebo/package.ps1'
+[1.068s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/user/catkin_ws/src/install/gazebo/share/gazebo/package.dsv'
+[1.069s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/gazebo/share/gazebo/package.sh'
+[1.069s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/gazebo/share/gazebo/package.bash'
+[1.069s] INFO:colcon.colcon_core.shell:Creating package script '/home/user/catkin_ws/src/install/gazebo/share/gazebo/package.zsh'
+[1.069s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/user/catkin_ws/src/install/gazebo/share/colcon-core/packages/gazebo)
+[1.069s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[1.069s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[1.069s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '0'
+[1.069s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[1.079s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.notify_send': Could not find 'notify-send'
+[1.079s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[1.079s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[1.079s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[1.081s] DEBUG:colcon.colcon_notification.desktop_notification.notify2:Failed to initialize notify2: org.freedesktop.DBus.Error.Spawn.ExecFailed: /usr/bin/dbus-launch terminated abnormally without any error message
+[1.081s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[1.088s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/user/catkin_ws/src/install/local_setup.ps1'
+[1.089s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/user/catkin_ws/src/install/_local_setup_util_ps1.py'
+[1.089s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/user/catkin_ws/src/install/setup.ps1'
+[1.096s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/user/catkin_ws/src/install/local_setup.sh'
+[1.096s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/user/catkin_ws/src/install/_local_setup_util_sh.py'
+[1.096s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/user/catkin_ws/src/install/setup.sh'
+[1.103s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/user/catkin_ws/src/install/local_setup.bash'
+[1.103s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/user/catkin_ws/src/install/setup.bash'
+[1.110s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/user/catkin_ws/src/install/local_setup.zsh'
+[1.110s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/user/catkin_ws/src/install/setup.zsh'

@@ -1,0 +1,15 @@
+/home/user/catkin_ws/src/install/description/share/ament_index/resource_index/package_run_dependencies/description
+/home/user/catkin_ws/src/install/description/share/ament_index/resource_index/parent_prefix_path/description
+/home/user/catkin_ws/src/install/description/share/description/environment/ament_prefix_path.sh
+/home/user/catkin_ws/src/install/description/share/description/environment/ament_prefix_path.dsv
+/home/user/catkin_ws/src/install/description/share/description/environment/path.sh
+/home/user/catkin_ws/src/install/description/share/description/environment/path.dsv
+/home/user/catkin_ws/src/install/description/share/description/local_setup.bash
+/home/user/catkin_ws/src/install/description/share/description/local_setup.sh
+/home/user/catkin_ws/src/install/description/share/description/local_setup.zsh
+/home/user/catkin_ws/src/install/description/share/description/local_setup.dsv
+/home/user/catkin_ws/src/install/description/share/description/package.dsv
+/home/user/catkin_ws/src/install/description/share/ament_index/resource_index/packages/description
+/home/user/catkin_ws/src/install/description/share/description/cmake/descriptionConfig.cmake
+/home/user/catkin_ws/src/install/description/share/description/cmake/descriptionConfig-version.cmake
+/home/user/catkin_ws/src/install/description/share/description/package.xml

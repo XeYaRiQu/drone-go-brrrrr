@@ -82,7 +82,8 @@ class IBus ():
             return ((value - 1000) / 10)
         else:
             return ((value - 1500) / 5)
-LED = Pin("LED", Pin.OUT)
+        
+Pin("LED", Pin.OUT).on()
 
 ibus_in = IBus(1)
 

@@ -1,64 +1,54 @@
+# -*- coding: utf-8 -*-
+
+##### Imports #####
+
 import time
 from machine import UART, Pin
 
-# Works by connecting to uart, transferring data and then disconnecting
-# Allows ibus to be polled regularly without creating a block
+##### Classes and variables #####
 
-# returns raw values
-# To make meaningful there is a normalize static method 
-# approx (-100 to +100) for default (standard) controls
-# 0 is centre. The zero point can be adjusted on the controller
-# actual value of min and maximum may differ
-# approx (0 to 100) for dials
+class IBus():
+    """
+    A class to handle iBus signals received from UART.
 
+    An iBus packet comprises 32 bytes:
+        - 2 header bytes (first header is 0x20, second is 0x40)
+        - 28 channel bytes (2 bytes per channel, little endian)
+        - 2 checksum bytes (1 checksum value, little endian)
 
-# Select appropriate uart pin (following are defaults)
-# For ibus receive then only RX pin needs to be connected
-# UART 0: TX pin 0 GP0 RX pin 1 GP1 
-# UART 1: TX pin 6 GP4 RX pin 7 GP5 
-# Connect appropriate RX pin to rightmost pin on FS-iA6B
+    The default data rate is 115200 baud. A packet is transmitted every 7 ms.
+    Checksum = 0xFFFF - sum of first 30 bytes
+    """
 
-# returns list of channel values. First value (pseudo channel 0) is status
-# 0 = initial values
-# 1 = new values
-# -1 = failed to receive data old values sent
-# -2 = checksum error
-
-
-class IBus ():
-    
-    # Number of channels (FS-iA6B has 6)
-    def __init__ (self, uart_num, baud=115200, num_channels=6):
-        self.uart_num = uart_num
-        self.baud = baud
-        self.uart = UART(self.uart_num, self.baud)
+    def __init__(self, uart_number, baud = 115200, num_channels = 6):
+        self.uart = UART(uart_number, baud)
         self.num_channels = num_channels
-        # ch is channel value
-        self.ch = []
-        # Set channel values to 0
-        for i in range (self.num_channels+1):
-            self.ch.append(0)
-            
-            
+
+        self.ch = [0]*self.num_channels
+
     # Returns list with raw data
     def read(self):
-        # Max 10 attempts to read
-        for z in range(10):
-            buffer = bytearray (31)
-            char = self.uart.read(1)
-            # check for 0x20
-            if char == b'\x20':
-                # read rest of string into buffer
-                self.uart.readinto(buffer)
-                checksum = 0xffdf # 0xffff - 0x20
-                # check checksum
-                for i in range(29):
-                    checksum -= buffer[i]
-                if checksum == (buffer[30] << 8) | buffer[29]:
+
+        buffer = bytearray(30)
+
+        # Attempt to catch a packet 10 times
+        for attempt in range(10):
+            header1 = self.uart.read(1) # Read the first byte from UART
+            header2 = self.uart.read(1) # Read the second byte from UART
+
+            if header1 == 0x20 and header2 == 0x40: # Checking for correct header bytes
+                self.uart.readinto(buffer) # Store the rest of the packet into buffer
+
+                checksum = 0xFF9F # 0xFFFF - 0x20 - 0x40
+                # Validate the checksum
+                for byte_number in range(29):
+                    checksum -= buffer[byte_number]
+
+                if checksum == (buffer[30] << 8) | buffer[29]: # Comparing the calculated checksum against the sent value
                     # buffer[0] = 0x40
-                    self.ch[0] = 1 # status 1 = success
-                    for i in range (1, self.num_channels + 1):
-                        self.ch[i] = (buffer[(i*2)-1] + (buffer[i*2] << 8))                    
+                    # self.ch[0] = 1 # status 1 = success
+                    for channel in range (self.num_channels):
+                        self.ch[channel] = (buffer[channel*2] + (buffer[channel*2 + 1] << 8))                    
                     return self.ch
                 else:
                     # Checksum error

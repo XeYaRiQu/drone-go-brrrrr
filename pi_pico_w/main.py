@@ -62,7 +62,7 @@ def run() -> None:
     print("Hello from Scout!")
 
     # flash the LED a few times to show the microcontroller has received power and the program is active
-    led = machine.Pin(25, machine.Pin.OUT) # the onboard LED of the Raspberry Pi Pico
+    led = machine.Pin("LED", machine.Pin.OUT) # the onboard LED of the Raspberry Pi Pico
     for x in range(8):
         led.on()
         time.sleep(0.1)

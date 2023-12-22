@@ -24,11 +24,11 @@ Theoretical analysis    - @jersst
 - [x] Literature review
 - [x] Finalise testbed design
 - [x] Purchase components
-- [ ] Assemble testbed
-- [ ] Assemble drone
+- [x] Assemble testbed
+- [ ] Assemble multirotor
 - [ ] Set up simulation infrastructure
 - [ ] Get preliminary simulation
-
+- [ ] Perform test flight
 
 ## Workflow:
 main - All finalised and validated work (code, designs, etc.) will be checked-in here by creating a PR from the dev branch.
@@ -49,20 +49,11 @@ https://dronesgator.com/how-to-choose-a-drone-propeller/
 
 https://dronenodes.com/how-to-build-a-drone/
 
-## Prof Zhao Lin References:
-
 https://www.mathworks.com/content/dam/mathworks/mathworks-dot-com/solutions/automotive/files/de-expo-2014/rapid-prototyping-and-hil-simulation-with-simulink-real-time.pdf
 
 https://www.speedgoat.com/products-services/real-time-target-machines
 
 https://www.mathworks.com/videos/how-to-design-and-model-a-quadcopter-prototype-with-simulink-and-arduino-1494618375170.html
-
-Paper (By Prof Zhao Lin) : 
-
-https://core.ac.uk/download/pdf/36739356.pdf
-
-https://www.researchgate.net/publication/264422628_Rapid_Prototyping_of_Quadrotor_Controllers_Using_MATLAB_RTW_and_dsPICs
-
 
 
 ## Given literature:
@@ -73,3 +64,7 @@ https://underactuated.mit.edu/lqr.html
 http://www.brokking.net/ymfc-3d_v2_main.html
 
 http://www.brokking.net/Video_94.html
+
+https://core.ac.uk/download/pdf/36739356.pdf
+
+https://www.researchgate.net/publication/264422628_Rapid_Prototyping_of_Quadrotor_Controllers_Using_MATLAB_RTW_and_dsPICs

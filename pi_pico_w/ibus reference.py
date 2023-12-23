@@ -1,8 +1,5 @@
-# -*- coding: utf-8 -*-
-
-__author__ = "W, Stewart. (2022). ibus. [Source code]. https://www.penguintutor.com/news/electronics/rc-pico-ibus"
-
 from machine import UART
+import time
 
 # Works by connecting to uart, transferring data and then disconnecting
 # Allows ibus to be polled regularly without creating a block
@@ -27,10 +24,11 @@ from machine import UART
 # -1 = failed to receive data old values sent
 # -2 = checksum error
 
+
 class IBus ():
     
     # Number of channels (FS-iA6B has 6)
-    def __init__(self, uart_num, baud=115200, num_channels=6):
+    def __init__ (self, uart_num, baud=115200, num_channels=6):
         self.uart_num = uart_num
         self.baud = baud
         self.uart = UART(self.uart_num, self.baud)
@@ -84,3 +82,25 @@ class IBus ():
             return ((value - 1000) / 10)
         else:
             return ((value - 1500) / 5)
+        
+    
+ibus_in = IBus(1)
+
+
+while True:
+    res = ibus_in.read()
+    # if signal then display immediately
+    if (res[0] == 1):
+        print ("Status {} CH 1 {} Ch 2 {} Ch 3 {} Ch 4 {} Ch 5 {} Ch 6 {}".format(
+            res[0],    # Status
+            IBus.normalize(res[1]),
+            IBus.normalize(res[2]),
+            IBus.normalize(res[3]),
+            IBus.normalize(res[4]),
+            IBus.normalize(res[5], type="dial"),
+            IBus.normalize(res[6], type="dial")),
+            end="")
+        print (" - {}".format(time.ticks_ms()))
+    else:
+        print ("Status offline {}".format(res[0]))
+        time.sleep(0.5)

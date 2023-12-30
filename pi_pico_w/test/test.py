@@ -118,9 +118,10 @@ def setup() -> int:
         imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_CONFIG, bytes(8)) # Set gyroscope scale to 500 dps
         print("INFO >>>>    MPU-6050 setup --> SUCCESS\n")
     except:
+        # Masking the fail flag here as IMU wiring needs some work
         # error_raised_flag = True
         error_list.append("IMU I2C write error.")
-        print("INFO >>>>    MPU-6050 setup --> FAIL\n")
+        print("ERROR >>>>   MPU-6050 setup --> FAIL\n")
 
     motor1.freq(250)
     motor2.freq(250)
@@ -192,7 +193,7 @@ if setup() == 0:
         except:
             break
 else:
-    print("ERROR  >>>  Setup failed.\n")
+    print("ERROR >>>   Setup failed.\n")
 
     for error in error_list:
-        print("ERROR >>>>  ", error)
+        print("ERROR >>>>   ", error)

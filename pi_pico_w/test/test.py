@@ -111,7 +111,7 @@ def setup() -> int:
         error_list.append("Failed to initialise UART for RC receiver.")
         print("ERROR >>>>   RC receiver setup --> FAIL\n")
 
-    # IMU SDA and SCL needs to be connected to strong pull-up resistors
+    # IMU SDA and SCL must to be connected to strong pull-up resistors
     try:
         imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_PWR_MGMT1, bytes(1))   # Wake command
         imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_CONFIG, bytes(5))      # Set accelerometer LPF to 10 Hz
@@ -127,7 +127,7 @@ def setup() -> int:
     motor2.freq(250)
     motor3.freq(250)
     motor4.freq(250)
-    print("INFO >>>>    Motors PWM set to 250 Hz.\n")
+    print("INFO >>>>    Motors' PWM set to 250 Hz.\n")
 
     if not error_raised_flag:
         return 0

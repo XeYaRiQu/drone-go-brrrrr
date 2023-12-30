@@ -15,8 +15,17 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration("use_sim_time", default="false")
     drone_bringup_path = get_package_share_directory('drone_bringup')
 
+
+
     rviz_path = os.path.join(
         drone_bringup_path, "rviz", "rviz.rviz"
+    )
+
+    joystick_control_node = Node(
+        package='simulator',  # Replace 'your_package_name' with the actual package name where 'joystick_control.py' is located
+        executable='python3',  # Replace with 'python' if needed
+        arguments=['joystick_control.py'],  # Reference the joystick script
+        output='screen',
     )
 
     return LaunchDescription([
@@ -42,5 +51,8 @@ def generate_launch_description():
             namespace="drone",
             output="screen",
             prefix="xterm -e"
-        )
+        ),
+
+        joystick_control_node,
+
     ])

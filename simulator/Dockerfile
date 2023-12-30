@@ -15,6 +15,7 @@ RUN echo "deb http://packages.osrfoundation.org/gazebo/ubuntu `lsb_release -cs` 
     && apt-get install -y \
     gazebo \
     ros-humble-gazebo-ros-pkgs \
+    ros-humble-joy \
     python3-colcon-common-extensions python3-rosdep --no-install-recommends \
     && apt-get clean
 RUN rosdep init && rosdep update

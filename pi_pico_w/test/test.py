@@ -167,7 +167,7 @@ def rc_read() -> None:
                         for channel in range(6):
                             raw_rc_values[channel] = (buffer[channel*2 + 1] << 8) + buffer[channel*2]
 
-                    break
+                        break
 
     # Normalise data
     for index in range(6):

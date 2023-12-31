@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Avoid using classes and minimise unnecessary function calls
-to speed up processing time in the main flight control loop.
+to increase processing speed in the main flight control loop.
 """
 
 ##### Imports #####
@@ -161,7 +161,7 @@ def rc_read() -> None:
                 # Validate start bytes
                 if char1 == b'\x20' and char2 == b'\x40':
                     rc.readinto(buffer)
-                    checksum = 0xFF9F # 0xFFFF - 0x20 - 0x40 or 65439 in decimal
+                    checksum = 0xFF9F # = 0xFFFF - 0x20 - 0x40 or 65439 in decimal
 
                     for byte_index in range(28):
                         checksum -= buffer[byte_index]
@@ -197,9 +197,9 @@ if setup() == 0:
         except:
             break
 
-        # end_time = time.ticks_us()
+        # print("INFO >>>>    Loop time:", time.ticks_diff(time.ticks_us(), start_time))
 else:
     print("ERROR >>>   Setup failed.\n")
 
     for error in error_list:
-        print("ERROR >>>>   ", error)
+        print("ERROR >>>>  ", error)

@@ -104,7 +104,7 @@ def setup() -> int:
         print("INFO >>>>    Overclock RP2040 to 250 MHz --> SUCCESS.\n")
     except:
         error_raised_flag = True
-        error_list.append("Failed to overclock RP2040.")
+        error_list.append("Unable to overclock RP2040.")
         print("ERROR >>>>   Overclock RP2040 to 250 MHz --> FAIL\n")
 
     try:
@@ -112,7 +112,7 @@ def setup() -> int:
         print("INFO >>>>    RC receiver setup --> SUCCESS\n")
     except:
         error_raised_flag = True
-        error_list.append("Failed to initialise UART for RC receiver.")
+        error_list.append("Unable to initialise UART for RC receiver.")
         print("ERROR >>>>   RC receiver setup --> FAIL\n")
 
     try:
@@ -127,11 +127,16 @@ def setup() -> int:
         error_list.append("IMU I2C write error.")
         print("ERROR >>>>   MPU-6050 setup --> FAIL\n")
 
-    motor1.freq(250)
-    motor2.freq(250)
-    motor3.freq(250)
-    motor4.freq(250)
-    print("INFO >>>>    Motors' PWM set to 250 Hz.\n")
+    try:
+        motor1.freq(250)
+        motor2.freq(250)
+        motor3.freq(250)
+        motor4.freq(250)
+        print("INFO >>>>    Set motor PWM freq to 250 Hz --> SUCCESS\n")
+    except:
+        error_raised_flag = True
+        error_list.append("Unable to set motor PWM freq to 250 Hz.")
+        print("ERROR >>>>   Set motor PWM freq to 250 Hz --> FAIL\n")
 
     if not error_raised_flag:
         return 0

@@ -115,7 +115,6 @@ def setup() -> int:
         error_list.append("Failed to initialise UART for RC receiver.")
         print("ERROR >>>>   RC receiver setup --> FAIL\n")
 
-    # IMU SDA and SCL must to be connected to strong pull-up resistors
     try:
         imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_PWR_MGMT1, bytes(1))   # Wake command
         imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_CONFIG, bytes(5))      # Set accelerometer LPF to 10 Hz
@@ -123,6 +122,7 @@ def setup() -> int:
         print("INFO >>>>    MPU-6050 setup --> SUCCESS\n")
     except:
         # Masking the fail flag here as IMU wiring needs some work
+        # IMU SDA and SCL must to be connected to strong pull-up resistors
         # error_raised_flag = True
         error_list.append("IMU I2C write error.")
         print("ERROR >>>>   MPU-6050 setup --> FAIL\n")

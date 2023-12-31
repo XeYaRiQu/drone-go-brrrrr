@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Ideally to avoid using classes and minimise unnecessary function calls
+Avoid using classes and minimise unnecessary function calls
 to speed up processing time in the main flight control loop.
 """
 
@@ -31,6 +31,7 @@ IMU_REG_GYRO_CONFIG = 27 # 0x1B
 LED_GPIO = Pin("LED", Pin.OUT)
 
 RC_GPIO_IN = Pin(5)
+RC_GPIO_OUT = Pin(4)
 
 IMU_GPIO_SDA = Pin(12, pull=Pin.PULL_UP)
 IMU_GPIO_SCL = Pin(13, pull=Pin.PULL_UP)
@@ -40,15 +41,8 @@ MOTOR2_GPIO = Pin(28)
 MOTOR3_GPIO = Pin(15)
 MOTOR4_GPIO = Pin(16)
 
-rc:UART = UART(1)
-imu:I2C = I2C(0, sda=IMU_GPIO_SDA, scl=IMU_GPIO_SCL)
-motor1:PWM = PWM(MOTOR1_GPIO)
-motor2:PWM = PWM(MOTOR2_GPIO)
-motor3:PWM = PWM(MOTOR3_GPIO)
-motor4:PWM = PWM(MOTOR4_GPIO)
 
-
-##### Control settings #####
+##### Control variables #####
 
 raw_rc_values:list = [0]*6
 normalised_rc_values = [0.0]*6
@@ -73,6 +67,16 @@ pid_yaw_kd:float = 0.0
 max_rate_roll:float = 30.0
 max_rate_pitch:float = 30.0
 max_rate_yaw:float = 50.0
+
+
+##### Enable pin IO #####
+
+rc:UART = UART(1)
+imu:I2C = I2C(0, sda=IMU_GPIO_SDA, scl=IMU_GPIO_SCL)
+motor1:PWM = PWM(MOTOR1_GPIO)
+motor2:PWM = PWM(MOTOR2_GPIO)
+motor3:PWM = PWM(MOTOR3_GPIO)
+motor4:PWM = PWM(MOTOR4_GPIO)
 
 
 ##### Others #####
@@ -179,11 +183,11 @@ def rc_read() -> None:
 
 if setup() == 0:
     while True:
+        # start_time = time.ticks_us()
+
         try:
-            # start_time = time.ticks_us()
             rc_read()
             print(normalised_rc_values)
-            # end_time = time.ticks_us()
 
             # Just simple throttle testing for now
             motor1.duty_ns(normalised_rc_values[RC_THROTTLE_CH])
@@ -192,6 +196,8 @@ if setup() == 0:
             motor4.duty_ns(normalised_rc_values[RC_THROTTLE_CH])
         except:
             break
+
+        # end_time = time.ticks_us()
 else:
     print("ERROR >>>   Setup failed.\n")
 

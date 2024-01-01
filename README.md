@@ -57,6 +57,8 @@ https://www.mathworks.com/videos/how-to-design-and-model-a-quadcopter-prototype-
 
 https://forum.pjrc.com/index.php?threads/teensy-3-1-flightcontroller-quadcopter-mavlink.27793/
 
+https://timhanewich.medium.com/how-i-developed-the-scout-flight-controller-part-7-full-flight-controller-code-4269c83b3b48
+
 ## Given literature:
 https://doi.org/10.1155/2020/8829329
 

@@ -22,5 +22,4 @@ UART1 RX | I2C0 SCL (default) | SPI0 CSn |  GP5  | ( ) 7             34 ( ) | GP
                                             GND  | ( ) 18            23 ( ) | GND
                      I2C1 SDA | SPI1 SCK |  GP14 | ( ) 19            22 ( ) | GP17  | SPI0 CSn (default) | I2C0 SCL | UART0 RX
                      I2C1 SCL | SPI1 TX  |  GP15 | ( ) 20            21 ( ) | GP16  | SPI0 RX  (default) | I2C0 SDA | UART0 TX
-                                                 ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅
-
+                                                 ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾

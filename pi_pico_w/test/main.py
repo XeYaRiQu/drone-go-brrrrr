@@ -50,11 +50,6 @@ IMU_REG_GYRO_Y_LO = 70   # 0x46
 IMU_REG_GYRO_Z_HI = 71   # 0x47
 IMU_REG_GYRO_Z_LO = 72   # 0x48
 
-# The scale modifiers change with respect to the scale settings
-# used for the IMU's accelerometer and gyroscope.
-# The 16-bit 2's complement readings range from -32768 to 32767
-# The measurement range depends on the bits written to IMU_REG_GYRO_CONFIG
-# The modifer converts raw values back into physical measurements
 SCALE_MODIFIER_ACCE:float = 32767/acce_range
 SCALE_MODIFIER_GYRO:float = 32767/gyro_range
 
@@ -242,7 +237,10 @@ def rc_read() -> None:
 
 def imu_read() -> None:
     """
-    The IMU measurements are 16-bit 2's complement values.
+    The IMU measurements are 16-bit 2's complement values ranging from
+    -32768 to 32767 which needs to be divided by the scale modifiers to
+    obtain the physical values. These scale modifiers change depending on
+    the range set for their respective configs.
     """
     raw_gyro_data = imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_X_HI, 6)
 

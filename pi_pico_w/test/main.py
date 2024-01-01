@@ -10,6 +10,14 @@ import time
 from machine import UART, Pin, PWM, freq, I2C
 
 
+##### General settings #####
+
+# 250, 500, 1000, 2000 dps (IMU_REG_GYRO_CONFIG[3:4])
+gyro_range:int = 500
+# 2, 4, 8, 16 g (IMU_REG_ACCE_CONFIG[3:4])
+acce_range:int = 4
+
+
 ##### Constants #####
 
 RC_THROTTLE_CH = 2
@@ -22,8 +30,33 @@ RC_EXTRA2_CH = 5
 IMU_I2C_ADDRESS = 104    # 0x68
 IMU_REG_SMPLRT_DIV = 25  # 0x19
 IMU_REG_PWR_MGMT1 = 107  # 0x6B
+IMU_REG_WHO_AM_I = 117   # 0x75
+
 IMU_REG_CONFIG = 26      # 0x1A
 IMU_REG_GYRO_CONFIG = 27 # 0x1B
+IMU_REG_ACCE_CONFIG = 28 # 0x1C
+IMU_REG_ACCE_X_HI = 59   # 0x3B
+IMU_REG_ACCE_X_LO = 60   # 0x3C
+IMU_REG_ACCE_Y_HI = 61   # 0x3D
+IMU_REG_ACCE_Y_LO = 62   # 0x3E
+IMU_REG_ACCE_Z_HI = 63   # 0x3F
+IMU_REG_ACCE_Z_LO = 64   # 0x40
+IMU_REG_TEMP_HI = 65     # 0x41
+IMU_REG_TEMP_LO = 66     # 0x42
+IMU_REG_GYRO_X_HI = 67   # 0x43
+IMU_REG_GYRO_X_LO = 68   # 0x44
+IMU_REG_GYRO_Y_HI = 69   # 0x45
+IMU_REG_GYRO_Y_LO = 70   # 0x46
+IMU_REG_GYRO_Z_HI = 71   # 0x47
+IMU_REG_GYRO_Z_LO = 72   # 0x48
+
+# The scale modifiers change with respect to the scale settings
+# used for the IMU's accelerometer and gyroscope.
+# The 16-bit 2's complement readings range from -32768 to 32767
+# The measurement range depends on the bits written to IMU_REG_GYRO_CONFIG
+# The modifer converts raw values back into physical measurements
+SCALE_MODIFIER_ACCE:float = 32767/acce_range
+SCALE_MODIFIER_GYRO:float = 32767/gyro_range
 
 
 ##### Pin settings #####
@@ -45,7 +78,9 @@ MOTOR4_GPIO = Pin(16)
 ##### Control variables #####
 
 raw_rc_values:list = [0]*6
-normalised_rc_values = [0.0]*6
+normalised_rc_values = [0]*6
+
+normalised_gyro_values = [0.0]*3
 
 roll_last_integral:float = 0.0
 roll_last_error:float = 0.0
@@ -128,6 +163,27 @@ def setup() -> int:
         print("ERROR >>>>   MPU-6050 setup --> FAIL\n")
 
     try:
+        # Who am I check
+        if imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_WHO_AM_I, 1)[0] == IMU_I2C_ADDRESS:
+            print("INFO >>>>   MPU-6050 verify WHO_AM_I -> SUCCESS")
+        else:
+            error_raised_flag = True
+            error_list.append("MPU-6050 WHO_AM_I read error.")
+            print("ERROR >>>>  MPU-6050 verify WHO_AM_I -> FAIL")
+
+        # Low pass filter check
+        if imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_CONFIG, 1)[0] == 5:
+            print("INFO >>>>    MPU-6050 verify DLPF -> SUCCESS")
+        else:
+            error_raised_flag = True
+            error_list.append("MPU-6050 DLPF not set.")
+            print("ERROR >>>>  MPU-6050 verify DLPF -> FAIL")
+    except:
+        error_raised_flag = True
+        error_list.append("IMU I2C read error.")
+        print("ERROR >>>>  MPU-6050 verify settings -> FAIL")
+
+    try:
         motor1.freq(250)
         motor2.freq(250)
         motor3.freq(250)
@@ -184,6 +240,22 @@ def rc_read() -> None:
         normalised_rc_values[index] = raw_rc_values[index]*1000 # From 1000-2000 to 1000000-2000000
 
 
+def imu_read() -> None:
+    """
+    The IMU measurements are 16-bit 2's complement values.
+    """
+    raw_gyro_data = imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_X_HI, 6)
+
+    for axis in range(3):
+        value = (raw_gyro_data[axis*2] << 8) | raw_gyro_data[axis*2 + 1]
+
+        # Check if negative
+        if raw_gyro_data[axis*2] >= 0xFF:
+            normalised_gyro_values[axis] = -((0xFFFF - value) + 1) / SCALE_MODIFIER_GYRO
+        else:
+            normalised_gyro_values[axis] = value / SCALE_MODIFIER_GYRO
+
+
 ##### Main #####
 
 if setup() == 0:
@@ -199,6 +271,8 @@ if setup() == 0:
             motor2.duty_ns(normalised_rc_values[RC_THROTTLE_CH])
             motor3.duty_ns(normalised_rc_values[RC_THROTTLE_CH])
             motor4.duty_ns(normalised_rc_values[RC_THROTTLE_CH])
+
+            # imu_read()
         except:
             break
 

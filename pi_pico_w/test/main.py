@@ -273,6 +273,10 @@ if setup() == 0:
             motor4.duty_ns(normalised_rc_values[RC_THROTTLE_CH])
 
             # imu_read()
+            desired_throttle:float = normalised_rc_values[RC_THROTTLE_CH]
+            desired_pitch:float = normalised_rc_values[RC_PITCH_CH]
+            desired_roll:float = normalised_rc_values[RC_ROLL_CH]
+            desired_yaw:float = normalised_rc_values[RC_YAW_CH]
         except:
             break
 

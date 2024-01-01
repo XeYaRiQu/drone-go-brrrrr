@@ -12,10 +12,11 @@ from machine import UART, Pin, PWM, freq, I2C
 
 ##### General settings #####
 
-# 250, 500, 1000, 2000 dps (IMU_REG_GYRO_CONFIG[3:4])
-gyro_range:int = 500
-# 2, 4, 8, 16 g (IMU_REG_ACCE_CONFIG[3:4])
-acce_range:int = 4
+gyro_range:int = 500 # 250, 500, 1000, 2000 dps (IMU_REG_GYRO_CONFIG[3:4])
+acce_range:int = 4   # 2, 4, 8, 16 g (IMU_REG_ACCE_CONFIG[3:4])
+
+throttle_idle:float = 0.15  # Maximum throttle without generating thrust (throttle floor)
+throttle_max:float = 0.25   # Maximum throttle at 100% input
 
 
 ##### Constants #####
@@ -53,6 +54,7 @@ IMU_REG_GYRO_Z_LO = 72   # 0x48
 SCALE_MODIFIER_ACCE:float = 32767/acce_range
 SCALE_MODIFIER_GYRO:float = 32767/gyro_range
 
+THROTTLE_RANGE = throttle_max - throttle_idle
 
 ##### Pin settings #####
 
@@ -275,6 +277,8 @@ if setup() == 0:
             desired_pitch:float = normalised_rc_values[RC_PITCH_CH]
             desired_roll:float = normalised_rc_values[RC_ROLL_CH]
             desired_yaw:float = normalised_rc_values[RC_YAW_CH]
+
+            adjust_throttle:float = THROTTLE_RANGE*desired_throttle + throttle_idle
         except:
             break
 

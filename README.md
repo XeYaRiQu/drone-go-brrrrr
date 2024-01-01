@@ -55,6 +55,7 @@ https://www.speedgoat.com/products-services/real-time-target-machines
 
 https://www.mathworks.com/videos/how-to-design-and-model-a-quadcopter-prototype-with-simulink-and-arduino-1494618375170.html
 
+https://forum.pjrc.com/index.php?threads/teensy-3-1-flightcontroller-quadcopter-mavlink.27793/
 
 ## Given literature:
 https://doi.org/10.1155/2020/8829329

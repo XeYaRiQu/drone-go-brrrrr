@@ -8,7 +8,7 @@ Try to replace integer division with float multiplication.
 ##### Imports #####
 
 import time
-from machine import UART, Pin, PWM, freq, I2C
+from machine import Pin, UART, I2C, PWM, freq
 
 
 ##### General settings #####
@@ -342,7 +342,7 @@ if setup() == 0:
             prev_pid_inte_yaw = 0.0
 
             # Calculate duty cycle
-
+            # To be added
         except:
             break
 

@@ -262,7 +262,7 @@ def imu_read() -> None:
         value = (raw_gyro_data[axis * 2] << 8) | raw_gyro_data[axis*2 + 1]
 
         # Check if negative
-        if raw_gyro_data[axis * 2] >= 0xFF:
+        if raw_gyro_data[axis * 2] >= 128:
             normalised_gyro_values[axis] = -((0xFFFF - value) + 1) * SCALE_MULTIPLIER_GYRO
         else:
             normalised_gyro_values[axis] = value * SCALE_MULTIPLIER_GYRO

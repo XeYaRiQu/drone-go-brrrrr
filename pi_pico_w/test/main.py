@@ -16,8 +16,8 @@ from machine import Pin, UART, I2C, PWM, freq
 gyro_range:int = 500 # 250, 500, 1000, 2000 dps (IMU_REG_GYRO_CONFIG[3:4])
 acce_range:int = 4   # 2, 4, 8, 16 g (IMU_REG_ACCE_CONFIG[3:4])
 
-idle_throttle_rate:float = 0.15 # Maximum throttle without generating thrust (throttle floor)
-max_throttle_rate:float = 0.25  # Maximum throttle at 100% input
+min_throttle_rate:float = 0.10  # Maximum throttle at 0% input (does not generate thrust)
+max_throttle_rate:float = 0.40  # Maximum throttle at 100% input (limits acceleration)
 
 
 ##### PID settings #####
@@ -80,7 +80,7 @@ GYRO_INDEX_YAW = 2
 SCALE_MULTIPLIER_ACCE:float = acce_range / 32767
 SCALE_MULTIPLIER_GYRO:float = gyro_range / 32767
 
-THROTTLE_RANGE = max_throttle_rate - idle_throttle_rate
+THROTTLE_RANGE = max_throttle_rate - min_throttle_rate
 
 ##### Pin settings #####
 
@@ -222,39 +222,40 @@ def rc_read() -> None:
     """
 
     for attempt in range(6):
-            if rc.any():
-                buffer = bytearray(30)
-                char1 = rc.read(1)
-                char2 = rc.read(1)
+        if rc.any():
+            buffer = bytearray(30)
+            char1 = rc.read(1)
+            char2 = rc.read(1)
 
-                # Validate start bytes
-                if char1 == b'\x20' and char2 == b'\x40':
-                    rc.readinto(buffer)
-                    checksum = 0xFF9F # = 0xFFFF - 0x20 - 0x40 or 65439 in decimal
+            # Validate start bytes
+            if char1 == b'\x20' and char2 == b'\x40':
+                rc.readinto(buffer)
+                checksum = 0xFF9F # = 0xFFFF - 0x20 - 0x40 or 65439 in decimal
 
-                    for byte_index in range(28):
-                        checksum -= buffer[byte_index]
+                for byte_index in range(28):
+                    checksum -= buffer[byte_index]
 
-                    # Validate checksum
-                    if checksum == (buffer[29] << 8) | buffer[28]: # Converting to big endian
-                        for channel in range(6):
-                            raw_rc_values[channel] = (buffer[channel*2 + 1] << 8) + buffer[channel * 2]
+                # Validate checksum
+                if checksum == (buffer[29] << 8) | buffer[28]: # Converting to big endian
+                    for channel in range(6):
+                        raw_rc_values[channel] = (buffer[channel*2 + 1] << 8) + buffer[channel * 2]
 
-                        break
+                    break
 
     # Normalise data
     for index in range(6):
         # Normalise to 0.0-1.0 as these values are scaled with respect to the maximum rates defined in settings
         # normalised_rc_values[index] = float(raw_rc_values[index]*0.001 - 1) # From 1000-2000 to 0.0-1.0
-        normalised_rc_values[index] = raw_rc_values[index] * 1000 # From 1000-2000 to 1000000-2000000
+        normalised_rc_values[index] = raw_rc_values[index] * 1000 # From 1000-2000 to 1000000-2000000 for simple testing
 
 
 def imu_read() -> None:
     """
-    The IMU measurements are 16-bit 2's complement values ranging from
-    -32768 to 32767 which needs to be divided by the scale modifiers to
-    obtain the physical values. These scale modifiers change depending on
-    the range set for their respective configs.
+    The IMU measurements are 16-bit 2's complement values ranging from -32768
+    to 32767 which needs to be divided by the scale multipliers to obtain the
+    physical values. These scale multipliers change depending on the range set
+    in their respective register configs. The high byte is read before the low
+    byte for each measurement.
     """
     raw_gyro_data = imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_X_HI, 6)
 
@@ -271,7 +272,7 @@ def imu_read() -> None:
 ##### Main #####
 
 if setup() == 0:
-    prev_pid_timestamp:float = time.ticks_us()
+    prev_pid_timestamp:int = time.ticks_us()
     print("INFO  >>>>   Starting flight control loop.\n")
 
     while True:
@@ -322,16 +323,16 @@ if setup() == 0:
             # Capture end timestamp for current PID loop
             prev_pid_timestamp = time.ticks_us()
 
-            adjust_throttle:float = THROTTLE_RANGE*desired_throttle_rate + idle_throttle_rate
+            throttle_rate:float = THROTTLE_RANGE*desired_throttle_rate + min_throttle_rate
             pid_roll:float = pid_prop_roll + pid_inte_roll + pid_deri_roll
             pid_pitch:float = pid_prop_pitch + pid_inte_pitch + pid_deri_pitch
             pid_yaw:float = pid_prop_yaw + pid_inte_yaw + pid_deri_yaw
 
             # Throttle calculations (cross configuration)
-            motor1_throttle:float = adjust_throttle + pid_roll + pid_pitch - pid_yaw
-            motor2_throttle:float = adjust_throttle - pid_roll + pid_pitch + pid_yaw
-            motor3_throttle:float = adjust_throttle + pid_roll - pid_pitch + pid_yaw
-            motor4_throttle:float = adjust_throttle - pid_roll - pid_pitch - pid_yaw
+            motor1_throttle:float = throttle_rate + pid_roll + pid_pitch - pid_yaw
+            motor2_throttle:float = throttle_rate - pid_roll + pid_pitch + pid_yaw
+            motor3_throttle:float = throttle_rate + pid_roll - pid_pitch + pid_yaw
+            motor4_throttle:float = throttle_rate - pid_roll - pid_pitch - pid_yaw
 
             # Save PID values for subsequent calculations
             prev_pid_error_roll = 0.0

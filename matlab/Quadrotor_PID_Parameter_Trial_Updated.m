@@ -4,6 +4,10 @@ Kdy = 0.25 ;% Y point Gain
 Kdz = 0.25; % Z point Gain
 m = 0.468; %kg
 g = 9.82; %m / s^2 - Gravity
+altitude_i = 50; %metres
+roll_i = 0.1; %radians
+yaw_i = 0.1; %radians
+pitch_i = 0.1; %radians
 
 %Angular Accelerations - Body Frame - vdot
 I_xx = 4.856 * 10^-3  ;% kg m^2 - Inertia of XX Axis
@@ -24,24 +28,23 @@ theta_desired = 0.02 ; %Theta Angle in Radians
 psi_desired = -0.01 ;% Psi Angle in Radians
 
 %Attitude Controller Parameters
-Kpphi_attitude= 25 ;
+Kpphi_attitude= 25;
 Kptheta_attitude = 2.5; 
 Kppsi_attitude = 2.5 ;
 
-%Attitude Rate Controller Parameters - Gains of the PID Controller
-Kpphi =2.5;
-Kiphi = 0.25; 
-Kdphi = 0.25 ;
+%Attitude Rate Controller Parameters - Gains of the PID Controller - This
+%could be different from the actual intial attitude controller
+Kpphi =25;
+Kiphi = 2.5; 
+Kdphi = 2.5 ;
 
 Kptheta = 2.5;
 Kitheta = 0.25; 
 Kdtheta = 0.25; 
 
 Kppsi = 2.5;
-Kipsi = 0.25; 
+Kipsi = 0.5; 
 Kdpsi = 0.25; 
-
-
 
 %Thrust Control Blocks - Gains of the PID Controller
 Kzi = 0.25; 
@@ -52,7 +55,8 @@ Kzd = 0.25;
 roll_d = 0.01 ;% Desired Roll 
 pitch_d = 0.01; %Desired Pitch
 yaw_d = 0.01 ;%Desired Yaw
-z_d = 1; %Desired Altitude
+z_d = 10; %Desired Altitude
+z_dot_desired = 0; %Desired Linear Velocity
 
 
 

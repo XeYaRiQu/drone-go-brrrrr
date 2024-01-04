@@ -128,6 +128,7 @@ prev_pid_inte_roll:float = 0.0
 prev_pid_inte_pitch:float = 0.0
 prev_pid_inte_yaw:float = 0.0
 
+motors_are_armed:bool = False
 
 ##### Functions #####
 
@@ -330,90 +331,104 @@ if setup() == 0:
     LED_GPIO.off()
 
     while True:
-        try:
-            rc_read()
-            imu_read()
+        if motors_are_armed:
+            try:
+                rc_read()
 
-            desired_throttle_rate:float = normalised_rc_values[RC_THROTTLE_CH]
-            desired_pitch_rate:float = normalised_rc_values[RC_PITCH_CH]
-            desired_roll_rate:float = normalised_rc_values[RC_ROLL_CH]
-            desired_yaw_rate:float = normalised_rc_values[RC_YAW_CH]
+                if normalised_rc_values[RC_EXTRA1_CH] == 0:
+                    if normalised_rc_values[RC_THROTTLE_CH] == 0.0:
+                        motors_are_armed = False
 
-            # Error calculations (desired - actual)
-            pid_error_roll:float = desired_roll_rate * max_roll_rate - normalised_gyro_values[GYRO_INDEX_ROLL]
-            pid_error_pitch:float = desired_pitch_rate * max_pitch_rate - normalised_gyro_values[GYRO_INDEX_PITCH]
-            pid_error_yaw:float = desired_yaw_rate * max_yaw_rate - normalised_gyro_values[GYRO_INDEX_YAW]
+                imu_read()
 
-            # Proportion calculations
-            pid_prop_roll:float = pid_error_roll * pid_kp_roll
-            pid_prop_pitch:float = pid_error_pitch * pid_kp_pitch
-            pid_prop_yaw:float = pid_error_yaw * pid_kp_yaw
+                desired_throttle_rate:float = normalised_rc_values[RC_THROTTLE_CH]
+                desired_pitch_rate:float = normalised_rc_values[RC_PITCH_CH]
+                desired_roll_rate:float = normalised_rc_values[RC_ROLL_CH]
+                desired_yaw_rate:float = normalised_rc_values[RC_YAW_CH]
 
-            # Calculate time elapsed since previous PID calculations
-            pid_cycle_time:float = time.ticks_diff(time.ticks_us(), prev_pid_timestamp) * 0.000001
+                # Error calculations (desired - actual)
+                pid_error_roll:float = desired_roll_rate * max_roll_rate - normalised_gyro_values[GYRO_INDEX_ROLL]
+                pid_error_pitch:float = desired_pitch_rate * max_pitch_rate - normalised_gyro_values[GYRO_INDEX_PITCH]
+                pid_error_yaw:float = desired_yaw_rate * max_yaw_rate - normalised_gyro_values[GYRO_INDEX_YAW]
 
-            # Integral calculations
-            pid_inte_roll:float = pid_error_roll * pid_ki_roll * pid_cycle_time + prev_pid_inte_roll
-            pid_inte_pitch:float = pid_error_pitch * pid_ki_pitch * pid_cycle_time + prev_pid_inte_pitch
-            pid_inte_yaw:float = pid_error_yaw * pid_ki_yaw * pid_cycle_time + prev_pid_inte_yaw
+                # Proportion calculations
+                pid_prop_roll:float = pid_error_roll * pid_kp_roll
+                pid_prop_pitch:float = pid_error_pitch * pid_kp_pitch
+                pid_prop_yaw:float = pid_error_yaw * pid_kp_yaw
 
-            # Calculate time elapsed since previous PID calculations
-            pid_cycle_time:float = time.ticks_diff(time.ticks_us(), prev_pid_timestamp) * 0.000001
+                # Calculate time elapsed since previous PID calculations
+                pid_cycle_time:float = time.ticks_diff(time.ticks_us(), prev_pid_timestamp) * 0.000001
 
-            # Constrain within integral limits
-            pid_inte_roll = max(min(pid_inte_roll, pid_integral_limit_pos), pid_integral_limit_neg)
-            pid_inte_pitch = max(min(pid_inte_pitch, pid_integral_limit_pos), pid_integral_limit_neg)
-            pid_inte_yaw = max(min(pid_inte_yaw, pid_integral_limit_pos), pid_integral_limit_neg)
+                # Integral calculations
+                pid_inte_roll:float = pid_error_roll * pid_ki_roll * pid_cycle_time + prev_pid_inte_roll
+                pid_inte_pitch:float = pid_error_pitch * pid_ki_pitch * pid_cycle_time + prev_pid_inte_pitch
+                pid_inte_yaw:float = pid_error_yaw * pid_ki_yaw * pid_cycle_time + prev_pid_inte_yaw
 
-            # Calculate time elapsed since previous PID calculations
-            pid_cycle_time:float = time.ticks_diff(time.ticks_us(), prev_pid_timestamp) * 0.000001
+                # Calculate time elapsed since previous PID calculations
+                pid_cycle_time:float = time.ticks_diff(time.ticks_us(), prev_pid_timestamp) * 0.000001
 
-            # Derivative calculations
-            pid_deri_roll:float = (pid_error_roll - prev_pid_error_roll) * pid_kd_roll * pid_cycle_time
-            pid_deri_pitch:float = (pid_error_pitch - prev_pid_error_pitch) * pid_kd_pitch * pid_cycle_time
-            pid_deri_yaw:float = (pid_error_yaw - prev_pid_error_yaw) * pid_kd_yaw * pid_cycle_time
+                # Constrain within integral limits
+                pid_inte_roll = max(min(pid_inte_roll, pid_integral_limit_pos), pid_integral_limit_neg)
+                pid_inte_pitch = max(min(pid_inte_pitch, pid_integral_limit_pos), pid_integral_limit_neg)
+                pid_inte_yaw = max(min(pid_inte_yaw, pid_integral_limit_pos), pid_integral_limit_neg)
 
-            # Capture end timestamp for current PID loop
-            prev_pid_timestamp = time.ticks_us()
+                # Calculate time elapsed since previous PID calculations
+                pid_cycle_time:float = time.ticks_diff(time.ticks_us(), prev_pid_timestamp) * 0.000001
 
-            throttle_rate:float = desired_throttle_rate * THROTTLE_RANGE + min_throttle_rate
-            pid_roll:float = pid_prop_roll + pid_inte_roll + pid_deri_roll
-            pid_pitch:float = pid_prop_pitch + pid_inte_pitch + pid_deri_pitch
-            pid_yaw:float = pid_prop_yaw + pid_inte_yaw + pid_deri_yaw
+                # Derivative calculations
+                pid_deri_roll:float = (pid_error_roll - prev_pid_error_roll) * pid_kd_roll * pid_cycle_time
+                pid_deri_pitch:float = (pid_error_pitch - prev_pid_error_pitch) * pid_kd_pitch * pid_cycle_time
+                pid_deri_yaw:float = (pid_error_yaw - prev_pid_error_yaw) * pid_kd_yaw * pid_cycle_time
 
-            # Throttle calculations (cross configuration)
-            motor1_throttle:float = throttle_rate + pid_roll + pid_pitch + pid_yaw
-            motor2_throttle:float = throttle_rate + pid_roll - pid_pitch - pid_yaw
-            motor3_throttle:float = throttle_rate - pid_roll - pid_pitch + pid_yaw
-            motor4_throttle:float = throttle_rate - pid_roll - pid_pitch - pid_yaw
+                # Capture end timestamp for current PID loop
+                prev_pid_timestamp = time.ticks_us()
 
-            # Save PID values for subsequent calculations
-            prev_pid_error_roll = pid_error_roll
-            prev_pid_error_pitch = pid_error_pitch
-            prev_pid_error_yaw = pid_error_yaw
-            prev_pid_inte_roll = pid_inte_roll
-            prev_pid_inte_pitch = pid_inte_pitch
-            prev_pid_inte_yaw = pid_inte_yaw
+                throttle_rate:float = desired_throttle_rate * THROTTLE_RANGE + min_throttle_rate
+                pid_roll:float = pid_prop_roll + pid_inte_roll + pid_deri_roll
+                pid_pitch:float = pid_prop_pitch + pid_inte_pitch + pid_deri_pitch
+                pid_yaw:float = pid_prop_yaw + pid_inte_yaw + pid_deri_yaw
 
-            # Calculate duty cycle
-            motor1_duty_cycle:int = int(min(max(motor1_throttle * 1000000, 0) + 1000000, 2000000))
-            motor2_duty_cycle:int = int(min(max(motor2_throttle * 1000000, 0) + 1000000, 2000000))
-            motor3_duty_cycle:int = int(min(max(motor3_throttle * 1000000, 0) + 1000000, 2000000))
-            motor4_duty_cycle:int = int(min(max(motor4_throttle * 1000000, 0) + 1000000, 2000000))
+                # Throttle calculations (cross configuration)
+                motor1_throttle:float = throttle_rate + pid_roll + pid_pitch + pid_yaw
+                motor2_throttle:float = throttle_rate + pid_roll - pid_pitch - pid_yaw
+                motor3_throttle:float = throttle_rate - pid_roll - pid_pitch + pid_yaw
+                motor4_throttle:float = throttle_rate - pid_roll - pid_pitch - pid_yaw
 
-            motor1.duty_ns(motor1_duty_cycle)
-            motor2.duty_ns(motor2_duty_cycle)
-            motor3.duty_ns(motor3_duty_cycle)
-            motor4.duty_ns(motor4_duty_cycle)
+                # Save PID values for subsequent calculations
+                prev_pid_error_roll = pid_error_roll
+                prev_pid_error_pitch = pid_error_pitch
+                prev_pid_error_yaw = pid_error_yaw
+                prev_pid_inte_roll = pid_inte_roll
+                prev_pid_inte_pitch = pid_inte_pitch
+                prev_pid_inte_yaw = pid_inte_yaw
 
-            # print(normalised_rc_values)
-            # print(normalised_gyro_values[GYRO_INDEX_PITCH])
-            print(motor1_throttle, motor2_throttle, motor3_throttle, motor4_throttle)
-            # print(motor1_duty_cycle, motor2_duty_cycle, motor3_duty_cycle, motor4_duty_cycle)
-        except:
-            break
+                # Calculate duty cycle
+                motor1_duty_cycle:int = int(min(max(motor1_throttle * 1000000, 0) + 1000000, 2000000))
+                motor2_duty_cycle:int = int(min(max(motor2_throttle * 1000000, 0) + 1000000, 2000000))
+                motor3_duty_cycle:int = int(min(max(motor3_throttle * 1000000, 0) + 1000000, 2000000))
+                motor4_duty_cycle:int = int(min(max(motor4_throttle * 1000000, 0) + 1000000, 2000000))
 
-        # print("INFO  >>>>   Loop duration:", pid_cycle_time) # Target duration is less than 0.004 s
+                motor1.duty_ns(motor1_duty_cycle)
+                motor2.duty_ns(motor2_duty_cycle)
+                motor3.duty_ns(motor3_duty_cycle)
+                motor4.duty_ns(motor4_duty_cycle)
+
+                # print(normalised_rc_values)
+                # print(normalised_gyro_values[GYRO_INDEX_PITCH])
+                # print(motor1_throttle, motor2_throttle, motor3_throttle, motor4_throttle)
+                # print(motor1_duty_cycle, motor2_duty_cycle, motor3_duty_cycle, motor4_duty_cycle)
+            except:
+                break
+
+            print("INFO  >>>>   Loop duration:", pid_cycle_time) # Target duration is less than 0.004 s
+        else:
+            try:
+                rc_read()
+                if normalised_rc_values[RC_EXTRA1_CH] == 1:
+                    if normalised_rc_values[RC_THROTTLE_CH] == 0.0:
+                        motors_are_armed = True
+            except:
+                break
 
     # Out of while loop
 else:

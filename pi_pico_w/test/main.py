@@ -17,7 +17,7 @@ gyro_range:int = 500 # 250, 500, 1000, 2000 dps (IMU_REG_GYRO_CONFIG[3:4])
 acce_range:int = 4   # 2, 4, 8, 16 g (IMU_REG_ACCE_CONFIG[3:4])
 
 min_throttle_rate:float = 0.10  # Maximum throttle at 0% input (does not generate thrust)
-max_throttle_rate:float = 0.40  # Maximum throttle at 100% input (limits acceleration)
+max_throttle_rate:float = 0.80  # Maximum throttle at 100% input (limits acceleration and throttle)
 
 
 ##### PID settings #####
@@ -159,7 +159,11 @@ def setup() -> int:
         print("ERROR >>>>   RC receiver setup --> FAIL\n")
 
     try:
-        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_PWR_MGMT1, bytes(1))   # Wake command
+        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_PWR_MGMT1, bytes(128)) # Reset all registers
+        time.sleep_ms(100)
+        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_PWR_MGMT1, bytes(9))   # Wake, disable temperature sensor
+        time.sleep_ms(100)
+        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_SMPLRT_DIV, bytes(3))  # Set sensor sample rate to 250 Hz
         imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_CONFIG, bytes(5))      # Set accelerometer LPF to 10 Hz
         imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_CONFIG, bytes(8)) # Set gyroscope scale to 500 dps
         print("INFO  >>>>   MPU-6050 setup --> SUCCESS\n")
@@ -190,7 +194,26 @@ def setup() -> int:
         error_list.append("IMU I2C read error.")
         print("ERROR >>>>   MPU-6050 verify settings -> FAIL\n")
 
-    # Calcluate gyroscope bias
+    try:
+        motor1.freq(250)
+        motor2.freq(250)
+        motor3.freq(250)
+        motor4.freq(250)
+        print("INFO  >>>>   Set motor PWM freq to 250 Hz --> SUCCESS\n")
+    except:
+        error_raised_flag = True
+        error_list.append("Unable to set motor PWM freq to 250 Hz.")
+        print("ERROR >>>>   Set motor PWM freq to 250 Hz --> FAIL\n")
+
+    calc_gyro_bias()
+
+    if not error_raised_flag:
+        return 0
+    else:
+        return 1
+
+
+def calc_gyro_bias() -> None:
     gyro_bias_x_data:list[float] = []
     gyro_bias_y_data:list[float] = []
     gyro_bias_z_data:list[float] = []
@@ -209,22 +232,6 @@ def setup() -> int:
     gyro_offset_bias[GYRO_Y_OFFSET] = sum(gyro_bias_y_data) / gyro_bias_data_points
     gyro_offset_bias[GYRO_Z_OFFSET] = sum(gyro_bias_z_data) / gyro_bias_data_points
     print("INFO  >>>>   Gyroscope offsets saved. Offsets:\nINFO  >>>>   X: {}\nINFO  >>>>   Y: {}\nINFO  >>>>   Z: {}\n".format(gyro_offset_bias[GYRO_X_OFFSET], gyro_offset_bias[GYRO_Y_OFFSET], gyro_offset_bias[GYRO_Z_OFFSET]))
-
-    try:
-        motor1.freq(250)
-        motor2.freq(250)
-        motor3.freq(250)
-        motor4.freq(250)
-        print("INFO  >>>>   Set motor PWM freq to 250 Hz --> SUCCESS\n")
-    except:
-        error_raised_flag = True
-        error_list.append("Unable to set motor PWM freq to 250 Hz.")
-        print("ERROR >>>>   Set motor PWM freq to 250 Hz --> FAIL\n")
-
-    if not error_raised_flag:
-        return 0
-    else:
-        return 1
 
 
 def rc_read() -> None:
@@ -262,9 +269,15 @@ def rc_read() -> None:
                     break
 
     # Normalise data
-    for index in range(6):
-        # Normalise to 0.0-1.0 as these values are scaled with respect to the maximum rates defined in settings
-        normalised_rc_values[index] = float(raw_rc_values[index]*0.001 - 1) # From 1000-2000 to 0.0-1.0
+    # for index in range(6):
+    #     # Normalise 1000-2000 to 0.0-1.0
+    #     normalised_rc_values[index] = float(raw_rc_values[index]*0.001 - 1)
+    normalised_rc_values[RC_THROTTLE_CH] = float(raw_rc_values[RC_THROTTLE_CH]*0.001 - 1) # Normalise from 1000-2000 to 0.0-1.0
+    normalised_rc_values[RC_ROLL_CH] = float((raw_rc_values[RC_ROLL_CH] - 1500) * 0.002) # Normalise from 1000-2000 to -1-1
+    normalised_rc_values[RC_PITCH_CH] = float((raw_rc_values[RC_PITCH_CH] - 1500) * 0.002) # Normalise from 1000-2000 to -1-1
+    normalised_rc_values[RC_YAW_CH] = float(-((raw_rc_values[RC_YAW_CH] - 1500) * 0.002)) # Normalise from 1000-2000 to -1-1
+    normalised_rc_values[RC_EXTRA1_CH] = int(raw_rc_values[RC_EXTRA1_CH]*0.001 - 1) # Normalise from 1000-2000 to 0-1
+    normalised_rc_values[RC_EXTRA2_CH] = int(raw_rc_values[RC_EXTRA2_CH]*0.001 - 1) # Normalise from 1000-2000 to 0-1
 
 
 def imu_read() -> None:
@@ -276,45 +289,31 @@ def imu_read() -> None:
     byte for each measurement.
     """
 
-    x_hi = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_X_HI, 1), 'little')
-    x_lo = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_X_LO, 1), 'little')
-    y_hi = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_HI, 1), 'little')
-    y_lo = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_LO, 1), 'little')
-    z_hi = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_HI, 1), 'little')
-    z_lo = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_LO, 1), 'little')
+    x_hi = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_X_HI, 1), 'big')
+    x_lo = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_X_LO, 1), 'big')
+    y_hi = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_HI, 1), 'big')
+    y_lo = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_LO, 1), 'big')
+    z_hi = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_HI, 1), 'big')
+    z_lo = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_LO, 1), 'big')
 
     x_value = (x_hi << 8) | x_lo
     y_value = (y_hi << 8) | y_lo
     z_value = (z_hi << 8) | z_lo
 
-    print(x_value, y_value, z_value)
-
-    if x_hi > 127:
-        normalised_gyro_values[0] = (~x_value + 1) * SCALE_MULTIPLIER_GYRO - gyro_offset_bias[0]
+    if x_value > 32767:
+        normalised_gyro_values[GYRO_INDEX_ROLL] = (x_value - 65536) * SCALE_MULTIPLIER_GYRO - gyro_offset_bias[GYRO_INDEX_ROLL]
     else:
-        normalised_gyro_values[0] = x_value
+        normalised_gyro_values[GYRO_INDEX_ROLL] = x_value * SCALE_MULTIPLIER_GYRO - gyro_offset_bias[GYRO_INDEX_ROLL]
 
-    if y_hi > 127:
-        normalised_gyro_values[1] = (~y_value + 1) * SCALE_MULTIPLIER_GYRO - gyro_offset_bias[1]
+    if y_value > 32767:
+        normalised_gyro_values[GYRO_INDEX_PITCH] = (y_value - 65536) * SCALE_MULTIPLIER_GYRO - gyro_offset_bias[GYRO_INDEX_PITCH]
     else:
-        normalised_gyro_values[1] = y_value
+        normalised_gyro_values[GYRO_INDEX_PITCH] = y_value * SCALE_MULTIPLIER_GYRO - gyro_offset_bias[GYRO_INDEX_PITCH]
 
-    if z_hi > 127:
-        normalised_gyro_values[2] = (~z_value + 1) * SCALE_MULTIPLIER_GYRO - gyro_offset_bias[2]
+    if z_value > 32767:
+        normalised_gyro_values[GYRO_INDEX_YAW] = (z_value - 65536) * SCALE_MULTIPLIER_GYRO - gyro_offset_bias[GYRO_INDEX_YAW]
     else:
-        normalised_gyro_values[2] = z_value
-
-    print(normalised_gyro_values)
-
-    # for axis in range(3):
-    #     value = (raw_gyro_data[axis*2] << 8) | raw_gyro_data[axis*2 + 1]
-    #     # print("DEBUG >>>>   {}".format(value))
-
-    #     # Check if negative
-    #     if value >= 32768:
-    #         normalised_gyro_values[axis] = -(value^0xFFFF + 1) * SCALE_MULTIPLIER_GYRO - gyro_offset_bias[axis]
-    #     else:
-    #         normalised_gyro_values[axis] = value * SCALE_MULTIPLIER_GYRO - gyro_offset_bias[axis]
+        normalised_gyro_values[GYRO_INDEX_YAW] = z_value * SCALE_MULTIPLIER_GYRO - gyro_offset_bias[GYRO_INDEX_YAW]
 
 
 ##### Main #####
@@ -334,7 +333,6 @@ if setup() == 0:
         try:
             rc_read()
             imu_read()
-            print(normalised_gyro_values)
 
             desired_throttle_rate:float = normalised_rc_values[RC_THROTTLE_CH]
             desired_pitch_rate:float = normalised_rc_values[RC_PITCH_CH]
@@ -359,10 +357,16 @@ if setup() == 0:
             pid_inte_pitch:float = pid_error_pitch * pid_ki_pitch * pid_cycle_time + prev_pid_inte_pitch
             pid_inte_yaw:float = pid_error_yaw * pid_ki_yaw * pid_cycle_time + prev_pid_inte_yaw
 
+            # Calculate time elapsed since previous PID calculations
+            pid_cycle_time:float = time.ticks_diff(time.ticks_us(), prev_pid_timestamp) * 0.000001
+
             # Constrain within integral limits
             pid_inte_roll = max(min(pid_inte_roll, pid_integral_limit_pos), pid_integral_limit_neg)
             pid_inte_pitch = max(min(pid_inte_pitch, pid_integral_limit_pos), pid_integral_limit_neg)
             pid_inte_yaw = max(min(pid_inte_yaw, pid_integral_limit_pos), pid_integral_limit_neg)
+
+            # Calculate time elapsed since previous PID calculations
+            pid_cycle_time:float = time.ticks_diff(time.ticks_us(), prev_pid_timestamp) * 0.000001
 
             # Derivative calculations
             pid_deri_roll:float = (pid_error_roll - prev_pid_error_roll) * pid_kd_roll * pid_cycle_time
@@ -372,37 +376,39 @@ if setup() == 0:
             # Capture end timestamp for current PID loop
             prev_pid_timestamp = time.ticks_us()
 
-            throttle_rate:float = THROTTLE_RANGE * desired_throttle_rate + min_throttle_rate
+            throttle_rate:float = desired_throttle_rate * THROTTLE_RANGE + min_throttle_rate
             pid_roll:float = pid_prop_roll + pid_inte_roll + pid_deri_roll
             pid_pitch:float = pid_prop_pitch + pid_inte_pitch + pid_deri_pitch
             pid_yaw:float = pid_prop_yaw + pid_inte_yaw + pid_deri_yaw
 
             # Throttle calculations (cross configuration)
-            motor1_throttle:float = throttle_rate + pid_roll + pid_pitch - pid_yaw
-            motor2_throttle:float = throttle_rate - pid_roll + pid_pitch + pid_yaw
-            motor3_throttle:float = throttle_rate + pid_roll - pid_pitch + pid_yaw
+            motor1_throttle:float = throttle_rate + pid_roll + pid_pitch + pid_yaw
+            motor2_throttle:float = throttle_rate + pid_roll - pid_pitch - pid_yaw
+            motor3_throttle:float = throttle_rate - pid_roll - pid_pitch + pid_yaw
             motor4_throttle:float = throttle_rate - pid_roll - pid_pitch - pid_yaw
 
             # Save PID values for subsequent calculations
-            prev_pid_error_roll = 0.0
-            prev_pid_error_pitch = 0.0
-            prev_pid_error_yaw = 0.0
-            prev_pid_inte_roll = 0.0
-            prev_pid_inte_pitch = 0.0
-            prev_pid_inte_yaw = 0.0
+            prev_pid_error_roll = pid_error_roll
+            prev_pid_error_pitch = pid_error_pitch
+            prev_pid_error_yaw = pid_error_yaw
+            prev_pid_inte_roll = pid_inte_roll
+            prev_pid_inte_pitch = pid_inte_pitch
+            prev_pid_inte_yaw = pid_inte_yaw
 
             # Calculate duty cycle
-            motor1_duty_cycle:int = int(max(min(max(motor1_throttle * 1000000, 0) * 1000000 + 1000000, 2000000), 1000000))
-            motor2_duty_cycle:int = int(max(min(max(motor2_throttle * 1000000, 0) * 1000000 + 1000000, 2000000), 1000000))
-            motor3_duty_cycle:int = int(max(min(max(motor3_throttle * 1000000, 0) * 1000000 + 1000000, 2000000), 1000000))
-            motor4_duty_cycle:int = int(max(min(max(motor4_throttle * 1000000, 0) * 1000000 + 1000000, 2000000), 1000000))
+            motor1_duty_cycle:int = int(min(max(motor1_throttle * 1000000, 0) + 1000000, 2000000))
+            motor2_duty_cycle:int = int(min(max(motor2_throttle * 1000000, 0) + 1000000, 2000000))
+            motor3_duty_cycle:int = int(min(max(motor3_throttle * 1000000, 0) + 1000000, 2000000))
+            motor4_duty_cycle:int = int(min(max(motor4_throttle * 1000000, 0) + 1000000, 2000000))
 
             motor1.duty_ns(motor1_duty_cycle)
             motor2.duty_ns(motor2_duty_cycle)
             motor3.duty_ns(motor3_duty_cycle)
             motor4.duty_ns(motor4_duty_cycle)
 
-            # print(motor1_throttle, motor2_throttle, motor3_throttle, motor4_throttle)
+            # print(normalised_rc_values)
+            # print(normalised_gyro_values[GYRO_INDEX_PITCH])
+            print(motor1_throttle, motor2_throttle, motor3_throttle, motor4_throttle)
             # print(motor1_duty_cycle, motor2_duty_cycle, motor3_duty_cycle, motor4_duty_cycle)
         except:
             break

@@ -85,7 +85,7 @@ Settings available:
 ##### Imports #####
 
 import time
-from machine import Pin, UART, I2C, PWM, freq
+from machine import Pin, UART, PWM, freq
 
 
 ##### Constants #####

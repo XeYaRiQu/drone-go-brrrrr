@@ -263,12 +263,12 @@ def rc_read() -> None:
     # for index in range(6):
     #     # Normalise 1000-2000 to 0.0-1.0
     #     normalised_rc_values[index] = float(raw_rc_values[index]*0.001 - 1)
-    normalised_rc_values[RC_THROTTLE_CH] = float(raw_rc_values[RC_THROTTLE_CH]*0.001 - 1) # Normalise from 1000-2000 to 0.0-1.0
+    normalised_rc_values[RC_THROTTLE_CH] = float(raw_rc_values[RC_THROTTLE_CH] * 0.001 - 1) # Normalise from 1000-2000 to 0.0-1.0
     normalised_rc_values[RC_ROLL_CH] = float((raw_rc_values[RC_ROLL_CH] - 1500) * 0.002) # Normalise from 1000-2000 to -1-1
     normalised_rc_values[RC_PITCH_CH] = float((raw_rc_values[RC_PITCH_CH] - 1500) * 0.002) # Normalise from 1000-2000 to -1-1
     normalised_rc_values[RC_YAW_CH] = float(-((raw_rc_values[RC_YAW_CH] - 1500) * 0.002)) # Normalise from 1000-2000 to -1-1
-    normalised_rc_values[RC_EXTRA1_CH] = int(raw_rc_values[RC_EXTRA1_CH]*0.001 - 1) # Normalise from 1000-2000 to 0-1
-    normalised_rc_values[RC_EXTRA2_CH] = int(raw_rc_values[RC_EXTRA2_CH]*0.001 - 1) # Normalise from 1000-2000 to 0-1
+    normalised_rc_values[RC_EXTRA1_CH] = int(raw_rc_values[RC_EXTRA1_CH] * 0.001 - 1) # Normalise from 1000-2000 to 0-1
+    normalised_rc_values[RC_EXTRA2_CH] = int(raw_rc_values[RC_EXTRA2_CH] * 0.001 - 1) # Normalise from 1000-2000 to 0-1
 
 
 def imu_read() -> None:

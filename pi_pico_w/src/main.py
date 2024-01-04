@@ -446,3 +446,7 @@ else:
 
     for error in error_list:
         print("ERROR >>>>  ", error)
+
+    while True:
+        led.toggle()
+        time.sleep_ms(50)

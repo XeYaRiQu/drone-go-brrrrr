@@ -16,7 +16,7 @@ from machine import Pin, UART, I2C, PWM, freq
 gyro_range:int = 500 # 250, 500, 1000, 2000 dps (IMU_REG_GYRO_CONFIG[3:4])
 acce_range:int = 4   # 2, 4, 8, 16 g (IMU_REG_ACCE_CONFIG[3:4])
 
-min_throttle_rate:float = 0.10  # Maximum throttle at 0% input (does not generate thrust)
+min_throttle_rate:float = 0.07  # Maximum throttle at 0% input (does not generate thrust)
 max_throttle_rate:float = 0.80  # Maximum throttle at 100% input (limits acceleration and throttle)
 
 
@@ -109,7 +109,7 @@ motor1:PWM = PWM(MOTOR1_GPIO)
 motor2:PWM = PWM(MOTOR2_GPIO)
 motor3:PWM = PWM(MOTOR3_GPIO)
 motor4:PWM = PWM(MOTOR4_GPIO)
-
+led=LED_GPIO
 
 ##### Others #####
 
@@ -130,6 +130,7 @@ prev_pid_inte_yaw:float = 0.0
 
 motors_are_armed:bool = False
 
+
 ##### Functions #####
 
 def setup() -> int:
@@ -139,9 +140,9 @@ def setup() -> int:
     # Flash LED for 5 seconds
     for i in range(5):
         for j in range(2):
-            LED_GPIO.toggle()
+            led.toggle()
             time.sleep_ms(500)
-    LED_GPIO.off()
+    led.off()
 
     try:
         freq(250000000)
@@ -194,17 +195,6 @@ def setup() -> int:
         error_raised_flag = True
         error_list.append("IMU I2C read error.")
         print("ERROR >>>>   MPU-6050 verify settings -> FAIL\n")
-
-    try:
-        motor1.freq(250)
-        motor2.freq(250)
-        motor3.freq(250)
-        motor4.freq(250)
-        print("INFO  >>>>   Set motor PWM freq to 250 Hz --> SUCCESS\n")
-    except:
-        error_raised_flag = True
-        error_list.append("Unable to set motor PWM freq to 250 Hz.")
-        print("ERROR >>>>   Set motor PWM freq to 250 Hz --> FAIL\n")
 
     calc_gyro_bias()
 
@@ -326,9 +316,9 @@ if setup() == 0:
     # Flash LED for 5 seconds
     for i in range(5):
         for j in range(5):
-            LED_GPIO.toggle()
+            led.toggle()
             time.sleep_ms(200)
-    LED_GPIO.off()
+    led.off()
 
     while True:
         if motors_are_armed:
@@ -337,6 +327,10 @@ if setup() == 0:
 
                 if normalised_rc_values[RC_EXTRA1_CH] == 0:
                     if normalised_rc_values[RC_THROTTLE_CH] == 0.0:
+                        motor1.deinit()
+                        motor2.deinit()
+                        motor3.deinit()
+                        motor4.deinit()
                         motors_are_armed = False
 
                 imu_read()
@@ -426,7 +420,23 @@ if setup() == 0:
                 rc_read()
                 if normalised_rc_values[RC_EXTRA1_CH] == 1:
                     if normalised_rc_values[RC_THROTTLE_CH] == 0.0:
+                        motor1.freq(250)
+                        motor2.freq(250)
+                        motor3.freq(250)
+                        motor4.freq(250)
                         motors_are_armed = True
+                        takeoff_delay = time.ticks_ms() + 1000
+
+                        while time.ticks_ms() < takeoff_delay:
+                            motor1.duty_ns(1000000)
+                            motor2.duty_ns(1000000)
+                            motor3.duty_ns(1000000)
+                            motor4.duty_ns(1000000)
+                else:
+                        motor1.deinit()
+                        motor2.deinit()
+                        motor3.deinit()
+                        motor4.deinit()
             except:
                 break
 

@@ -39,7 +39,7 @@ pid_kd_pitch:float = 0.00002571429
 pid_kd_yaw:float = 0.0
 
 pid_integral_limit_pos:float = 100.0
-pid_integral_limit_neg:float = -pid_integral_limit_pos
+pid_integral_limit_neg:float = -100.0
 
 
 ##### Pin settings #####
@@ -166,8 +166,8 @@ def setup() -> int:
         imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_PWR_MGMT1, bytes(9))   # Wake, disable temperature sensor
         time.sleep_ms(100)
         imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_SMPLRT_DIV, bytes(3))  # Set sensor sample rate to 250 Hz
-        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_CONFIG, bytes(5))      # Set accelerometer LPF to 10 Hz
         imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_CONFIG, bytes(8)) # Set gyroscope scale to 500 dps
+        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_CONFIG, bytes(5))      # Set accelerometer LPF to 10 Hz
         print("INFO  >>>>   MPU-6050 setup --> SUCCESS\n")
     except:
         error_raised_flag = True
@@ -317,6 +317,7 @@ if setup() == 0:
             time.sleep_ms(200)
     led.off()
 
+    # Main loop start
     while True:
         if motors_are_armed:
             rc_read()
@@ -430,7 +431,7 @@ if setup() == 0:
                     motor2.deinit()
                     motor3.deinit()
                     motor4.deinit()
-    # Out of while loop
+    # Main loop end
 else:
     print("ERROR >>>>   Setup failed.\n")
 

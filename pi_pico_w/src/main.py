@@ -186,7 +186,7 @@ def setup() -> int:
             print("ERROR >>>>   MPU-6050 verify WHO_AM_I -> FAIL\n")
 
         # Low pass filter check
-        if int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_CONFIG, 1), 'big') == 5:
+        if int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_CONFIG, 1), 'big') == 3:
             print("INFO  >>>>   MPU-6050 verify DLPF -> SUCCESS\n")
         else:
             # Masking fail flag here as DLPF does not seem to retain settings (pending further investigation)

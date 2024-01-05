@@ -219,6 +219,7 @@ def calc_gyro_bias() -> None:
         gyro_bias_z_data.append(normalised_gyro_values[2])
         gyro_bias_data_points += 1
         time.sleep_ms(50)
+
     gyro_offset_bias[GYRO_X_OFFSET] = sum(gyro_bias_x_data) / gyro_bias_data_points
     gyro_offset_bias[GYRO_Y_OFFSET] = sum(gyro_bias_y_data) / gyro_bias_data_points
     gyro_offset_bias[GYRO_Z_OFFSET] = sum(gyro_bias_z_data) / gyro_bias_data_points
@@ -257,15 +258,15 @@ def rc_read() -> None:
                     for channel in range(6):
                         raw_rc_values[channel] = (buffer[channel*2 + 1] << 8) + buffer[channel*2]
 
-                    break
+                    # Normalise data
+                    normalised_rc_values[RC_THROTTLE_CH] = float(raw_rc_values[RC_THROTTLE_CH] * 0.001 - 1) # Normalise from 1000-2000 to 0.0-1.0
+                    normalised_rc_values[RC_ROLL_CH] = float((raw_rc_values[RC_ROLL_CH] - 1500) * 0.002) # Normalise from 1000-2000 to -1-1
+                    normalised_rc_values[RC_PITCH_CH] = float((raw_rc_values[RC_PITCH_CH] - 1500) * 0.002) # Normalise from 1000-2000 to -1-1
+                    normalised_rc_values[RC_YAW_CH] = float(-((raw_rc_values[RC_YAW_CH] - 1500) * 0.002)) # Normalise from 1000-2000 to -1-1
+                    normalised_rc_values[RC_EXTRA1_CH] = int(raw_rc_values[RC_EXTRA1_CH] * 0.001 - 1) # Normalise from 1000-2000 to 0-1
+                    normalised_rc_values[RC_EXTRA2_CH] = int(raw_rc_values[RC_EXTRA2_CH] * 0.001 - 1) # Normalise from 1000-2000 to 0-1
 
-    # Normalise data
-    normalised_rc_values[RC_THROTTLE_CH] = float(raw_rc_values[RC_THROTTLE_CH] * 0.001 - 1) # Normalise from 1000-2000 to 0.0-1.0
-    normalised_rc_values[RC_ROLL_CH] = float((raw_rc_values[RC_ROLL_CH] - 1500) * 0.002) # Normalise from 1000-2000 to -1-1
-    normalised_rc_values[RC_PITCH_CH] = float((raw_rc_values[RC_PITCH_CH] - 1500) * 0.002) # Normalise from 1000-2000 to -1-1
-    normalised_rc_values[RC_YAW_CH] = float(-((raw_rc_values[RC_YAW_CH] - 1500) * 0.002)) # Normalise from 1000-2000 to -1-1
-    normalised_rc_values[RC_EXTRA1_CH] = int(raw_rc_values[RC_EXTRA1_CH] * 0.001 - 1) # Normalise from 1000-2000 to 0-1
-    normalised_rc_values[RC_EXTRA2_CH] = int(raw_rc_values[RC_EXTRA2_CH] * 0.001 - 1) # Normalise from 1000-2000 to 0-1
+                    break
 
 
 def imu_read() -> None:
@@ -331,7 +332,6 @@ if setup() == 0:
                     motors_are_armed = False
 
             imu_read()
-
             desired_throttle_rate:float = normalised_rc_values[RC_THROTTLE_CH]
             desired_pitch_rate:float = normalised_rc_values[RC_PITCH_CH]
             desired_roll_rate:float = normalised_rc_values[RC_ROLL_CH]
@@ -394,15 +394,10 @@ if setup() == 0:
             prev_pid_inte_yaw = pid_inte_yaw
 
             # Calculate duty cycle
-            motor1_duty_cycle:int = int(min(max(motor1_throttle * 1000000, 0) + 1000000, 2000000))
-            motor2_duty_cycle:int = int(min(max(motor2_throttle * 1000000, 0) + 1000000, 2000000))
-            motor3_duty_cycle:int = int(min(max(motor3_throttle * 1000000, 0) + 1000000, 2000000))
-            motor4_duty_cycle:int = int(min(max(motor4_throttle * 1000000, 0) + 1000000, 2000000))
-
-            motor1.duty_ns(motor1_duty_cycle)
-            motor2.duty_ns(motor2_duty_cycle)
-            motor3.duty_ns(motor3_duty_cycle)
-            motor4.duty_ns(motor4_duty_cycle)
+            motor1.duty_ns(int(min(max(motor1_throttle * 1000000, 0) + 1000000, 2000000)))
+            motor2.duty_ns(int(min(max(motor2_throttle * 1000000, 0) + 1000000, 2000000)))
+            motor3.duty_ns(int(min(max(motor3_throttle * 1000000, 0) + 1000000, 2000000)))
+            motor4.duty_ns(int(min(max(motor4_throttle * 1000000, 0) + 1000000, 2000000)))
 
             # DEBUG PRINTS
             # print(normalised_rc_values)

@@ -52,10 +52,10 @@ RC_GPIO_OUT = Pin(4)
 IMU_GPIO_SDA = Pin(12, pull=Pin.PULL_UP)
 IMU_GPIO_SCL = Pin(13, pull=Pin.PULL_UP)
 
-MOTOR1_GPIO = Pin(2)
-MOTOR2_GPIO = Pin(28)
-MOTOR3_GPIO = Pin(15)
-MOTOR4_GPIO = Pin(16)
+MOTOR1_GPIO = Pin(16)
+MOTOR2_GPIO = Pin(15)
+MOTOR3_GPIO = Pin(2)
+MOTOR4_GPIO = Pin(28)
 
 
 ##### Constants #####

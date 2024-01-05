@@ -357,16 +357,14 @@ if setup() == 0:
             pid_inte_pitch:float = pid_error_pitch * pid_ki_pitch * pid_cycle_time + prev_pid_inte_pitch
             pid_inte_yaw:float = pid_error_yaw * pid_ki_yaw * pid_cycle_time + prev_pid_inte_yaw
 
-            # Calculate time elapsed since previous PID calculations
-            pid_cycle_time:float = time.ticks_diff(time.ticks_us(), prev_pid_timestamp) * 0.000001
-
             # Constrain within integral limits
             pid_inte_roll = max(min(pid_inte_roll, pid_integral_limit_pos), pid_integral_limit_neg)
             pid_inte_pitch = max(min(pid_inte_pitch, pid_integral_limit_pos), pid_integral_limit_neg)
             pid_inte_yaw = max(min(pid_inte_yaw, pid_integral_limit_pos), pid_integral_limit_neg)
 
             # Calculate time elapsed since previous PID calculations
-            pid_cycle_time:float = time.ticks_diff(time.ticks_us(), prev_pid_timestamp) * 0.000001
+            # pid_cycle_time:float = time.ticks_diff(time.ticks_us(), prev_pid_timestamp) * 0.000001
+            pid_cycle_time:float = 1/time.ticks_diff(time.ticks_us(), prev_pid_timestamp) * 0.000001
 
             # Derivative calculations
             pid_deri_roll:float = (pid_error_roll - prev_pid_error_roll) * pid_kd_roll * pid_cycle_time

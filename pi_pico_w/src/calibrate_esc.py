@@ -88,16 +88,6 @@ import time
 from machine import Pin, UART, PWM, freq
 
 
-##### Constants #####
-
-RC_THROTTLE_CH = 2
-RC_ROLL_CH = 0
-RC_PITCH_CH = 1
-RC_YAW_CH = 3
-RC_EXTRA1_CH = 4
-RC_EXTRA2_CH = 5
-
-
 ##### Pin settings #####
 
 LED_GPIO = Pin("LED", Pin.OUT)
@@ -109,6 +99,16 @@ MOTOR1_GPIO = Pin(2)
 MOTOR2_GPIO = Pin(28)
 MOTOR3_GPIO = Pin(15)
 MOTOR4_GPIO = Pin(16)
+
+
+##### Constants #####
+
+RC_THROTTLE_CH = 2
+RC_ROLL_CH = 0
+RC_PITCH_CH = 1
+RC_YAW_CH = 3
+RC_EXTRA1_CH = 4
+RC_EXTRA2_CH = 5
 
 
 ##### Enable pin IO #####
@@ -124,6 +124,7 @@ motor4:PWM = PWM(MOTOR4_GPIO)
 ##### Others #####
 
 raw_rc_values:list[int] = [0]*6
+normalised_rc_values:list[float] = [0.0]*6
 
 
 ##### Functions #####
@@ -162,6 +163,14 @@ def rc_read() -> None:
 
                     break
 
+    # Normalise data
+    normalised_rc_values[RC_THROTTLE_CH] = float(raw_rc_values[RC_THROTTLE_CH] * 0.001 - 1) # Normalise from 1000-2000 to 0.0-1.0
+    normalised_rc_values[RC_ROLL_CH] = float((raw_rc_values[RC_ROLL_CH] - 1500) * 0.002) # Normalise from 1000-2000 to -1-1
+    normalised_rc_values[RC_PITCH_CH] = float((raw_rc_values[RC_PITCH_CH] - 1500) * 0.002) # Normalise from 1000-2000 to -1-1
+    normalised_rc_values[RC_YAW_CH] = float(-((raw_rc_values[RC_YAW_CH] - 1500) * 0.002)) # Normalise from 1000-2000 to -1-1
+    normalised_rc_values[RC_EXTRA1_CH] = int(raw_rc_values[RC_EXTRA1_CH] * 0.001 - 1) # Normalise from 1000-2000 to 0-1
+    normalised_rc_values[RC_EXTRA2_CH] = int(raw_rc_values[RC_EXTRA2_CH] * 0.001 - 1) # Normalise from 1000-2000 to 0-1
+
 
 ##### Main #####
 
@@ -173,8 +182,23 @@ motor4.freq(250)
 
 while True:
     rc_read()
-    motor1.duty_ns(raw_rc_values[RC_THROTTLE_CH]*1000)
-    motor2.duty_ns(raw_rc_values[RC_THROTTLE_CH]*1000)
-    motor3.duty_ns(raw_rc_values[RC_THROTTLE_CH]*1000)
-    motor4.duty_ns(raw_rc_values[RC_THROTTLE_CH]*1000)
-    print(raw_rc_values)
+
+    if normalised_rc_values[RC_THROTTLE_CH] > 0.5:
+        motor1.duty_ns(2000000)
+        motor2.duty_ns(2000000)
+        motor3.duty_ns(2000000)
+        motor4.duty_ns(2000000)
+    else:
+        motor1.duty_ns(1000000)
+        motor2.duty_ns(1000000)
+        motor3.duty_ns(1000000)
+        motor4.duty_ns(1000000)
+
+    print(normalised_rc_values[RC_THROTTLE_CH])
+
+    if normalised_rc_values[RC_EXTRA1_CH] == 1:
+        motor1.deinit()
+        motor2.deinit()
+        motor3.deinit()
+        motor4.deinit()
+        break

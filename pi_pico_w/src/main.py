@@ -16,7 +16,7 @@ from machine import Pin, UART, I2C, PWM, freq
 gyro_range:int = 500 # 250, 500, 1000, 2000 dps (IMU_REG_GYRO_CONFIG[3:4])
 acce_range:int = 4   # 2, 4, 8, 16 g (IMU_REG_ACCE_CONFIG[3:4])
 
-min_throttle_rate:float = 0.07  # Maximum throttle at 0% input (does not generate thrust)
+min_throttle_rate:float = 0.07  # Maximum throttle at 0% input (does not generate lift)
 max_throttle_rate:float = 0.80  # Maximum throttle at 100% input (limits acceleration and throttle)
 
 

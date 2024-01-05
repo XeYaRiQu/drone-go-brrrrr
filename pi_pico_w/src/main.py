@@ -278,12 +278,12 @@ def imu_read() -> None:
     byte for each measurement.
     """
 
-    x_hi = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_X_HI, 1))
-    x_lo = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_X_LO, 1))
-    y_hi = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_HI, 1))
-    y_lo = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_LO, 1))
-    z_hi = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_HI, 1))
-    z_lo = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_LO, 1))
+    x_hi = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_X_HI, 1), 'big')
+    x_lo = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_X_LO, 1), 'big')
+    y_hi = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_HI, 1), 'big')
+    y_lo = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_LO, 1), 'big')
+    z_hi = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_HI, 1), 'big')
+    z_lo = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_LO, 1), 'big')
 
     x_value = (x_hi << 8) | x_lo
     y_value = (y_hi << 8) | y_lo
@@ -402,9 +402,8 @@ if setup() == 0:
             # DEBUG PRINTS
             # print(normalised_rc_values)
             # print(normalised_gyro_values[GYRO_INDEX_PITCH])
-            # print(motor1_throttle, motor2_throttle, motor3_throttle, motor4_throttle)
-            # print(motor1_duty_cycle, motor2_duty_cycle, motor3_duty_cycle, motor4_duty_cycle)
-            print("INFO  >>>>   Loop duration:", pid_cycle_time) # Target duration is less than 0.004 s
+            print(motor1_throttle, motor2_throttle, motor3_throttle, motor4_throttle)
+            # print("INFO  >>>>   Loop duration:", pid_cycle_time) # Target duration is less than 0.004 s
         else:
             rc_read()
             if normalised_rc_values[RC_EXTRA1_CH] == 1:

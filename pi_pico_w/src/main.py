@@ -278,12 +278,12 @@ def imu_read() -> None:
     byte for each measurement.
     """
 
-    x_hi = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_X_HI, 1), 'big')
-    x_lo = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_X_LO, 1), 'big')
-    y_hi = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_HI, 1), 'big')
-    y_lo = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_LO, 1), 'big')
-    z_hi = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_HI, 1), 'big')
-    z_lo = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_LO, 1), 'big')
+    x_hi = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_X_HI, 1))
+    x_lo = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_X_LO, 1))
+    y_hi = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_HI, 1))
+    y_lo = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_LO, 1))
+    z_hi = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_HI, 1))
+    z_lo = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_LO, 1))
 
     x_value = (x_hi << 8) | x_lo
     y_value = (y_hi << 8) | y_lo

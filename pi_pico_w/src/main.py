@@ -271,7 +271,7 @@ def rc_read() -> None:
 def imu_read() -> None:
     """
     The IMU measurements are 16-bit 2's complement values ranging from -32768
-    to 32767 which needs to be divided by the scale multipliers to obtain the
+    to 32767 which needs to be multiplied by the scale multipliers to obtain the
     physical values. These scale multipliers change depending on the range set
     in their respective register configs. The high byte is read before the low
     byte for each measurement.

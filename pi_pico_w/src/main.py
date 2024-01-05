@@ -218,7 +218,7 @@ def calc_gyro_bias() -> None:
         gyro_bias_y_data.append(normalised_gyro_values[1])
         gyro_bias_z_data.append(normalised_gyro_values[2])
         gyro_bias_data_points += 1
-        time.sleep_ms(100)
+        time.sleep_ms(50)
     gyro_offset_bias[GYRO_X_OFFSET] = sum(gyro_bias_x_data) / gyro_bias_data_points
     gyro_offset_bias[GYRO_Y_OFFSET] = sum(gyro_bias_y_data) / gyro_bias_data_points
     gyro_offset_bias[GYRO_Z_OFFSET] = sum(gyro_bias_z_data) / gyro_bias_data_points

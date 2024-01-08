@@ -1,0 +1,11 @@
+Pinout diagram for Adafruit MPU-6050
+             ______________
+             |    |__|    |
+ Vin (3-5 V) | ( )    ( ) | AD0
+Vout (3.3 V) | ( )    ( ) | FSYNC_IN
+         GND | ( )    ( ) | SCL_EXT (SCE)
+         SCL | ( )    ( ) | SDA_EXT (SDE)
+         SDA | ( )    ( ) | CLKIN
+   Interrupt | ( )    ( ) | GND
+             |    |‾‾|    |
+             ‾‾‾‾‾‾‾‾‾‾‾‾‾‾

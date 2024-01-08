@@ -1,0 +1,42 @@
+[0.030s] Invoking command in '/home/user/catkin_ws/src/build/navigation': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake /home/user/catkin_ws/src/navigation -DCMAKE_INSTALL_PREFIX=/home/user/catkin_ws/src/install/navigation
+[0.109s] -- The C compiler identification is GNU 11.4.0
+[0.171s] -- The CXX compiler identification is GNU 11.4.0
+[0.178s] -- Detecting C compiler ABI info
+[0.223s] -- Detecting C compiler ABI info - done
+[0.228s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.228s] -- Detecting C compile features
+[0.229s] -- Detecting C compile features - done
+[0.231s] -- Detecting CXX compiler ABI info
+[0.284s] -- Detecting CXX compiler ABI info - done
+[0.289s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.289s] -- Detecting CXX compile features
+[0.289s] -- Detecting CXX compile features - done
+[0.291s] -- Found ament_cmake: 2.3.0 (/opt/ros/rolling/share/ament_cmake/cmake)
+[0.401s] -- Found Python3: /usr/bin/python3.10 (found version "3.10.12") found components: Interpreter 
+[0.475s] -- Found ament_lint_auto: 0.16.0 (/opt/ros/rolling/share/ament_lint_auto/cmake)
+[0.532s] -- Added test 'lint_cmake' to check CMake code style
+[0.533s] -- Added test 'xmllint' to check XML markup files
+[0.535s] -- Configuring done
+[0.538s] -- Generating done
+[0.539s] -- Build files have been written to: /home/user/catkin_ws/src/build/navigation
+[0.546s] Invoked command in '/home/user/catkin_ws/src/build/navigation' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake /home/user/catkin_ws/src/navigation -DCMAKE_INSTALL_PREFIX=/home/user/catkin_ws/src/install/navigation
+[0.546s] Invoking command in '/home/user/catkin_ws/src/build/navigation': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /home/user/catkin_ws/src/build/navigation -- -j16 -l16
+[0.569s] Invoked command in '/home/user/catkin_ws/src/build/navigation' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --build /home/user/catkin_ws/src/build/navigation -- -j16 -l16
+[0.586s] Invoking command in '/home/user/catkin_ws/src/build/navigation': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /home/user/catkin_ws/src/build/navigation
+[0.589s] -- Install configuration: ""
+[0.590s] -- Installing: /home/user/catkin_ws/src/install/navigation/share/ament_index/resource_index/package_run_dependencies/navigation
+[0.590s] -- Installing: /home/user/catkin_ws/src/install/navigation/share/ament_index/resource_index/parent_prefix_path/navigation
+[0.590s] -- Installing: /home/user/catkin_ws/src/install/navigation/share/navigation/environment/ament_prefix_path.sh
+[0.590s] -- Installing: /home/user/catkin_ws/src/install/navigation/share/navigation/environment/ament_prefix_path.dsv
+[0.590s] -- Installing: /home/user/catkin_ws/src/install/navigation/share/navigation/environment/path.sh
+[0.590s] -- Installing: /home/user/catkin_ws/src/install/navigation/share/navigation/environment/path.dsv
+[0.590s] -- Installing: /home/user/catkin_ws/src/install/navigation/share/navigation/local_setup.bash
+[0.590s] -- Installing: /home/user/catkin_ws/src/install/navigation/share/navigation/local_setup.sh
+[0.590s] -- Installing: /home/user/catkin_ws/src/install/navigation/share/navigation/local_setup.zsh
+[0.591s] -- Installing: /home/user/catkin_ws/src/install/navigation/share/navigation/local_setup.dsv
+[0.591s] -- Installing: /home/user/catkin_ws/src/install/navigation/share/navigation/package.dsv
+[0.591s] -- Installing: /home/user/catkin_ws/src/install/navigation/share/ament_index/resource_index/packages/navigation
+[0.591s] -- Installing: /home/user/catkin_ws/src/install/navigation/share/navigation/cmake/navigationConfig.cmake
+[0.591s] -- Installing: /home/user/catkin_ws/src/install/navigation/share/navigation/cmake/navigationConfig-version.cmake
+[0.591s] -- Installing: /home/user/catkin_ws/src/install/navigation/share/navigation/package.xml
+[0.669s] Invoked command in '/home/user/catkin_ws/src/build/navigation' returned '0': CMAKE_PREFIX_PATH=/opt/ros/rolling /usr/bin/cmake --install /home/user/catkin_ws/src/build/navigation

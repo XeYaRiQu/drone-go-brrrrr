@@ -1,0 +1,24 @@
+services:
+  ros:
+    container_name: ros
+    privileged: true
+    network_mode: host
+    ipc: host
+    build: .
+    environment:
+      - DISPLAY=$DISPLAY
+      - QT_X11_NO_MITSHM=1
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority
+      - ./tmp/build:/home/user/catkin_ws/build
+      - ./tmp/install:/home/user/catkin_ws/install
+      - ./tmp/log:/home/user/catkin_ws/log
+      - ./simulator:/home/user/catkin_ws/src
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

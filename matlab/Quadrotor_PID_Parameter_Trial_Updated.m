@@ -20,15 +20,15 @@ l = 0.225 ;% m
 b = 1.140 * 10^-7 ;% Drag Coefficient
 
 %Declare Initial Conditions Desired Positions
-x_desired = -1 ;% X coordinate
+x_desired = 10 ;% X coordinate
 y_desired = 2 ; %Y Coordinate
 z_desired = 1 ; %Z coordinate
-phi_desired = 0.02; % Phi Angle in Radians
-theta_desired = 0.02 ; %Theta Angle in Radians
-psi_desired = -0.01 ;% Psi Angle in Radians
+%phi_desired = 0.02; % Phi Angle in Radians
+%theta_desired = 0.02 ; %Theta Angle in Radians
+%psi_desired = -0.01 ;% Psi Angle in Radians
 
 %Attitude Controller Parameters
-Kpphi_attitude= 25;
+Kpphi_attitude= 2.5;
 Kptheta_attitude = 2.5; 
 Kppsi_attitude = 2.5 ;
 
@@ -36,25 +36,25 @@ Kppsi_attitude = 2.5 ;
 %could be different from the actual intial attitude controller
 Kpphi =25;
 Kiphi = 2.5; 
-Kdphi = 2.5 ;
+Kdphi = 0 ;
 
 Kptheta = 2.5;
 Kitheta = 0.25; 
-Kdtheta = 0.25; 
+Kdtheta = 0; 
 
 Kppsi = 2.5;
 Kipsi = 0.5; 
-Kdpsi = 0.25; 
+Kdpsi = 0; 
 
 %Thrust Control Blocks - Gains of the PID Controller
 Kzi = 0.25; 
 Kzp = 0.25 ;
-Kzd = 0.25; 
+Kzd = 0; 
 
 % Desired Conditions in Parameters
-roll_d = 0.01 ;% Desired Roll 
-pitch_d = 0.01; %Desired Pitch
-yaw_d = 0.01 ;%Desired Yaw
+roll_d = 0.01 ;% Desired Roll  - this replaces Phi Desired
+pitch_d = 0.01; %Desired Pitch - this replaces Theta Desired
+yaw_d = 0.01 ;%Desired Yaw - this replaces Psi Desired in the parameter
 z_d = 10; %Desired Altitude
 z_dot_desired = 0; %Desired Linear Velocity
 

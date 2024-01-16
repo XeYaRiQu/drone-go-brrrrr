@@ -161,15 +161,15 @@ def setup() -> int:
         print("ERROR >>>>   RC receiver setup --> FAIL\n")
 
     try:
-        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_PWR_MGMT1, bytes(128)) # Reset all registers
+        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_PWR_MGMT1, bytearray(b'\x2B78')) # Reset all registers
         time.sleep_ms(100)
-        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_PWR_MGMT1, bytes(9))   # Wake, disable temperature sensor
+        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_PWR_MGMT1, bytearray(b'\x09'))   # Wake, disable temperature sensor
         time.sleep_ms(100)
-        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_SMPLRT_DIV, bytes(3))  # Set sensor sample rate to 250 Hz
+        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_SMPLRT_DIV, bytearray(b'\x03'))  # Set sensor sample rate to 250 Hz
         time.sleep_ms(100)
-        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_CONFIG, bytes(8)) # Set gyroscope scale to 500 dps
+        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_CONFIG, bytearray(b'\x08')) # Set gyroscope scale to 500 dps
         time.sleep_ms(100)
-        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_CONFIG, bytes(3))      # Set accelerometer LPF to 44 Hz and gyroscope LPF to 42 Hz
+        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_CONFIG, bytearray(b'\x03'))      # Set accelerometer LPF to 44 Hz and gyroscope LPF to 42 Hz
         print("INFO  >>>>   MPU-6050 setup --> SUCCESS\n")
     except:
         error_raised_flag = True
@@ -189,8 +189,7 @@ def setup() -> int:
         if int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_CONFIG, 1), 'big') == 3:
             print("INFO  >>>>   MPU-6050 verify DLPF -> SUCCESS\n")
         else:
-            # Masking fail flag here as DLPF does not seem to retain settings (pending further investigation)
-            # error_raised_flag = True
+            error_raised_flag = True
             error_list.append("MPU-6050 DLPF not set.")
             print("ERROR >>>>   MPU-6050 verify DLPF -> FAIL\n")
     except:

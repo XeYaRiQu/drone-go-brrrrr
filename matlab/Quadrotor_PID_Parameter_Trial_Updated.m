@@ -52,9 +52,9 @@ Kzp = 0.25 ;
 Kzd = 0; 
 
 % Desired Conditions in Parameters
-roll_d = 0.01 ;% Desired Roll  - this replaces Phi Desired
-pitch_d = 0.01; %Desired Pitch - this replaces Theta Desired
-yaw_d = 0.01 ;%Desired Yaw - this replaces Psi Desired in the parameter
+roll_d = 0.06; % Desired Roll  - this replaces Phi Desired
+pitch_d = 0.06; %Desired Pitch - this replaces Theta Desired
+yaw_d = 0.2 ;%Desired Yaw - this replaces Psi Desired in the parameter
 z_d = 10; %Desired Altitude
 z_dot_desired = 0; %Desired Linear Velocity
 

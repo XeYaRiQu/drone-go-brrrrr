@@ -13,7 +13,7 @@ from machine import Pin, UART, I2C, PWM, freq
 
 ##### General settings #####
 
-gyro_range:int = 500 # 250, 500, 1000, 2000 dps (IMU_REG_GYRO_CONFIG[3:4])
+gyro_range:int = 250 # 250, 500, 1000, 2000 dps (IMU_REG_GYRO_CONFIG[3:4])
 acce_range:int = 4   # 2, 4, 8, 16 g (IMU_REG_ACCE_CONFIG[3:4])
 
 min_throttle_rate:float = 0.07  # Maximum throttle at 0% input (does not generate lift)
@@ -52,10 +52,10 @@ RC_GPIO_OUT = Pin(4)
 IMU_GPIO_SDA = Pin(12, pull=Pin.PULL_UP)
 IMU_GPIO_SCL = Pin(13, pull=Pin.PULL_UP)
 
-MOTOR1_GPIO = Pin(16)
-MOTOR2_GPIO = Pin(15)
-MOTOR3_GPIO = Pin(2)
-MOTOR4_GPIO = Pin(28)
+MOTOR1_GPIO = Pin(2)
+MOTOR2_GPIO = Pin(28)
+MOTOR3_GPIO = Pin(16)
+MOTOR4_GPIO = Pin(15)
 
 
 ##### Constants #####
@@ -137,13 +137,6 @@ def setup() -> int:
     error_raised_flag:bool = False
     print("INFO  >>>>   Starting setup sequence.\n")
 
-    # Flash LED for 5 seconds
-    for i in range(5):
-        for j in range(2):
-            led.toggle()
-            time.sleep_ms(500)
-    led.off()
-
     try:
         freq(250000000)
         print("INFO  >>>>   Overclock RP2040 to 250 MHz --> SUCCESS.\n")
@@ -165,11 +158,11 @@ def setup() -> int:
         time.sleep_ms(100)
         imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_PWR_MGMT1, bytearray(b'\x09'))   # Wake, disable temperature sensor
         time.sleep_ms(100)
+        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_CONFIG, bytearray(b'\x03'))      # Set accelerometer LPF to 44 Hz and gyroscope LPF to 42 Hz
+        time.sleep_ms(100)
         imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_SMPLRT_DIV, bytearray(b'\x03'))  # Set sensor sample rate to 250 Hz
         time.sleep_ms(100)
-        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_CONFIG, bytearray(b'\x08')) # Set gyroscope scale to 500 dps
-        time.sleep_ms(100)
-        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_CONFIG, bytearray(b'\x03'))      # Set accelerometer LPF to 44 Hz and gyroscope LPF to 42 Hz
+        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_CONFIG, bytearray(b'\x00')) # Set gyroscope scale to 250 dps
         print("INFO  >>>>   MPU-6050 setup --> SUCCESS\n")
     except:
         error_raised_flag = True
@@ -185,13 +178,37 @@ def setup() -> int:
             error_list.append("MPU-6050 WHO_AM_I read error.")
             print("ERROR >>>>   MPU-6050 verify WHO_AM_I -> FAIL\n")
 
-        # Low pass filter check
-        if int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_CONFIG, 1), 'big') == 3:
-            print("INFO  >>>>   MPU-6050 verify DLPF -> SUCCESS\n")
+        # Sleep and temperature sensor disabled check
+        if int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_PWR_MGMT1, 1), 'big') == 9:
+            print("INFO  >>>>   MPU-6050 verify IMU_REG_PWR_MGMT1 -> SUCCESS\n")
         else:
             error_raised_flag = True
-            error_list.append("MPU-6050 DLPF not set.")
-            print("ERROR >>>>   MPU-6050 verify DLPF -> FAIL\n")
+            error_list.append("MPU-6050 IMU_REG_PWR_MGMT1 not set.")
+            print("ERROR >>>>   MPU-6050 verify IMU_REG_PWR_MGMT1 -> FAIL\n")
+
+        # Low pass filter check
+        if int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_CONFIG, 1), 'big') == 3:
+            print("INFO  >>>>   MPU-6050 verify IMU_REG_CONFIG -> SUCCESS\n")
+        else:
+            error_raised_flag = True
+            error_list.append("MPU-6050 IMU_REG_CONFIG not set.")
+            print("ERROR >>>>   MPU-6050 verify IMU_REG_CONFIG -> FAIL\n")
+
+        # Sample rate check
+        if int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_SMPLRT_DIV, 1), 'big') == 3:
+            print("INFO  >>>>   MPU-6050 verify IMU_REG_SMPLRT_DIV -> SUCCESS\n")
+        else:
+            error_raised_flag = True
+            error_list.append("MPU-6050 IMU_REG_SMPLRT_DIV not set.")
+            print("INFO  >>>>   MPU-6050 verify IMU_REG_SMPLRT_DIV -> FAIL\n")
+
+        # Gyroscope scale check
+        if int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_CONFIG, 1), 'big') == 0:
+            print("INFO  >>>>   MPU-6050 verify IMU_REG_GYRO_CONFIG -> SUCCESS\n")
+        else:
+            error_raised_flag = True
+            error_list.append("MPU-6050 IMU_REG_GYRO_CONFIG not set.")
+            print("ERROR >>>>   MPU-6050 verify IMU_REG_GYRO_CONFIG -> FAIL\n")
     except:
         error_raised_flag = True
         error_list.append("IMU I2C read error.")
@@ -285,7 +302,7 @@ def imu_read() -> None:
     y_lo = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_LO, 1), 'big')
     z_hi = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_HI, 1), 'big')
     z_lo = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_LO, 1), 'big')
-
+    print(x_hi, x_lo, y_hi, y_lo, z_hi, z_lo)
     x_value = (x_hi << 8) | x_lo
     y_value = (y_hi << 8) | y_lo
     z_value = (z_hi << 8) | z_lo
@@ -379,10 +396,12 @@ if setup() == 0:
             pid_yaw:float = pid_prop_yaw + pid_inte_yaw + pid_deri_yaw
 
             # Throttle calculations (cross configuration)
-            motor1_throttle:float = throttle_rate + pid_roll + pid_pitch + pid_yaw
+            # motor1_throttle:float = throttle_rate + pid_roll + pid_pitch + pid_yaw
+            motor1_throttle:float = throttle_rate - pid_roll - pid_pitch + pid_yaw
             motor2_throttle:float = throttle_rate + pid_roll - pid_pitch - pid_yaw
-            motor3_throttle:float = throttle_rate - pid_roll - pid_pitch + pid_yaw
-            motor4_throttle:float = throttle_rate - pid_roll - pid_pitch - pid_yaw
+            # motor3_throttle:float = throttle_rate - pid_roll - pid_pitch + pid_yaw
+            motor3_throttle:float = throttle_rate + pid_roll + pid_pitch + pid_yaw
+            motor4_throttle:float = throttle_rate - pid_roll + pid_pitch - pid_yaw
 
             # Save PID values for subsequent calculations
             prev_pid_error_roll = pid_error_roll
@@ -400,8 +419,8 @@ if setup() == 0:
 
             # DEBUG PRINTS
             # print(normalised_rc_values)
-            # print(normalised_gyro_values[GYRO_INDEX_PITCH])
-            print(motor1_throttle, motor2_throttle, motor3_throttle, motor4_throttle)
+            # print(normalised_gyro_values)
+            # print(motor1_throttle, motor2_throttle, motor3_throttle, motor4_throttle)
             # print("INFO  >>>>   Loop duration:", pid_cycle_time) # Target duration is less than 0.004 s
         else:
             rc_read()

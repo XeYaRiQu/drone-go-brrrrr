@@ -154,15 +154,15 @@ def setup() -> int:
         print("ERROR >>>>   RC receiver setup --> FAIL\n")
 
     try:
-        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_PWR_MGMT1, bytearray(b'\x2B78')) # Reset all registers
+        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_PWR_MGMT1, b'\x80')   # Reset all registers
         time.sleep_ms(100)
-        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_PWR_MGMT1, bytearray(b'\x09'))   # Wake, disable temperature sensor
+        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_PWR_MGMT1, b'\x09')   # Wake, disable temperature sensor
         time.sleep_ms(100)
-        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_CONFIG, bytearray(b'\x03'))      # Set accelerometer LPF to 44 Hz and gyroscope LPF to 42 Hz
+        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_SMPLRT_DIV, b'\x03')  # Set sensor sample rate to 250 Hz
         time.sleep_ms(100)
-        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_SMPLRT_DIV, bytearray(b'\x03'))  # Set sensor sample rate to 250 Hz
+        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_CONFIG, b'\x03')      # Set accelerometer LPF to 44 Hz and gyroscope LPF to 42 Hz
         time.sleep_ms(100)
-        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_CONFIG, bytearray(b'\x00')) # Set gyroscope scale to 250 dps
+        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_CONFIG, b'\x00') # Set gyroscope scale to 250 dps
         print("INFO  >>>>   MPU-6050 setup --> SUCCESS\n")
     except:
         error_raised_flag = True
@@ -302,7 +302,7 @@ def imu_read() -> None:
     y_lo = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_LO, 1), 'big')
     z_hi = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_HI, 1), 'big')
     z_lo = int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_LO, 1), 'big')
-    print(x_hi, x_lo, y_hi, y_lo, z_hi, z_lo)
+
     x_value = (x_hi << 8) | x_lo
     y_value = (y_hi << 8) | y_lo
     z_value = (z_hi << 8) | z_lo
@@ -420,7 +420,7 @@ if setup() == 0:
             # DEBUG PRINTS
             # print(normalised_rc_values)
             # print(normalised_gyro_values)
-            # print(motor1_throttle, motor2_throttle, motor3_throttle, motor4_throttle)
+            print(motor1_throttle, motor2_throttle, motor3_throttle, motor4_throttle)
             # print("INFO  >>>>   Loop duration:", pid_cycle_time) # Target duration is less than 0.004 s
         else:
             rc_read()

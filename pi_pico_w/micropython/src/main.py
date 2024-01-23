@@ -116,7 +116,7 @@ led=LED_GPIO
 ##### Others #####
 
 motors_are_armed:bool = False
-error_list:list = []
+error_list:list[str] = []
 raw_rc_values:list[int] = [0]*6
 normalised_rc_values:list[float] = [0.0]*6
 normalised_gyro_values:list[float] = [0.0]*3

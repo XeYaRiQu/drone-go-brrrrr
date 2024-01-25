@@ -16,9 +16,6 @@ from machine import Pin, UART, I2C, PWM, freq
 gyro_range:int = 250 # 250, 500, 1000, 2000 dps (IMU_REG_GYRO_CONFIG[3:4])
 acce_range:int = 4   # 2, 4, 8, 16 g (IMU_REG_ACCE_CONFIG[3:4])
 
-min_throttle_rate:float = 0.07  # Maximum throttle at 0% input (does not generate lift)
-max_throttle_rate:float = 0.80  # Maximum throttle at 100% input (limits acceleration and throttle)
-
 
 ##### PID settings #####
 
@@ -99,7 +96,7 @@ GYRO_Z_OFFSET = 2
 SCALE_MULTIPLIER_ACCE:float = acce_range / 32767
 SCALE_MULTIPLIER_GYRO:float = gyro_range / 32767
 
-THROTTLE_RANGE = max_throttle_rate - min_throttle_rate
+# THROTTLE_RANGE = max_throttle_rate - min_throttle_rate
 
 
 ##### Enable pin IO #####
@@ -129,6 +126,17 @@ prev_pid_error_yaw:float = 0.0
 prev_pid_inte_roll:float = 0.0
 prev_pid_inte_pitch:float = 0.0
 prev_pid_inte_yaw:float = 0.0
+
+angle_roll:float = 0.0
+angle_pitch:float = 0.0
+throttle:float = 1000.0
+max_throttle_rate:float = 0.20  # Maximum rate of change for throttle at 100% input (limits acceleration)
+max_angle_roll:float = 45.0
+max_angle_pitch:float = 45.0
+max_throttle:float = 2000.0
+min_angle_roll:float = -45.0
+min_angle_pitch:float = -45.0
+min_throttle:float = 1000.0
 
 
 ##### Functions #####
@@ -277,7 +285,7 @@ def rc_read() -> None:
                         raw_rc_values[channel] = (buffer[channel*2 + 1] << 8) + buffer[channel*2]
 
                     # Normalise data
-                    normalised_rc_values[RC_THROTTLE_CH] = float(raw_rc_values[RC_THROTTLE_CH] * 0.001 - 1) # Normalise from 1000-2000 to 0.0-1.0
+                    normalised_rc_values[RC_THROTTLE_CH] = float((raw_rc_values[RC_THROTTLE_CH] - 1500) * 0.002) # Normalise from 1000-2000 to -1-1
                     normalised_rc_values[RC_ROLL_CH] = float((raw_rc_values[RC_ROLL_CH] - 1500) * 0.002) # Normalise from 1000-2000 to -1-1
                     normalised_rc_values[RC_PITCH_CH] = float((raw_rc_values[RC_PITCH_CH] - 1500) * 0.002) # Normalise from 1000-2000 to -1-1
                     normalised_rc_values[RC_YAW_CH] = float(-((raw_rc_values[RC_YAW_CH] - 1500) * 0.002)) # Normalise from 1000-2000 to -1-1
@@ -342,7 +350,7 @@ if setup() == 0:
             rc_read()
 
             if normalised_rc_values[RC_EXTRA1_CH] == 0:
-                if normalised_rc_values[RC_THROTTLE_CH] == 0.0:
+                if normalised_rc_values[RC_THROTTLE_CH] < 0.1 and normalised_rc_values[RC_THROTTLE_CH] > -0.1:
                     motor1.deinit()
                     motor2.deinit()
                     motor3.deinit()
@@ -350,15 +358,33 @@ if setup() == 0:
                     motors_are_armed = False
 
             imu_read()
-            desired_throttle_rate:float = normalised_rc_values[RC_THROTTLE_CH]
-            desired_pitch_rate:float = normalised_rc_values[RC_PITCH_CH]
-            desired_roll_rate:float = normalised_rc_values[RC_ROLL_CH]
-            desired_yaw_rate:float = normalised_rc_values[RC_YAW_CH]
+            # desired_throttle_rate:float = normalised_rc_values[RC_THROTTLE_CH]
+            # desired_pitch_rate:float = normalised_rc_values[RC_PITCH_CH]
+            # desired_roll_rate:float = normalised_rc_values[RC_ROLL_CH]
+            # desired_yaw_rate:float = normalised_rc_values[RC_YAW_CH]
+
+            if normalised_rc_values[RC_THROTTLE_CH] > 0.1 or normalised_rc_values[RC_THROTTLE_CH] < -0.1:
+                desired_throttle_change = normalised_rc_values[RC_THROTTLE_CH] * max_throttle_rate
+            else:
+                desired_throttle_change = 0.0
+            throttle = max(min(throttle + desired_throttle_change, 1800.0), 1000.0)
+
+            angle_roll += normalised_gyro_values[GYRO_INDEX_ROLL]
+            desired_roll:float = normalised_rc_values[RC_ROLL_CH] * max_angle_roll
+            pid_error_roll:float = desired_roll - angle_roll
+
+            angle_pitch += normalised_gyro_values[GYRO_INDEX_PITCH]
+            desired_pitch:float = normalised_rc_values[RC_PITCH_CH] * max_angle_pitch
+            pid_error_pitch:float = desired_pitch - angle_pitch
+
+            yaw_rate = normalised_gyro_values[GYRO_INDEX_YAW]
+            desired_yaw_rate = normalised_rc_values[RC_YAW_CH] * max_yaw_rate
+            pid_error_yaw = desired_yaw_rate - yaw_rate
 
             # Error calculations (desired - actual)
-            pid_error_roll:float = desired_roll_rate * max_roll_rate - normalised_gyro_values[GYRO_INDEX_ROLL]
-            pid_error_pitch:float = desired_pitch_rate * max_pitch_rate - normalised_gyro_values[GYRO_INDEX_PITCH]
-            pid_error_yaw:float = desired_yaw_rate * max_yaw_rate - normalised_gyro_values[GYRO_INDEX_YAW]
+            # pid_error_roll:float = desired_roll_rate * max_roll_rate - normalised_gyro_values[GYRO_INDEX_ROLL]
+            # pid_error_pitch:float = desired_pitch_rate * max_pitch_rate - normalised_gyro_values[GYRO_INDEX_PITCH]
+            # pid_error_yaw:float = desired_yaw_rate * max_yaw_rate - normalised_gyro_values[GYRO_INDEX_YAW]
 
             # Proportion calculations
             pid_prop_roll:float = pid_error_roll * pid_kp_roll
@@ -390,18 +416,18 @@ if setup() == 0:
             # Capture end timestamp for current PID loop
             prev_pid_timestamp = time.ticks_us()
 
-            throttle_rate:float = desired_throttle_rate * THROTTLE_RANGE + min_throttle_rate
+            # throttle_rate:float = desired_throttle_rate * THROTTLE_RANGE + min_throttle_rate
             pid_roll:float = pid_prop_roll + pid_inte_roll + pid_deri_roll
             pid_pitch:float = pid_prop_pitch + pid_inte_pitch + pid_deri_pitch
             pid_yaw:float = pid_prop_yaw + pid_inte_yaw + pid_deri_yaw
 
             # Throttle calculations (cross configuration)
             # motor1_throttle:float = throttle_rate + pid_roll + pid_pitch + pid_yaw
-            motor1_throttle:float = throttle_rate - pid_roll - pid_pitch + pid_yaw
-            motor2_throttle:float = throttle_rate + pid_roll - pid_pitch - pid_yaw
+            motor1_throttle:float = throttle - pid_roll - pid_pitch + pid_yaw
+            motor2_throttle:float = throttle + pid_roll - pid_pitch - pid_yaw
             # motor3_throttle:float = throttle_rate - pid_roll - pid_pitch + pid_yaw
-            motor3_throttle:float = throttle_rate + pid_roll + pid_pitch + pid_yaw
-            motor4_throttle:float = throttle_rate - pid_roll + pid_pitch - pid_yaw
+            motor3_throttle:float = throttle + pid_roll + pid_pitch + pid_yaw
+            motor4_throttle:float = throttle - pid_roll + pid_pitch - pid_yaw
 
             # Save PID values for subsequent calculations
             prev_pid_error_roll = pid_error_roll
@@ -412,10 +438,10 @@ if setup() == 0:
             prev_pid_inte_yaw = pid_inte_yaw
 
             # Calculate duty cycle
-            motor1.duty_ns(int(min(max(motor1_throttle * 1000000, 0) + 1000000, 2000000)))
-            motor2.duty_ns(int(min(max(motor2_throttle * 1000000, 0) + 1000000, 2000000)))
-            motor3.duty_ns(int(min(max(motor3_throttle * 1000000, 0) + 1000000, 2000000)))
-            motor4.duty_ns(int(min(max(motor4_throttle * 1000000, 0) + 1000000, 2000000)))
+            motor1.duty_ns(int(min(max(motor1_throttle * 1000, 0), 2000000)))
+            motor2.duty_ns(int(min(max(motor2_throttle * 1000, 0), 2000000)))
+            motor3.duty_ns(int(min(max(motor3_throttle * 1000, 0), 2000000)))
+            motor4.duty_ns(int(min(max(motor4_throttle * 1000, 0), 2000000)))
 
             # DEBUG PRINTS
             # print(normalised_rc_values)
@@ -425,7 +451,7 @@ if setup() == 0:
         else:
             rc_read()
             if normalised_rc_values[RC_EXTRA1_CH] == 1:
-                if normalised_rc_values[RC_THROTTLE_CH] == 0.0:
+                if normalised_rc_values[RC_THROTTLE_CH] < 0.1 and normalised_rc_values[RC_THROTTLE_CH] > -0.1:
                     motor1.freq(250)
                     motor2.freq(250)
                     motor3.freq(250)

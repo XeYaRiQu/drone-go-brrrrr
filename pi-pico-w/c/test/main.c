@@ -40,5 +40,7 @@ int setup() {
 
 
 void loop() {
+    unsigned long loop_start_timestamp = micros();
     printf("Hello World!");
+    while (micros() - loop_start_timestamp < 4000000); // Do nothing until 4 ms has passed since loop start
 }

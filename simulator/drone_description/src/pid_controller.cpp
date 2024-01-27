@@ -37,10 +37,10 @@ double PIDController::update(double new_input, double x, double dx, double dt)
     dinput = (new_input - input) / (dt + time_constant);
   }
 
-  // update proportional, differential and integral errors
-  p = input - x;
+  // update proportional, differential and integral errors (as small as possible) 
+  p = input - x; //desired - measured
   d = dinput - dx;
-  i = i + dt * p;
+  i = i + dt * p; //jerald never really touch
 
   // update control output
   output = gain_p * p + gain_d * d + gain_i * i;

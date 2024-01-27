@@ -61,9 +61,8 @@ Visualization Manager:
           Show Arrows: true
           Show Axes: true
           Show Names: false
-          Tree:
-            {}
-          Update Interval: 0
+          Tree: {}
+          Update Interval: 1
           Value: false
         - Alpha: 1
           Class: rviz_default_plugins/RobotModel
@@ -105,7 +104,7 @@ Visualization Manager:
             Mass: false
           Name: RobotModel
           TF Prefix: ""
-          Update Interval: 0
+          Update Interval: 1
           Value: true
           Visual Enabled: true
       Enabled: true

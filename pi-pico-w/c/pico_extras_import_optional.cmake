@@ -3,7 +3,7 @@
 # This can be dropped into an external project to help locate pico-extras
 # It should be include()ed prior to project()
 
-if (DEFINED ENV{PICO_EXTRAS_PATH} AND (NOT PICO_EXTRAS_PATH))
+if (DEFINED ENV{PICO_EXTRAS_PATH})
     set(PICO_EXTRAS_PATH $ENV{PICO_EXTRAS_PATH})
     message("Using PICO_EXTRAS_PATH from environment ('${PICO_EXTRAS_PATH}')")
 endif ()

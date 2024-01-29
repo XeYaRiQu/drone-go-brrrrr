@@ -37,8 +37,7 @@
     <parent link="base_link" />
     <child link="front_cam_link" />
   </joint>
-  <link name="front_cam_link"/>
-
+  <link name="front_cam_link"/>im free tmr before 2pm
   <joint name="bottom_cam_joint" type="fixed">
     <origin rpy="0 1.570796326794897 0" xyz="0 0 0"/>
     <parent link="base_link" />

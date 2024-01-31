@@ -1,4 +1,4 @@
-FROM ros:humble-ros-core-jammy
+FROM georgno/drone:latest
 
 RUN apt-get update \
     && apt-get install -y \
@@ -20,15 +20,20 @@ RUN echo "deb http://packages.osrfoundation.org/gazebo/ubuntu `lsb_release -cs` 
     ros-humble-rqt-graph \
     python3-colcon-common-extensions python3-rosdep --no-install-recommends \
     && apt-get clean
-RUN rosdep init && rosdep update
+# RUN rosdep init && rosdep update
+RUN rosdep update
 
 RUN mkdir -p /ros2_ws/src
 COPY ./drone_description /ros2_ws/src/drone_description
 COPY ./drone_bringup /ros2_ws/src/drone_bringup
 
-RUN curl -L https://github.com/osrf/gazebo_models/archive/refs/heads/master.zip -o /tmp/gazebo_models.zip \
-    && unzip /tmp/gazebo_models.zip -d /tmp && mkdir -p ~/.gazebo/models/ && mv /tmp/gazebo_models-master/* ~/.gazebo/models/ \
-    && rm -r /tmp/gazebo_models.zip
+RUN curl -L https://github.com/osrf/gazebo_models/archive/refs/heads/master.zip -o /tmp/gazebo_models.zip 
+
+RUN unzip -o /tmp/gazebo_models.zip -d /tmp 
+RUN mkdir -p ~/.gazebo/models/ 
+RUN rm -rf ~/.gazebo/models/*
+RUN mv /tmp/gazebo_models-master/* ~/.gazebo/models/
+RUN rm -r /tmp/gazebo_models.zip
 
 WORKDIR /ros2_ws
 RUN /bin/bash -c 'cd /ros2_ws/ \

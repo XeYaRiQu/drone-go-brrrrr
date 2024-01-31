@@ -23,9 +23,9 @@ def generate_launch_description():
     )
 
     # joystick_control_node = Node(
-    #     package='drone_bringup',  # Replace 'your_package_name' with the actual package name where 'joystick_control.py' is located
-    #     executable='python3',  # Replace with 'python' if needed
-    #     arguments=['joystick_control.py'],  # Reference the joystick script
+    #     package='drone_bringup',  
+    #     executable='python3',  
+    #     arguments=['joystick_control.py'],  0p
     #     output='screen',
     # )
 
@@ -35,7 +35,7 @@ def generate_launch_description():
             executable='joy_node',
             name='joy_node',
             output='screen',
-            # Add any necessary parameters or arguments here
+            
         ),
         Node(
             package='teleop_twist_joy', 
@@ -56,7 +56,7 @@ def generate_launch_description():
                 {'scale_angular.pitch': 1.0},
                 {'scale_angular.roll': 1.0},
                 {'scale_angular.yaw': 1.0}
-            ],
+            ]
         ),
         Node(
             package='drone_bringup',
@@ -85,7 +85,11 @@ def generate_launch_description():
             executable="teleop_twist_keyboard",
             namespace="drone",
             output="screen",
-            prefix="xterm -e"
+            remappings = [
+                (
+                    'teleop_twist_keyboard', 'cmd_vel'
+                )
+            ]
         ),
 
     ])

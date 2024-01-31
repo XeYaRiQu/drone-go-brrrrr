@@ -21,31 +21,31 @@
 
 #define MIN_THROTTLE_RATE 0.07
 #define MAX_THROTTLE_RATE 0.80
-#define MAX_YAW_RATE 30.0
-#define MAX_ROLL_RATE 30.0
-#define MAX_PITCH_RATE 30.0
+#define MAX_YAW_RATE      30.0
+#define MAX_ROLL_RATE     30.0
+#define MAX_PITCH_RATE    30.0
 
 #define RC_THROTTLE 2
-#define RC_ROLL 0
-#define RC_PITCH 1
-#define RC_YAW 3
-#define RC_SWA 4
-#define RC_SWB 5
+#define RC_ROLL     0
+#define RC_PITCH    1
+#define RC_YAW      3
+#define RC_SWA      4
+#define RC_SWB      5
 
-#define GYRO_ROLL 0
+#define GYRO_ROLL  0
 #define GYRO_PITCH 1
-#define GYRO_YAW 2
+#define GYRO_YAW   2
 
 /* Pin placement */
-#define PIN_LED 0 // The LED pin is tied to CYW43
-#define PIN_RC_RX 5
-#define PIN_RC_TX 4
+#define PIN_LED     0 // The LED pin is tied to CYW43
+#define PIN_RC_RX   5
+#define PIN_RC_TX   4
 #define PIN_IMU_SDA 12
 #define PIN_IMU_SCL 13
-#define PIN_MOTOR1 2
-#define PIN_MOTOR2 28
-#define PIN_MOTOR3 16
-#define PIN_MOTOR4 15
+#define PIN_MOTOR1  2
+#define PIN_MOTOR2  28
+#define PIN_MOTOR3  16
+#define PIN_MOTOR4  15
 
 enum GYRO_RANGE {
     RANGE_250DPS = 0,

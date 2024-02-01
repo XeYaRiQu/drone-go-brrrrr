@@ -241,19 +241,19 @@ int setup() {
 
     // Reset all registers
     writeRegister(i2c, IMU_PWR_MGMT1, 0x80);
-    sleep_us(100);
+    sleep_ms(100);
 
     // Wake, disable temperature sensor
     writeRegister(i2c, IMU_PWR_MGMT1, 0x09);
-    sleep_us(100);
+    sleep_ms(100);
 
     // Set sensor sample rate to 250 Hz
     writeRegister(i2c, IMU_SMPLRT_DIV, 0x03);
-    sleep_us(100);
+    sleep_ms(100);
 
     // Set accelerometer LPF and gyroscope LPF 
     writeRegister(i2c, IMU_CONFIG, lpf_config_byte);
-    sleep_us(100);
+    sleep_ms(100);
 
     // Set gyroscope scale (in dps)
     writeRegister(i2c, IMU_GYRO_CONFIG, gyro_config_byte);

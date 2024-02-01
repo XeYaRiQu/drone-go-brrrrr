@@ -396,12 +396,10 @@ if setup() == 0:
             pid_yaw:float = pid_prop_yaw + pid_inte_yaw + pid_deri_yaw
 
             # Throttle calculations (cross configuration)
-            # motor1_throttle:float = throttle_rate + pid_roll + pid_pitch + pid_yaw
-            motor1_throttle:float = throttle_rate - pid_roll - pid_pitch + pid_yaw
-            motor2_throttle:float = throttle_rate + pid_roll - pid_pitch - pid_yaw
-            # motor3_throttle:float = throttle_rate - pid_roll - pid_pitch + pid_yaw
-            motor3_throttle:float = throttle_rate + pid_roll + pid_pitch + pid_yaw
-            motor4_throttle:float = throttle_rate - pid_roll + pid_pitch - pid_yaw
+            motor1_throttle:float = throttle_rate - pid_roll + pid_pitch + pid_yaw
+            motor2_throttle:float = throttle_rate + pid_roll + pid_pitch - pid_yaw
+            motor3_throttle:float = throttle_rate + pid_roll - pid_pitch + pid_yaw
+            motor4_throttle:float = throttle_rate - pid_roll - pid_pitch - pid_yaw
 
             # Save PID values for subsequent calculations
             prev_pid_error_roll = pid_error_roll

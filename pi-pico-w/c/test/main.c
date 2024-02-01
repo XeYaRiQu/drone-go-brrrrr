@@ -61,8 +61,12 @@ enum ACCEL_RANGE {
     RANGE_16G
 };
 
-int GYRO_RANGE = RANGE_500DPS;
+int GYRO_RANGE = RANGE_250DPS;
 int ACCEL_RANGE = RANGE_4G;
+int lpf_config_byte = 3;
+//lpf config byte, acc lpf, gyro lpf --- 0,260,256 :: 1,184,188 :: 2,94,98 :: 3,44,42 :: 4,21,20 ::5,10,10 :: 6,5,5
+
+
 
 
 ////////////////// PID //////////////////
@@ -133,15 +137,19 @@ int mpu6050_init() {
     switch (GYRO_RANGE) {
         case RANGE_250DPS:
             gyro_multiplier = 250.0/32768.0;
+            gyro_config_byte = 0x00;
             break;
         case RANGE_500DPS:
             gyro_multiplier = 500.0/32768.0;
+            gyro_config_byte = 0x08;
             break;
         case RANGE_1000DPS:
             gyro_multiplier = 1000.0/32768.0;
+            gyro_config_byte = 0x10;
             break;
         case RANGE_2000DPS:
             gyro_multiplier = 2000.0/32768.0;
+            gyro_config_byte = 0x18;
             break;
     }
 
@@ -165,7 +173,11 @@ int mpu6050_init() {
 void read_gyro() {
     
 };
-
+// Function to write a byte to IMU registers using I2C
+void writeRegister(i2c_inst_t *i2c, uint8_t reg, uint8_t value) {
+    uint8_t buffer[2] = {reg, value};
+    i2c_write_blocking(i2c, IMU_I2C_ADDRESS, buffer, 2, false);
+};
 ////////////////// Setup //////////////////
 
 int setup() {
@@ -208,7 +220,9 @@ int setup() {
     }
 
     // Initialise I2C for IMU
+    i2c_inst_t *i2c = i2c0;
     if (i2c_init(i2c0, 400000) == 400000) {
+        
         gpio_set_function(PIN_IMU_SCL, GPIO_FUNC_I2C);
         gpio_set_function(PIN_IMU_SDA, GPIO_FUNC_I2C);
         gpio_pull_up(PIN_IMU_SCL);
@@ -216,6 +230,7 @@ int setup() {
         // Make the I2C pins available to picotool (copied from mpu6050_i2c.c in pico-examples)
         bi_decl(bi_2pins_with_func(PIN_IMU_SDA, PIN_IMU_SCL, GPIO_FUNC_I2C));
         printf("INFO  >>>>   Initialise I2C --> SUCCESS\n\n");
+        i2c_set_slave_mode(i2c, false, IMU_I2C_ADDRESS); //master mode set as mpu6050 (slave) needs to be configured by microcontroller (master)
     }
     else {
         fail_flag = 1;
@@ -223,7 +238,34 @@ int setup() {
     }
 
     return fail_flag;
+
+    // Reset all registers
+    writeRegister(i2c, IMU_PWR_MGMT1, 0x80);
+    sleep_us(100);
+
+    // Wake, disable temperature sensor
+    writeRegister(i2c, IMU_PWR_MGMT1, 0x09);
+    sleep_us(100);
+
+    // Set sensor sample rate to 250 Hz
+    writeRegister(i2c, IMU_SMPLRT_DIV, 0x03);
+    sleep_us(100);
+
+    // Set accelerometer LPF and gyroscope LPF 
+    writeRegister(i2c, IMU_CONFIG, lpf_config_byte);
+    sleep_us(100);
+
+    // Set gyroscope scale (in dps)
+    writeRegister(i2c, IMU_GYRO_CONFIG, gyro_config_byte);
+
+    printf("INFO  >>>>   MPU-6050 setup --> SUCCESS\n");
+
+    // Cleanup
+    i2c_deinit(i2c);
+
 }
+
+
 
 
 ////////////////// Main //////////////////

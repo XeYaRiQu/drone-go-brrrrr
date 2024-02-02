@@ -317,8 +317,11 @@ int setup() {
     // Cleanup
     i2c_deinit(i2c);
 
-
-
+    if  (!error_raised_flag){
+        return 0;
+    } else {
+        return 1;
+    }
 
 }
 

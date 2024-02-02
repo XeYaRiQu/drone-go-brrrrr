@@ -174,10 +174,27 @@ void read_gyro() {
     
 };
 // Function to write a byte to IMU registers using I2C
+
 void writeRegister(i2c_inst_t *i2c, uint8_t reg, uint8_t value) {
     uint8_t buffer[2] = {reg, value};
     i2c_write_blocking(i2c, IMU_I2C_ADDRESS, buffer, 2, false);
 };
+
+//Function to verify if gyro registers have been written correctly
+
+bool verifySetting(i2c_inst_t *i2c, uint8_t address, uint8_t reg, uint8_t expected_value, const char *success_msg, const char *fail_msg) {
+    uint8_t data;
+    i2c_read_blocking(i2c, address, reg, 1, false);
+    if (data == expected_value) {
+        printf("INFO  >>>>   %s -> SUCCESS\n", success_msg);
+        return true;
+    } else {
+        printf("ERROR >>>>   %s -> FAIL\n", fail_msg);
+        return false;
+    }
+}
+
+
 ////////////////// Setup //////////////////
 
 int setup() {
@@ -238,7 +255,7 @@ int setup() {
     }
 
     return fail_flag;
-
+    //Writing into registers
     // Reset all registers
     writeRegister(i2c, IMU_PWR_MGMT1, 0x80);
     sleep_ms(100);
@@ -260,8 +277,48 @@ int setup() {
 
     printf("INFO  >>>>   MPU-6050 setup --> SUCCESS\n");
 
+    //Reading from registers to check if values are updated correctly
+
+    bool error_raised_flag = false;
+    
+
+    // Who am I check
+    if (!verifySetting(i2c0, IMU_I2C_ADDRESS, IMU_WHO_AM_I, IMU_I2C_ADDRESS, "MPU-6050 verify WHO_AM_I", "MPU-6050 WHO_AM_I read error.")) {
+        error_raised_flag = true;
+    }
+
+    // Sleep and temperature sensor disabled check
+    if (!verifySetting(i2c0, IMU_I2C_ADDRESS, IMU_PWR_MGMT1, 9, "MPU-6050 verify IMU_REG_PWR_MGMT1", "MPU-6050 IMU_REG_PWR_MGMT1 not set.")) {
+        error_raised_flag = true;
+    }
+
+    // Low pass filter check
+    if (!verifySetting(i2c0, IMU_I2C_ADDRESS, IMU_CONFIG, lpf_config_byte, "MPU-6050 verify IMU_REG_CONFIG", "MPU-6050 IMU_REG_CONFIG not set.")) {
+        error_raised_flag = true;
+    }
+
+    // Sample rate check
+    if (!verifySetting(i2c0, IMU_I2C_ADDRESS, IMU_SMPLRT_DIV, 3, "MPU-6050 verify IMU_REG_SMPLRT_DIV", "MPU-6050 IMU_REG_SMPLRT_DIV not set.")) {
+        error_raised_flag = true;
+    }
+
+    // Gyroscope scale check
+    if (!verifySetting(i2c0, IMU_I2C_ADDRESS, IMU_GYRO_CONFIG, gyro_config_byte, "MPU-6050 verify IMU_REG_GYRO_CONFIG", "MPU-6050 IMU_REG_GYRO_CONFIG not set.")) {
+        error_raised_flag = true;
+    }
+
+    if (error_raised_flag) {
+        printf("ERROR >>>>   MPU-6050 verify settings -> FAIL\n");
+    } else {
+        printf("INFO  >>>>   MPU-6050 verify settings -> SUCCESS\n");
+    }
+
+
     // Cleanup
     i2c_deinit(i2c);
+
+
+
 
 }
 

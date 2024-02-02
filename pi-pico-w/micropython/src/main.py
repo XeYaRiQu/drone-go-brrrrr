@@ -328,7 +328,6 @@ def imu_read() -> None:
 if setup() == 0:
     prev_pid_timestamp:int = time.ticks_us()
     print("INFO  >>>>   Starting flight control loop.\n")
-
     led.off()
 
     # Main loop start
@@ -425,15 +424,15 @@ if setup() == 0:
                     motor3.freq(250)
                     motor4.freq(250)
                     motors_are_armed = True
-                    takeoff_delay = time.ticks_ms() + 1000
+                    spin_up_delay = time.ticks_ms() + 1000
 
-                    while time.ticks_ms() < takeoff_delay:
+                    while time.ticks_ms() < spin_up_delay:
                         motor1.duty_ns(1000000)
                         motor2.duty_ns(1000000)
                         motor3.duty_ns(1000000)
                         motor4.duty_ns(1000000)
 
-                        led.on()
+                    led.on()
             else:
                     motor1.deinit()
                     motor2.deinit()

@@ -130,6 +130,13 @@ volatile float prev_integ_yaw = 0.0;
 float gyro_multiplier, accel_multiplier;
 int gyro_config_byte, accel_config_byte;
 
+#define GYRO_X_OFFSET 0
+#define GYRO_Y_OFFSET 1
+#define GYRO_Z_OFFSET 2
+#define GYRO_ARRAY_SIZE 101
+float normalised_gyro_values[3] = {0.0f};
+float gyro_offset_bias[3] = {0.0f};
+
 
 ////////////////// Functions //////////////////
 
@@ -317,6 +324,8 @@ int setup() {
     // Cleanup
     i2c_deinit(i2c);
 
+    calc_gyro_bias();
+
     if  (!error_raised_flag){
         return 0;
     } else {
@@ -325,7 +334,47 @@ int setup() {
 
 }
 
+void calc_gyro_bias() {
+    float gyro_bias_x_data[GYRO_ARRAY_SIZE] = {0.0f};
+    float gyro_bias_y_data[GYRO_ARRAY_SIZE] = {0.0f};
+    float gyro_bias_z_data[GYRO_ARRAY_SIZE] = {0.0f};
+    int gyro_bias_data_points = 0;
+    uint32_t gyro_bias_duration = time_ms() + 5000;
+    
+    printf("INFO  >>>>   Calculating gyroscope bias. Keep vehicle still.\n");
 
+    while (time_ms() < gyro_bias_duration) {
+        imu_read();
+        gyro_bias_x_data[gyro_bias_data_points] = normalised_gyro_values[0];
+        gyro_bias_y_data[gyro_bias_data_points] = normalised_gyro_values[1];
+        gyro_bias_z_data[gyro_bias_data_points] = normalised_gyro_values[2];
+        gyro_bias_data_points++;
+        sleep_ms(50);
+    }
+
+    gyro_offset_bias[GYRO_X_OFFSET] = 0.0f;
+    gyro_offset_bias[GYRO_Y_OFFSET] = 0.0f;
+    gyro_offset_bias[GYRO_Z_OFFSET] = 0.0f;
+
+    for (int i = 0; i < gyro_bias_data_points; i++) {
+        gyro_offset_bias[GYRO_X_OFFSET] += gyro_bias_x_data[i];
+        gyro_offset_bias[GYRO_Y_OFFSET] += gyro_bias_y_data[i];
+        gyro_offset_bias[GYRO_Z_OFFSET] += gyro_bias_z_data[i];
+    }
+
+    gyro_offset_bias[GYRO_X_OFFSET] /= gyro_bias_data_points;
+    gyro_offset_bias[GYRO_Y_OFFSET] /= gyro_bias_data_points;
+    gyro_offset_bias[GYRO_Z_OFFSET] /= gyro_bias_data_points;
+
+    printf("INFO  >>>>   Gyroscope offsets saved. Offsets:\n");
+    printf("INFO  >>>>   X: %f\n", gyro_offset_bias[GYRO_X_OFFSET]);
+    printf("INFO  >>>>   Y: %f\n", gyro_offset_bias[GYRO_Y_OFFSET]);
+    printf("INFO  >>>>   Z: %f\n", gyro_offset_bias[GYRO_Z_OFFSET]);
+}
+void imu_read() {
+    // Implementation of IMU read function
+    // ...
+}
 
 
 ////////////////// Main //////////////////

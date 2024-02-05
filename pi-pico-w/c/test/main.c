@@ -104,12 +104,12 @@ static const float I_LIMIT_NEG = -100.0;
 #define IMU_ACCE_Z_L    64
 #define IMU_TEMP_HI     65
 #define IMU_TEMP_LO     66
-#define IMU_GYRO_X_H    67
-#define IMU_GYRO_X_L    68
-#define IMU_GYRO_Y_H    69
-#define IMU_GYRO_Y_L    70
-#define IMU_GYRO_Z_H    71
-#define IMU_GYRO_Z_L    72
+#define IMU_REG_GYRO_X_HI    67
+#define IMU_REG_GYRO_X_LO    68
+#define IMU_REG_GYRO_Y_HI    69
+#define IMU_REG_GYRO_Y_LO    70
+#define IMU_REG_GYRO_Z_HI    71
+#define IMU_REG_GYRO_Z_LO    72
 
 
 ////////////////// Constants //////////////////
@@ -140,6 +140,7 @@ float gyro_offset_bias[3] = {0.0f};
 
 #define RC_BUFFER 30
 #define UART_ID uart1
+
 ////////////////// Functions //////////////////
 
 int mpu6050_init() {
@@ -435,8 +436,50 @@ void rc_read() {
 
 
 void imu_read() {
-    // Implementation of IMU read function
-    // ...
+    /*
+    The IMU measurements are 16-bit 2's complement values ranging from -32768
+    to 32767 which needs to be multiplied by the scale multipliers to obtain the
+    physical values. These scale multipliers change depending on the range set
+    in their respective register configs. The high byte is read before the low
+    byte for each measurement.
+    */
+ 
+
+    //The code reads the high and low bytes separately and combines them to form the 16-bit values 
+    //for X, Y, and Z axes.
+    uint8_t x_hi = i2c_read_blocking(i2c0, IMU_I2C_ADDRESS, IMU_REG_GYRO_X_HI, 1, false);
+    uint8_t x_lo = i2c_read_blocking(i2c0, IMU_I2C_ADDRESS, IMU_REG_GYRO_X_LO, 1, false);
+    uint8_t y_hi = i2c_read_blocking(i2c0, IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_HI, 1, false);
+    uint8_t y_lo = i2c_read_blocking(i2c0, IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_LO, 1, false);
+    uint8_t z_hi = i2c_read_blocking(i2c0, IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_HI, 1, false);
+    uint8_t z_lo = i2c_read_blocking(i2c0, IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_LO, 1, false);
+
+    int x_value = (x_hi << 8) | x_lo;
+    int y_value = (y_hi << 8) | y_lo;
+    int z_value = (z_hi << 8) | z_lo;
+
+    // Normalize X axis
+    if (x_value > 32767) {
+        normalised_gyro_values[GYRO_ROLL] = (x_value - 65536) * gyro_multiplier - gyro_offset_bias[GYRO_ROLL];
+    } else {
+        normalised_gyro_values[GYRO_ROLL] = x_value * gyro_multiplier - gyro_offset_bias[GYRO_ROLL];
+    }
+
+    // Normalize Y axis
+    if (y_value > 32767) {
+        normalised_gyro_values[GYRO_PITCH] = (y_value - 65536) * gyro_multiplier - gyro_offset_bias[GYRO_PITCH];
+    } else {
+        normalised_gyro_values[GYRO_PITCH] = y_value * gyro_multiplier - gyro_offset_bias[GYRO_PITCH];
+    }
+
+    // Normalize Z axis
+    if (z_value > 32767) {
+        normalised_gyro_values[GYRO_YAW] = (z_value - 65536) * gyro_multiplier - gyro_offset_bias[GYRO_YAW];
+    } else {
+        normalised_gyro_values[GYRO_YAW] = z_value * gyro_multiplier - gyro_offset_bias[GYRO_YAW];
+    }
+
+
 }
 
 

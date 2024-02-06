@@ -179,19 +179,19 @@ int mpu6050_init() {
     }
     return 0;
 };
-
+#ifdef i2c_default
 // Function to write a byte to IMU registers using I2C
 
-void writeRegister(i2c_inst_t *i2c, uint8_t reg, uint8_t value) {
+void writeRegister(uint8_t reg, uint8_t value) {
     uint8_t buffer[2] = {reg, value};
-    i2c_write_blocking(i2c, IMU_I2C_ADDRESS, buffer, 2, false);
+    i2c_write_blocking(i2c_default, IMU_I2C_ADDRESS, buffer, 2, false);
 };
 
 //Function to verify if gyro registers have been written correctly
 
-bool verifySetting(i2c_inst_t *i2c, uint8_t address, uint8_t reg, uint8_t expected_value, const char *success_msg, const char *fail_msg) {
+bool verifySetting(uint8_t address, uint8_t reg, uint8_t expected_value, const char *success_msg, const char *fail_msg) {
     uint8_t data;
-    i2c_read_blocking(i2c, address, reg, 1, false);
+    i2c_read_blocking(i2c_default, address, reg, 1, false);
     if (data == expected_value) {
         printf("INFO  >>>>   %s -> SUCCESS\n", success_msg);
         return true;
@@ -207,10 +207,10 @@ bool verifySetting(i2c_inst_t *i2c, uint8_t address, uint8_t reg, uint8_t expect
 int setup() {
     int fail_flag = 0;
     uint64_t setup_start = time_us_64();
-
+    uint64_t setup_delay = setup_start + 5000000;
     stdio_init_all();
 
-    while (time_us_64() - setup_start < 5000000);
+    while (time_us_64()  < setup_delay);
 
     // Overclock RP2040
     set_sys_clock_khz(250000, true);
@@ -244,8 +244,9 @@ int setup() {
     }
 
     // Initialise I2C for IMU
-    i2c_inst_t *i2c = i2c0;
-    if (i2c_init(i2c0, 400000) == 400000) {
+    //i2c_inst_t *i2c = i2c0; using i2c_default instead
+
+    if (i2c_init(i2c_default, 400000) == 400000) {
         
         gpio_set_function(PIN_IMU_SCL, GPIO_FUNC_I2C);
         gpio_set_function(PIN_IMU_SDA, GPIO_FUNC_I2C);
@@ -254,7 +255,7 @@ int setup() {
         // Make the I2C pins available to picotool (copied from mpu6050_i2c.c in pico-examples)
         bi_decl(bi_2pins_with_func(PIN_IMU_SDA, PIN_IMU_SCL, GPIO_FUNC_I2C));
         printf("INFO  >>>>   Initialise I2C --> SUCCESS\n\n");
-        i2c_set_slave_mode(i2c, false, IMU_I2C_ADDRESS); //master mode set as mpu6050 (slave) needs to be configured by microcontroller (master)
+        i2c_set_slave_mode(i2c_default, false, IMU_I2C_ADDRESS); //master mode set as mpu6050 (slave) needs to be configured by microcontroller (master)
     }
     else {
         fail_flag = 1;
@@ -264,23 +265,23 @@ int setup() {
     return fail_flag;
     //Writing into registers
     // Reset all registers
-    writeRegister(i2c, IMU_PWR_MGMT1, 0x80);
+    writeRegister(IMU_PWR_MGMT1, 0x80);
     sleep_ms(100);
 
     // Wake, disable temperature sensor
-    writeRegister(i2c, IMU_PWR_MGMT1, 0x09);
+    writeRegister(IMU_PWR_MGMT1, 0x09);
     sleep_ms(100);
 
     // Set sensor sample rate to 250 Hz
-    writeRegister(i2c, IMU_SMPLRT_DIV, 0x03);
+    writeRegister(IMU_SMPLRT_DIV, 0x03);
     sleep_ms(100);
 
     // Set accelerometer LPF and gyroscope LPF 
-    writeRegister(i2c, IMU_CONFIG, lpf_config_byte);
+    writeRegister(IMU_CONFIG, lpf_config_byte);
     sleep_ms(100);
 
     // Set gyroscope scale (in dps)
-    writeRegister(i2c, IMU_GYRO_CONFIG, gyro_config_byte);
+    writeRegister(IMU_GYRO_CONFIG, gyro_config_byte);
 
     printf("INFO  >>>>   MPU-6050 setup --> SUCCESS\n");
 
@@ -290,27 +291,27 @@ int setup() {
     
 
     // Who am I check
-    if (!verifySetting(i2c0, IMU_I2C_ADDRESS, IMU_WHO_AM_I, IMU_I2C_ADDRESS, "MPU-6050 verify WHO_AM_I", "MPU-6050 WHO_AM_I read error.")) {
+    if (!verifySetting(IMU_I2C_ADDRESS, IMU_WHO_AM_I, IMU_I2C_ADDRESS, "MPU-6050 verify WHO_AM_I", "MPU-6050 WHO_AM_I read error.")) {
         error_raised_flag = true;
     }
 
     // Sleep and temperature sensor disabled check
-    if (!verifySetting(i2c0, IMU_I2C_ADDRESS, IMU_PWR_MGMT1, 9, "MPU-6050 verify IMU_REG_PWR_MGMT1", "MPU-6050 IMU_REG_PWR_MGMT1 not set.")) {
+    if (!verifySetting(IMU_I2C_ADDRESS, IMU_PWR_MGMT1, 9, "MPU-6050 verify IMU_REG_PWR_MGMT1", "MPU-6050 IMU_REG_PWR_MGMT1 not set.")) {
         error_raised_flag = true;
     }
 
     // Low pass filter check
-    if (!verifySetting(i2c0, IMU_I2C_ADDRESS, IMU_CONFIG, lpf_config_byte, "MPU-6050 verify IMU_REG_CONFIG", "MPU-6050 IMU_REG_CONFIG not set.")) {
+    if (!verifySetting(IMU_I2C_ADDRESS, IMU_CONFIG, lpf_config_byte, "MPU-6050 verify IMU_REG_CONFIG", "MPU-6050 IMU_REG_CONFIG not set.")) {
         error_raised_flag = true;
     }
 
     // Sample rate check
-    if (!verifySetting(i2c0, IMU_I2C_ADDRESS, IMU_SMPLRT_DIV, 3, "MPU-6050 verify IMU_REG_SMPLRT_DIV", "MPU-6050 IMU_REG_SMPLRT_DIV not set.")) {
+    if (!verifySetting(IMU_I2C_ADDRESS, IMU_SMPLRT_DIV, 3, "MPU-6050 verify IMU_REG_SMPLRT_DIV", "MPU-6050 IMU_REG_SMPLRT_DIV not set.")) {
         error_raised_flag = true;
     }
 
     // Gyroscope scale check
-    if (!verifySetting(i2c0, IMU_I2C_ADDRESS, IMU_GYRO_CONFIG, gyro_config_byte, "MPU-6050 verify IMU_REG_GYRO_CONFIG", "MPU-6050 IMU_REG_GYRO_CONFIG not set.")) {
+    if (!verifySetting(IMU_I2C_ADDRESS, IMU_GYRO_CONFIG, gyro_config_byte, "MPU-6050 verify IMU_REG_GYRO_CONFIG", "MPU-6050 IMU_REG_GYRO_CONFIG not set.")) {
         error_raised_flag = true;
     }
 
@@ -322,7 +323,7 @@ int setup() {
 
 
     // Cleanup
-    i2c_deinit(i2c);
+    //i2c_deinit(i2c_default); ---- not deinitialising because i2c will be used in imu_read function as well.
 
     calc_gyro_bias();
 
@@ -447,17 +448,17 @@ void imu_read() {
 
     //The code reads the high and low bytes separately and combines them to form the 16-bit values 
     //for X, Y, and Z axes.
-    uint8_t x_hi = i2c_read_blocking(i2c0, IMU_I2C_ADDRESS, IMU_REG_GYRO_X_HI, 1, false);
-    uint8_t x_lo = i2c_read_blocking(i2c0, IMU_I2C_ADDRESS, IMU_REG_GYRO_X_LO, 1, false);
-    uint8_t y_hi = i2c_read_blocking(i2c0, IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_HI, 1, false);
-    uint8_t y_lo = i2c_read_blocking(i2c0, IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_LO, 1, false);
-    uint8_t z_hi = i2c_read_blocking(i2c0, IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_HI, 1, false);
-    uint8_t z_lo = i2c_read_blocking(i2c0, IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_LO, 1, false);
+    uint8_t x_hi = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_X_HI, 1, false);
+    uint8_t x_lo = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_X_LO, 1, false);
+    uint8_t y_hi = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_HI, 1, false);
+    uint8_t y_lo = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_LO, 1, false);
+    uint8_t z_hi = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_HI, 1, false);
+    uint8_t z_lo = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_LO, 1, false);
 
-    int x_value = (x_hi << 8) | x_lo;
+    int x_value = (x_hi << 8) | x_lo; //x_value is 16 bit
     int y_value = (y_hi << 8) | y_lo;
     int z_value = (z_hi << 8) | z_lo;
-
+    
     // Normalize X axis
     if (x_value > 32767) {
         normalised_gyro_values[GYRO_ROLL] = (x_value - 65536) * gyro_multiplier - gyro_offset_bias[GYRO_ROLL];
@@ -481,7 +482,7 @@ void imu_read() {
 
 
 }
-
+#endif
 
 ////////////////// Main //////////////////
 

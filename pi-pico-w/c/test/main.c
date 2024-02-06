@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <time.h>
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
 #include "pico/cyw43_arch.h" // WiFi chip on Pico W
@@ -15,6 +16,7 @@
 #include "hardware/timer.h"
 #include "hardware/uart.h"
 #include "hardware/clocks.h"
+
 
 
 ////////////////// Settings //////////////////
@@ -116,7 +118,7 @@ static const float I_LIMIT_NEG = -100.0;
 
 static const int MIN_THROTTLE = MIN_THROTTLE_RATE;
 static const int MAX_THROTTLE = MAX_THROTTLE_RATE;
-
+int THROTTLE_RANGE = MAX_THROTTLE_RATE - MIN_THROTTLE_RATE;
 
 ////////////////// Global variables //////////////////
 
@@ -134,6 +136,8 @@ int gyro_config_byte, accel_config_byte;
 #define GYRO_Y_OFFSET 1
 #define GYRO_Z_OFFSET 2
 #define GYRO_ARRAY_SIZE 101
+
+bool motors_are_armed = false;
 float normalised_rc_values[6] = {0.0f};
 float normalised_gyro_values[3] = {0.0f};
 float gyro_offset_bias[3] = {0.0f};
@@ -495,12 +499,76 @@ void main() {
     }
     else {
         printf("INFO  >>>>   Setup completed in %f seconds, looping.\n\n", ((double)(time_us_64() - start_timestamp)/1000000 - 5));
-
+        uint64_t prev_pid_timestamp = time_us_64();
         ////////////////// Loop //////////////////
         while (true) {
             start_timestamp = time_us_64();
+            if (motors_are_armed == true) {
+                rc_read();
 
+                if (normalised_rc_values[RC_SWA] == 0) {
+                    if (normalised_rc_values[RC_THROTTLE] == 0.0){
+                        //deinit 4 motors
+                        motors_are_armed = false;
+                    }
+                }
+
+                imu_read();
+                float desired_throttle_rate = normalised_rc_values[RC_THROTTLE];
+                float desired_pitch_rate = normalised_rc_values[RC_PITCH];
+                float desired_roll_rate = normalised_rc_values[RC_ROLL];
+                float desired_yaw_rate = normalised_rc_values[RC_YAW];
+                
+                // Error calculations (desired - actual)
+                float pid_error_roll = desired_roll_rate * MAX_ROLL_RATE - normalised_gyro_values[GYRO_ROLL];
+                float pid_error_pitch = desired_pitch_rate * MAX_PITCH_RATE - normalised_gyro_values[GYRO_PITCH];
+                float pid_error_yaw = desired_yaw_rate * MAX_YAW_RATE - normalised_gyro_values[GYRO_YAW];
+
+                // Proportion calculations
+                float pid_prop_roll = pid_error_roll * KP_ROLL;
+                float pid_prop_pitch = pid_error_pitch * KP_PITCH;
+                float pid_prop_yaw = pid_error_yaw * KP_YAW;
+
+                // Calculate time elapsed since previous PID calculations
+                float pid_cycle_time = 1.0 / (((float)(time_us_64() - prev_pid_timestamp)) * 0.000001);
+
+                // Integral calculations
+                float pid_inte_roll = pid_error_roll * KI_ROLL * pid_cycle_time + prev_integ_roll;
+                float pid_inte_pitch = pid_error_pitch * KI_PITCH * pid_cycle_time + prev_integ_pitch;
+                float pid_inte_yaw = pid_error_yaw * KI_YAW * pid_cycle_time + prev_integ_yaw;
+
+                // Derivative calculations
+                float pid_deri_roll = (pid_error_roll - prev_error_roll) * KD_ROLL * pid_cycle_time;
+                float pid_deri_pitch = (pid_error_pitch - prev_error_pitch) * KD_PITCH * pid_cycle_time;
+                float pid_deri_yaw = (pid_error_yaw - prev_error_yaw) * KD_YAW * pid_cycle_time;
+
+                // Capture end timestamp for current PID loop
+                prev_pid_timestamp = time_us_64();
+
+                float throttle_rate = desired_throttle_rate * THROTTLE_RANGE + MIN_THROTTLE;
+                float pid_roll = pid_prop_roll + pid_inte_roll + pid_deri_roll;
+                float pid_pitch = pid_prop_pitch + pid_inte_pitch + pid_deri_pitch;
+                float pid_yaw = pid_prop_yaw + pid_inte_yaw + pid_deri_yaw;
+
+                // Throttle calculations (cross configuration)
+                float motor1_throttle = throttle_rate - pid_roll + pid_pitch + pid_yaw;
+                float motor2_throttle = throttle_rate + pid_roll + pid_pitch - pid_yaw;
+                float motor3_throttle = throttle_rate + pid_roll - pid_pitch + pid_yaw;
+                float motor4_throttle = throttle_rate - pid_roll - pid_pitch - pid_yaw;
+
+                // Save PID values for subsequent calculations
+                prev_error_roll = pid_error_roll;
+                prev_error_pitch = pid_error_pitch;
+                prev_error_yaw = pid_error_yaw;
+                prev_integ_roll = pid_inte_roll;
+                prev_integ_pitch = pid_inte_pitch;
+                prev_integ_yaw = pid_inte_yaw;
+
+            }
             
+            else {
+
+            }
 
             while (time_us_64() - start_timestamp < 4000); // Do nothing until 4 ms has passed since loop start
         }

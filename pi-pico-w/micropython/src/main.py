@@ -26,9 +26,9 @@ max_roll_rate:float = 30.0  # degrees per second
 max_pitch_rate:float = 30.0 # degrees per second
 max_yaw_rate:float = 60.0   # degrees per second
 
-pid_kp_roll:float = 0.00043714285
-pid_kp_pitch:float = 0.00043714285
-pid_kp_yaw:float = 0.001714287
+pid_kp_roll:float = 0.08
+pid_kp_pitch:float = 0.08
+pid_kp_yaw:float = 0.02
 
 pid_ki_roll:float = 0.00255
 pid_ki_pitch:float = 0.00255
@@ -329,11 +329,6 @@ if setup() == 0:
     prev_pid_timestamp:int = time.ticks_us()
     print("INFO  >>>>   Starting flight control loop.\n")
 
-    # Flash LED for 5 seconds
-    for i in range(5):
-        for j in range(5):
-            led.toggle()
-            time.sleep_ms(200)
     led.off()
 
     # Main loop start
@@ -348,6 +343,7 @@ if setup() == 0:
                     motor3.deinit()
                     motor4.deinit()
                     motors_are_armed = False
+                    led.off()
 
             imu_read()
             desired_throttle_rate:float = normalised_rc_values[RC_THROTTLE_CH]
@@ -418,7 +414,7 @@ if setup() == 0:
             # DEBUG PRINTS
             # print(normalised_rc_values)
             # print(normalised_gyro_values)
-            print(motor1_throttle, motor2_throttle, motor3_throttle, motor4_throttle)
+            # print(motor1_throttle, motor2_throttle, motor3_throttle, motor4_throttle)
             # print("INFO  >>>>   Loop duration:", pid_cycle_time) # Target duration is less than 0.004 s
         else:
             rc_read()
@@ -436,6 +432,8 @@ if setup() == 0:
                         motor2.duty_ns(1000000)
                         motor3.duty_ns(1000000)
                         motor4.duty_ns(1000000)
+
+                        led.on()
             else:
                     motor1.deinit()
                     motor2.deinit()

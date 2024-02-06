@@ -25,10 +25,10 @@ Theoretical analysis    - @jersst
 - [x] Finalise testbed design
 - [x] Purchase components
 - [x] Assemble testbed
-- [ ] Assemble multirotor
+- [x] Assemble multirotor
 - [ ] Set up simulation infrastructure
 - [ ] Get preliminary simulation
-- [ ] Perform test flight
+- [x] Perform test flight
 
 ## Workflow:
 main - All finalised and validated work (code, designs, etc.) will be checked-in here by creating a PR from the dev branch.

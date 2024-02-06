@@ -104,12 +104,12 @@ static const float I_LIMIT_NEG = -100.0;
 #define IMU_ACCE_Z_L    64
 #define IMU_TEMP_HI     65
 #define IMU_TEMP_LO     66
-#define IMU_GYRO_X_H    67
-#define IMU_GYRO_X_L    68
-#define IMU_GYRO_Y_H    69
-#define IMU_GYRO_Y_L    70
-#define IMU_GYRO_Z_H    71
-#define IMU_GYRO_Z_L    72
+#define IMU_REG_GYRO_X_HI    67
+#define IMU_REG_GYRO_X_LO    68
+#define IMU_REG_GYRO_Y_HI    69
+#define IMU_REG_GYRO_Y_LO    70
+#define IMU_REG_GYRO_Z_HI    71
+#define IMU_REG_GYRO_Z_LO    72
 
 
 ////////////////// Constants //////////////////
@@ -130,6 +130,16 @@ volatile float prev_integ_yaw = 0.0;
 float gyro_multiplier, accel_multiplier;
 int gyro_config_byte, accel_config_byte;
 
+#define GYRO_X_OFFSET 0
+#define GYRO_Y_OFFSET 1
+#define GYRO_Z_OFFSET 2
+#define GYRO_ARRAY_SIZE 101
+float normalised_rc_values[6] = {0.0f};
+float normalised_gyro_values[3] = {0.0f};
+float gyro_offset_bias[3] = {0.0f};
+
+#define RC_BUFFER 30
+#define UART_ID uart1
 
 ////////////////// Functions //////////////////
 
@@ -170,14 +180,28 @@ int mpu6050_init() {
     return 0;
 };
 
-void read_gyro() {
-    
-};
 // Function to write a byte to IMU registers using I2C
+
 void writeRegister(i2c_inst_t *i2c, uint8_t reg, uint8_t value) {
     uint8_t buffer[2] = {reg, value};
     i2c_write_blocking(i2c, IMU_I2C_ADDRESS, buffer, 2, false);
 };
+
+//Function to verify if gyro registers have been written correctly
+
+bool verifySetting(i2c_inst_t *i2c, uint8_t address, uint8_t reg, uint8_t expected_value, const char *success_msg, const char *fail_msg) {
+    uint8_t data;
+    i2c_read_blocking(i2c, address, reg, 1, false);
+    if (data == expected_value) {
+        printf("INFO  >>>>   %s -> SUCCESS\n", success_msg);
+        return true;
+    } else {
+        printf("ERROR >>>>   %s -> FAIL\n", fail_msg);
+        return false;
+    }
+}
+
+
 ////////////////// Setup //////////////////
 
 int setup() {
@@ -238,7 +262,7 @@ int setup() {
     }
 
     return fail_flag;
-
+    //Writing into registers
     // Reset all registers
     writeRegister(i2c, IMU_PWR_MGMT1, 0x80);
     sleep_ms(100);
@@ -260,12 +284,203 @@ int setup() {
 
     printf("INFO  >>>>   MPU-6050 setup --> SUCCESS\n");
 
+    //Reading from registers to check if values are updated correctly
+
+    bool error_raised_flag = false;
+    
+
+    // Who am I check
+    if (!verifySetting(i2c0, IMU_I2C_ADDRESS, IMU_WHO_AM_I, IMU_I2C_ADDRESS, "MPU-6050 verify WHO_AM_I", "MPU-6050 WHO_AM_I read error.")) {
+        error_raised_flag = true;
+    }
+
+    // Sleep and temperature sensor disabled check
+    if (!verifySetting(i2c0, IMU_I2C_ADDRESS, IMU_PWR_MGMT1, 9, "MPU-6050 verify IMU_REG_PWR_MGMT1", "MPU-6050 IMU_REG_PWR_MGMT1 not set.")) {
+        error_raised_flag = true;
+    }
+
+    // Low pass filter check
+    if (!verifySetting(i2c0, IMU_I2C_ADDRESS, IMU_CONFIG, lpf_config_byte, "MPU-6050 verify IMU_REG_CONFIG", "MPU-6050 IMU_REG_CONFIG not set.")) {
+        error_raised_flag = true;
+    }
+
+    // Sample rate check
+    if (!verifySetting(i2c0, IMU_I2C_ADDRESS, IMU_SMPLRT_DIV, 3, "MPU-6050 verify IMU_REG_SMPLRT_DIV", "MPU-6050 IMU_REG_SMPLRT_DIV not set.")) {
+        error_raised_flag = true;
+    }
+
+    // Gyroscope scale check
+    if (!verifySetting(i2c0, IMU_I2C_ADDRESS, IMU_GYRO_CONFIG, gyro_config_byte, "MPU-6050 verify IMU_REG_GYRO_CONFIG", "MPU-6050 IMU_REG_GYRO_CONFIG not set.")) {
+        error_raised_flag = true;
+    }
+
+    if (error_raised_flag) {
+        printf("ERROR >>>>   MPU-6050 verify settings -> FAIL\n");
+    } else {
+        printf("INFO  >>>>   MPU-6050 verify settings -> SUCCESS\n");
+    }
+
+
     // Cleanup
     i2c_deinit(i2c);
 
+    calc_gyro_bias();
+
+    if  (!error_raised_flag){
+        return 0;
+    } else {
+        return 1;
+    }
+
+}
+
+void calc_gyro_bias() {
+    float gyro_bias_x_data[GYRO_ARRAY_SIZE] = {0.0f};
+    float gyro_bias_y_data[GYRO_ARRAY_SIZE] = {0.0f};
+    float gyro_bias_z_data[GYRO_ARRAY_SIZE] = {0.0f};
+    int gyro_bias_data_points = 0;
+    uint32_t gyro_bias_duration = time_ms() + 5000;
+    
+    printf("INFO  >>>>   Calculating gyroscope bias. Keep vehicle still.\n");
+
+    while (time_ms() < gyro_bias_duration) {
+        imu_read();
+        gyro_bias_x_data[gyro_bias_data_points] = normalised_gyro_values[0];
+        gyro_bias_y_data[gyro_bias_data_points] = normalised_gyro_values[1];
+        gyro_bias_z_data[gyro_bias_data_points] = normalised_gyro_values[2];
+        gyro_bias_data_points++;
+        sleep_ms(50);
+    }
+
+    gyro_offset_bias[GYRO_X_OFFSET] = 0.0f;
+    gyro_offset_bias[GYRO_Y_OFFSET] = 0.0f;
+    gyro_offset_bias[GYRO_Z_OFFSET] = 0.0f;
+
+    //Summing data
+    for (int i = 0; i < gyro_bias_data_points; i++) {
+        gyro_offset_bias[GYRO_X_OFFSET] += gyro_bias_x_data[i];
+        gyro_offset_bias[GYRO_Y_OFFSET] += gyro_bias_y_data[i];
+        gyro_offset_bias[GYRO_Z_OFFSET] += gyro_bias_z_data[i];
+    }
+
+    //Dividing by number of data points to get average
+    gyro_offset_bias[GYRO_X_OFFSET] /= gyro_bias_data_points;
+    gyro_offset_bias[GYRO_Y_OFFSET] /= gyro_bias_data_points;
+    gyro_offset_bias[GYRO_Z_OFFSET] /= gyro_bias_data_points;
+
+    printf("INFO  >>>>   Gyroscope offsets saved. Offsets:\n");
+    printf("INFO  >>>>   X: %f\n", gyro_offset_bias[GYRO_X_OFFSET]);
+    printf("INFO  >>>>   Y: %f\n", gyro_offset_bias[GYRO_Y_OFFSET]);
+    printf("INFO  >>>>   Z: %f\n", gyro_offset_bias[GYRO_Z_OFFSET]);
+}
+
+void rc_read() {
+    /* 
+        An iBus packet comprises 32 bytes:
+        - 2 header bytes (first header is 0x20, second is 0x40)
+        - 28 channel bytes (2 bytes per channel value)
+        - 2 checksum bytes (1 checksum value)
+
+    The protocol data rate is 115200 baud. A packet is transmitted every 7 ms.
+    Each packet takes 32*8/115200 seconds to transmit (about 2.22 ms).
+    Checksum = 0xFFFF - sum of first 30 bytes
+    The channels' values are transmitted sequentially in little endian byte order.
+    
+    */
+    for (int attempt = 0; attempt < 6; ++attempt) {
+        // Check if data is available in the UART buffer
+        if (uart_is_readable(UART_ID)) {
+            uint8_t buffer[RC_BUFFER];
+
+            // Read start bytes
+            uint8_t char1 = uart_getc(UART_ID);
+            uint8_t char2 = uart_getc(UART_ID);
+
+            // Validate start bytes
+            if (char1 == 0x20 && char2 == 0x40) {
+                // Read the rest of the data into the buffer
+                uart_read_blocking(UART_ID, buffer, RC_BUFFER);
+
+                // Calculate and set the checksum
+                uint16_t checksum = 0xFF9F; // 0xFFFF - 0x20 - 0x40
+                
+                //Validating checksum
+                for (int byte_index = 0; byte_index < 28; ++byte_index) {
+                checksum -= buffer[byte_index];
+                }
+
+                if (checksum == (buffer[29] << 8) | buffer[28]) { // Convert to big endian
+                // Process raw values
+                    int raw_rc_values[6];
+                    for (int channel = 0; channel < 6; ++channel) {
+                    raw_rc_values[channel] = (buffer[channel * 2 + 1] << 8) + buffer[channel * 2];
+                    }
+                   
+                    // Normalize data
+                    normalised_rc_values[RC_THROTTLE] = (float)(raw_rc_values[RC_THROTTLE] * 0.001 - 1); // Normalize from 1000-2000 to 0.0-1.0
+                    normalised_rc_values[RC_ROLL] = (float)((raw_rc_values[RC_ROLL] - 1500) * 0.002);    // Normalize from 1000-2000 to -1-1
+                    normalised_rc_values[RC_PITCH] = (float)((raw_rc_values[RC_PITCH] - 1500) * 0.002);  // Normalize from 1000-2000 to -1-1
+                    normalised_rc_values[RC_YAW] = (float)-((raw_rc_values[RC_YAW] - 1500) * 0.002);      // Normalize from 1000-2000 to -1-1
+                    normalised_rc_values[RC_SWA] = (float)(raw_rc_values[RC_SWA] * 0.001 - 1);    // Normalize from 1000-2000 to 0-1
+                    normalised_rc_values[RC_SWB] = (float)(raw_rc_values[RC_SWB] * 0.001 - 1);    // Normalize from 1000-2000 to 0-1
+                    
+                    break;
+                }
+
+
+
+            }
+        }
+    }
 }
 
 
+void imu_read() {
+    /*
+    The IMU measurements are 16-bit 2's complement values ranging from -32768
+    to 32767 which needs to be multiplied by the scale multipliers to obtain the
+    physical values. These scale multipliers change depending on the range set
+    in their respective register configs. The high byte is read before the low
+    byte for each measurement.
+    */
+ 
+
+    //The code reads the high and low bytes separately and combines them to form the 16-bit values 
+    //for X, Y, and Z axes.
+    uint8_t x_hi = i2c_read_blocking(i2c0, IMU_I2C_ADDRESS, IMU_REG_GYRO_X_HI, 1, false);
+    uint8_t x_lo = i2c_read_blocking(i2c0, IMU_I2C_ADDRESS, IMU_REG_GYRO_X_LO, 1, false);
+    uint8_t y_hi = i2c_read_blocking(i2c0, IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_HI, 1, false);
+    uint8_t y_lo = i2c_read_blocking(i2c0, IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_LO, 1, false);
+    uint8_t z_hi = i2c_read_blocking(i2c0, IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_HI, 1, false);
+    uint8_t z_lo = i2c_read_blocking(i2c0, IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_LO, 1, false);
+
+    int x_value = (x_hi << 8) | x_lo;
+    int y_value = (y_hi << 8) | y_lo;
+    int z_value = (z_hi << 8) | z_lo;
+
+    // Normalize X axis
+    if (x_value > 32767) {
+        normalised_gyro_values[GYRO_ROLL] = (x_value - 65536) * gyro_multiplier - gyro_offset_bias[GYRO_ROLL];
+    } else {
+        normalised_gyro_values[GYRO_ROLL] = x_value * gyro_multiplier - gyro_offset_bias[GYRO_ROLL];
+    }
+
+    // Normalize Y axis
+    if (y_value > 32767) {
+        normalised_gyro_values[GYRO_PITCH] = (y_value - 65536) * gyro_multiplier - gyro_offset_bias[GYRO_PITCH];
+    } else {
+        normalised_gyro_values[GYRO_PITCH] = y_value * gyro_multiplier - gyro_offset_bias[GYRO_PITCH];
+    }
+
+    // Normalize Z axis
+    if (z_value > 32767) {
+        normalised_gyro_values[GYRO_YAW] = (z_value - 65536) * gyro_multiplier - gyro_offset_bias[GYRO_YAW];
+    } else {
+        normalised_gyro_values[GYRO_YAW] = z_value * gyro_multiplier - gyro_offset_bias[GYRO_YAW];
+    }
+
+
+}
 
 
 ////////////////// Main //////////////////

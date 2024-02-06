@@ -1,9 +1,0 @@
-/home/user/catkin_ws/src/build/description/CMakeFiles/uninstall.dir
-/home/user/catkin_ws/src/build/description/CMakeFiles/description_uninstall.dir
-/home/user/catkin_ws/src/build/description/CMakeFiles/test.dir
-/home/user/catkin_ws/src/build/description/CMakeFiles/edit_cache.dir
-/home/user/catkin_ws/src/build/description/CMakeFiles/rebuild_cache.dir
-/home/user/catkin_ws/src/build/description/CMakeFiles/list_install_components.dir
-/home/user/catkin_ws/src/build/description/CMakeFiles/install.dir
-/home/user/catkin_ws/src/build/description/CMakeFiles/install/local.dir
-/home/user/catkin_ws/src/build/description/CMakeFiles/install/strip.dir

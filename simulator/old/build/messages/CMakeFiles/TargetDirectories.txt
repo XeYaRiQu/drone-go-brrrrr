@@ -1,9 +1,0 @@
-/home/user/catkin_ws/src/build/messages/CMakeFiles/uninstall.dir
-/home/user/catkin_ws/src/build/messages/CMakeFiles/messages_uninstall.dir
-/home/user/catkin_ws/src/build/messages/CMakeFiles/test.dir
-/home/user/catkin_ws/src/build/messages/CMakeFiles/edit_cache.dir
-/home/user/catkin_ws/src/build/messages/CMakeFiles/rebuild_cache.dir
-/home/user/catkin_ws/src/build/messages/CMakeFiles/list_install_components.dir
-/home/user/catkin_ws/src/build/messages/CMakeFiles/install.dir
-/home/user/catkin_ws/src/build/messages/CMakeFiles/install/local.dir
-/home/user/catkin_ws/src/build/messages/CMakeFiles/install/strip.dir

@@ -1,4 +1,5 @@
 FROM georgno/drone:latest
+# FROM ros:humble-ros-core-jammy
 
 RUN apt-get update \
     && apt-get install -y \

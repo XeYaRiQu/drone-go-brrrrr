@@ -63,9 +63,9 @@ enum ACCEL_RANGE {
     RANGE_16G
 };
 
-int GYRO_RANGE = RANGE_250DPS;
+int GYRO_RANGE = RANGE_1000DPS;
 int ACCEL_RANGE = RANGE_4G;
-int lpf_config_byte = 3;
+int lpf_config_byte = 2;
 //lpf config byte, acc lpf, gyro lpf --- 0,260,256 :: 1,184,188 :: 2,94,98 :: 3,44,42 :: 4,21,20 ::5,10,10 :: 6,5,5
 
 
@@ -563,6 +563,7 @@ void main() {
                 prev_integ_roll = pid_inte_roll;
                 prev_integ_pitch = pid_inte_pitch;
                 prev_integ_yaw = pid_inte_yaw;
+                prev_pid_timestamp = time_us_64();
 
             }
             

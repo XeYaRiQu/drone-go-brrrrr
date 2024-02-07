@@ -13,7 +13,7 @@ from machine import Pin, UART, I2C, PWM, freq
 
 ##### General settings #####
 
-gyro_range:int = 250 # 250, 500, 1000, 2000 dps (IMU_REG_GYRO_CONFIG[3:4])
+gyro_range:int = 1000 # 250, 500, 1000, 2000 dps (IMU_REG_GYRO_CONFIG[3:4])
 acce_range:int = 4   # 2, 4, 8, 16 g (IMU_REG_ACCE_CONFIG[3:4])
 
 min_throttle_rate:float = 0.07  # Maximum throttle at 0% input (does not generate lift)
@@ -160,9 +160,9 @@ def setup() -> int:
         time.sleep_ms(100)
         imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_SMPLRT_DIV, b'\x03')  # Set sensor sample rate to 250 Hz
         time.sleep_ms(100)
-        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_CONFIG, b'\x03')      # Set accelerometer LPF to 44 Hz and gyroscope LPF to 42 Hz
+        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_CONFIG, b'\x02')      # Set accelerometer LPF to 44 Hz and gyroscope LPF to 42 Hz
         time.sleep_ms(100)
-        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_CONFIG, b'\x00') # Set gyroscope scale to 250 dps
+        imu.writeto_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_CONFIG, b'\x10') # Set gyroscope scale to 250 dps
         print("INFO  >>>>   MPU-6050 setup --> SUCCESS\n")
     except:
         error_raised_flag = True
@@ -187,7 +187,7 @@ def setup() -> int:
             print("ERROR >>>>   MPU-6050 verify IMU_REG_PWR_MGMT1 -> FAIL\n")
 
         # Low pass filter check
-        if int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_CONFIG, 1), 'big') == 3:
+        if int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_CONFIG, 1), 'big') == 2:
             print("INFO  >>>>   MPU-6050 verify IMU_REG_CONFIG -> SUCCESS\n")
         else:
             error_raised_flag = True
@@ -203,7 +203,7 @@ def setup() -> int:
             print("INFO  >>>>   MPU-6050 verify IMU_REG_SMPLRT_DIV -> FAIL\n")
 
         # Gyroscope scale check
-        if int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_CONFIG, 1), 'big') == 0:
+        if int.from_bytes(imu.readfrom_mem(IMU_I2C_ADDRESS, IMU_REG_GYRO_CONFIG, 1), 'big') == 16:
             print("INFO  >>>>   MPU-6050 verify IMU_REG_GYRO_CONFIG -> SUCCESS\n")
         else:
             error_raised_flag = True
@@ -326,7 +326,8 @@ def imu_read() -> None:
 ##### Main #####
 
 if setup() == 0:
-    prev_pid_timestamp:int = time.ticks_us()
+    prev_pid_timestamp_I:int = time.ticks_us()
+    prev_pid_timestamp_D:int = prev_pid_timestamp_I
     print("INFO  >>>>   Starting flight control loop.\n")
     led.off()
 
@@ -361,12 +362,14 @@ if setup() == 0:
             pid_prop_yaw:float = pid_error_yaw * pid_kp_yaw
 
             # Calculate time elapsed since previous PID calculations
-            pid_cycle_time:float = time.ticks_diff(time.ticks_us(), prev_pid_timestamp) * 0.000001
+            pid_cycle_time_I:float = time.ticks_diff(time.ticks_us(), prev_pid_timestamp_I) * 0.000001
 
             # Integral calculations
-            pid_inte_roll:float = pid_error_roll * pid_ki_roll * pid_cycle_time + prev_pid_inte_roll
-            pid_inte_pitch:float = pid_error_pitch * pid_ki_pitch * pid_cycle_time + prev_pid_inte_pitch
-            pid_inte_yaw:float = pid_error_yaw * pid_ki_yaw * pid_cycle_time + prev_pid_inte_yaw
+            pid_inte_roll:float = pid_error_roll * pid_ki_roll * pid_cycle_time_I + prev_pid_inte_roll
+            pid_inte_pitch:float = pid_error_pitch * pid_ki_pitch * pid_cycle_time_I + prev_pid_inte_pitch
+            pid_inte_yaw:float = pid_error_yaw * pid_ki_yaw * pid_cycle_time_I + prev_pid_inte_yaw
+
+            prev_pid_timestamp_I = time.ticks_us()
 
             # Constrain within integral limits
             pid_inte_roll = max(min(pid_inte_roll, pid_integral_limit_pos), pid_integral_limit_neg)
@@ -375,15 +378,15 @@ if setup() == 0:
 
             # Calculate time elapsed since previous PID calculations
             # pid_cycle_time:float = time.ticks_diff(time.ticks_us(), prev_pid_timestamp) * 0.000001
-            pid_cycle_time:float = 1/time.ticks_diff(time.ticks_us(), prev_pid_timestamp) * 0.000001
+            pid_cycle_time_D:float = 1/time.ticks_diff(time.ticks_us(), prev_pid_timestamp_D) * 0.000001
 
             # Derivative calculations
-            pid_deri_roll:float = (pid_error_roll - prev_pid_error_roll) * pid_kd_roll * pid_cycle_time
-            pid_deri_pitch:float = (pid_error_pitch - prev_pid_error_pitch) * pid_kd_pitch * pid_cycle_time
-            pid_deri_yaw:float = (pid_error_yaw - prev_pid_error_yaw) * pid_kd_yaw * pid_cycle_time
+            pid_deri_roll:float = (pid_error_roll - prev_pid_error_roll) * pid_kd_roll * pid_cycle_time_D
+            pid_deri_pitch:float = (pid_error_pitch - prev_pid_error_pitch) * pid_kd_pitch * pid_cycle_time_D
+            pid_deri_yaw:float = (pid_error_yaw - prev_pid_error_yaw) * pid_kd_yaw * pid_cycle_time_D
 
             # Capture end timestamp for current PID loop
-            prev_pid_timestamp = time.ticks_us()
+            prev_pid_timestamp_D = time.ticks_us()
 
             throttle_rate:float = desired_throttle_rate * THROTTLE_RANGE + min_throttle_rate
             pid_roll:float = pid_prop_roll + pid_inte_roll + pid_deri_roll
@@ -404,17 +407,23 @@ if setup() == 0:
             prev_pid_inte_pitch = pid_inte_pitch
             prev_pid_inte_yaw = pid_inte_yaw
 
+            motor1_duty_cycle = int(min(max(motor1_throttle * 1000000, 0) + 1000000, 2000000))
+            motor2_duty_cycle = int(min(max(motor2_throttle * 1000000, 0) + 1000000, 2000000))
+            motor3_duty_cycle = int(min(max(motor3_throttle * 1000000, 0) + 1000000, 2000000))
+            motor4_duty_cycle = int(min(max(motor4_throttle * 1000000, 0) + 1000000, 2000000))
+
             # Calculate duty cycle
-            motor1.duty_ns(int(min(max(motor1_throttle * 1000000, 0) + 1000000, 2000000)))
-            motor2.duty_ns(int(min(max(motor2_throttle * 1000000, 0) + 1000000, 2000000)))
-            motor3.duty_ns(int(min(max(motor3_throttle * 1000000, 0) + 1000000, 2000000)))
-            motor4.duty_ns(int(min(max(motor4_throttle * 1000000, 0) + 1000000, 2000000)))
+            motor1.duty_ns(motor1_duty_cycle)
+            motor2.duty_ns(motor2_duty_cycle)
+            motor3.duty_ns(motor3_duty_cycle)
+            motor4.duty_ns(motor4_duty_cycle)
 
             # DEBUG PRINTS
             # print(normalised_rc_values)
             # print(normalised_gyro_values)
-            # print(motor1_throttle, motor2_throttle, motor3_throttle, motor4_throttle)
-            # print("INFO  >>>>   Loop duration:", pid_cycle_time) # Target duration is less than 0.004 s
+            # print(pid_error_roll, pid_error_pitch, pid_error_yaw)
+            # print(motor1_duty_cycle, motor1_duty_cycle, motor3_duty_cycle, motor4_duty_cycle)
+            # print(prev_pid_timestamp_I, prev_pid_timestamp_D)
         else:
             rc_read()
             if normalised_rc_values[RC_EXTRA1_CH] == 1:
@@ -433,6 +442,14 @@ if setup() == 0:
                         motor4.duty_ns(1000000)
 
                     led.on()
+                    prev_pid_error_roll:float = 0.0
+                    prev_pid_error_pitch:float = 0.0
+                    prev_pid_error_yaw:float = 0.0
+                    prev_pid_inte_roll:float = 0.0
+                    prev_pid_inte_pitch:float = 0.0
+                    prev_pid_inte_yaw:float = 0.0
+                    prev_pid_timestamp_I:int = time.ticks_us()
+                    prev_pid_timestamp_D:int = prev_pid_timestamp_I
             else:
                     motor1.deinit()
                     motor2.deinit()

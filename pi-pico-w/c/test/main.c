@@ -145,6 +145,12 @@ float gyro_offset_bias[3] = {0.0f};
 #define RC_BUFFER 30
 #define UART_ID uart1
 
+//for motors
+uint slice_num1 = 0;
+uint slice_num2 = 0;
+uint slice_num3 = 0;
+uint slice_num4 = 0;
+
 ////////////////// Functions //////////////////
 
 int mpu6050_init() {
@@ -337,6 +343,27 @@ int setup() {
         return 1;
     }
 
+    //Motors Setup
+
+    gpio_set_function(PIN_MOTOR1, GPIO_FUNC_PWM);
+    gpio_set_function(PIN_MOTOR2, GPIO_FUNC_PWM);
+    gpio_set_function(PIN_MOTOR3, GPIO_FUNC_PWM);
+    gpio_set_function(PIN_MOTOR3, GPIO_FUNC_PWM);
+
+    slice_num1 =  pwm_gpio_to_slice_num(PIN_MOTOR1);
+    slice_num2 =  pwm_gpio_to_slice_num(PIN_MOTOR2);
+    slice_num3 =  pwm_gpio_to_slice_num(PIN_MOTOR3);
+    slice_num4 =  pwm_gpio_to_slice_num(PIN_MOTOR4);
+
+    pwm_set_enabled(slice_num1, true);
+    pwm_set_enabled(slice_num2, true);
+    pwm_set_enabled(slice_num3, true);
+    pwm_set_enabled(slice_num4, true);
+
+    pwm_set_wrap(slice_num1, 500000); //For 250Hz freq, time = 4ms. 4ms/8ns = 500000 cycles
+    pwm_set_wrap(slice_num2, 500000); 
+    pwm_set_wrap(slice_num3, 500000); 
+    pwm_set_wrap(slice_num4, 500000); 
 }
 
 void calc_gyro_bias() {
@@ -564,6 +591,34 @@ void main() {
                 prev_integ_pitch = pid_inte_pitch;
                 prev_integ_yaw = pid_inte_yaw;
                 prev_pid_timestamp = time_us_64();
+
+                //Calculating duty cycle
+                float motor1_temp = ((motor1_throttle * 1000000 > 0) ? motor1_throttle * 1000000 : 0) + 1000000;
+                float motor2_temp = ((motor2_throttle * 1000000 > 0) ? motor2_throttle * 1000000 : 0) + 1000000;
+                float motor3_temp = ((motor3_throttle * 1000000 > 0) ? motor3_throttle * 1000000 : 0) + 1000000;
+                float motor4_temp = ((motor4_throttle * 1000000 > 0) ? motor4_throttle * 1000000 : 0) + 1000000;
+
+                int motor1_ns = (motor1_temp > 2000000) ? 2000000 : (int)motor1_temp;
+                int motor2_ns = (motor2_temp > 2000000) ? 2000000 : (int)motor2_temp;
+                int motor3_ns = (motor3_temp > 2000000) ? 2000000 : (int)motor3_temp;
+                int motor4_ns = (motor4_temp > 2000000) ? 2000000 : (int)motor4_temp;
+
+                float motor1_dutycycle = motor1_ns/4000000;  //motor1_ns is between 1000000 and 2000000. 25%-50% duty cycle
+                float motor2_dutycycle = motor2_ns/4000000;
+                float motor3_dutycycle = motor3_ns/4000000;
+                float motor4_dutycycle = motor4_ns/4000000;
+
+                //Convert duty cycle to setpoint for gpio_set_level. setpoint = wrap number * duty cycle
+                u_int16_t setpoint_motor1 = 500000 * motor1_dutycycle;
+                u_int16_t setpoint_motor2 = 500000 * motor2_dutycycle;
+                u_int16_t setpoint_motor3 = 500000 * motor3_dutycycle;
+                u_int16_t setpoint_motor4 = 500000 * motor4_dutycycle;
+
+                pwm_set_gpio_level(PIN_MOTOR1, setpoint_motor1);
+                pwm_set_gpio_level(PIN_MOTOR2, setpoint_motor2);
+                pwm_set_gpio_level(PIN_MOTOR3, setpoint_motor3);
+                pwm_set_gpio_level(PIN_MOTOR4, setpoint_motor4);
+
 
             }
             

@@ -521,10 +521,8 @@ void main() {
     uint64_t start_timestamp = time_us_64();
 
     printf("INFO  >>>>   Executing setup sequence.\n\n");
-    if (setup()) {
-        printf("ERROR >>>>   Setup failed in %f seconds, exiting.\n\n", ((double)(time_us_64() - start_timestamp)/1000000 - 5));
-    }
-    else {
+    if (setup() == 0) {
+    
         printf("INFO  >>>>   Setup completed in %f seconds, looping.\n\n", ((double)(time_us_64() - start_timestamp)/1000000 - 5));
         uint64_t prev_pid_timestamp = time_us_64();
         ////////////////// Loop //////////////////
@@ -535,7 +533,10 @@ void main() {
 
                 if (normalised_rc_values[RC_SWA] == 0) {
                     if (normalised_rc_values[RC_THROTTLE] == 0.0){
-                        //deinit 4 motors
+                        pwm_set_gpio_level(PIN_MOTOR1, 0); //motors running at 0% duty cycle. motors not rotating
+                        pwm_set_gpio_level(PIN_MOTOR2, 0);
+                        pwm_set_gpio_level(PIN_MOTOR3, 0);
+                        pwm_set_gpio_level(PIN_MOTOR4, 0);
                         motors_are_armed = false;
                     }
                 }
@@ -590,7 +591,7 @@ void main() {
                 prev_integ_roll = pid_inte_roll;
                 prev_integ_pitch = pid_inte_pitch;
                 prev_integ_yaw = pid_inte_yaw;
-                prev_pid_timestamp = time_us_64();
+                
 
                 //Calculating duty cycle
                 float motor1_temp = ((motor1_throttle * 1000000 > 0) ? motor1_throttle * 1000000 : 0) + 1000000;
@@ -623,10 +624,55 @@ void main() {
             }
             
             else {
+                rc_read();
+                if (normalised_rc_values[RC_SWA] == 1) {
+                    if (normalised_rc_values[RC_THROTTLE] == 0.0) {
+                        motors_are_armed = true;
+                        uint64_t spin_up_delay= time_us_64 + 1000;
+
+                        while (time_us_64 < spin_up_delay) {
+
+                            pwm_set_gpio_level(PIN_MOTOR1, 500000 * 0.25); //motors running at 25% duty cycle
+                            pwm_set_gpio_level(PIN_MOTOR2, 500000 * 0.25);
+                            pwm_set_gpio_level(PIN_MOTOR3, 500000 * 0.25);
+                            pwm_set_gpio_level(PIN_MOTOR4, 500000 * 0.25);
+                            
+                        }
+
+                        float prev_pid_error_roll = 0.0;
+                        float prev_pid_error_pitch = 0.0;
+                        float prev_pid_error_yaw = 0.0;
+                        float prev_pid_inte_roll = 0.0;
+                        float prev_pid_inte_pitch = 0.0;
+                        float prev_pid_inte_yaw = 0.0;
+
+                        prev_pid_timestamp = time_us_64;
+
+                    }
+                }
+                else{
+                    pwm_set_gpio_level(PIN_MOTOR1, 0); //motors running at 0% duty cycle. motors not rotating
+                    pwm_set_gpio_level(PIN_MOTOR2, 0);
+                    pwm_set_gpio_level(PIN_MOTOR3, 0);
+                    pwm_set_gpio_level(PIN_MOTOR4, 0);
+
+                }                
+
+
 
             }
 
             while (time_us_64() - start_timestamp < 4000); // Do nothing until 4 ms has passed since loop start
         }
     }
+    
+    else {
+        printf("ERROR >>>> -> SETUP FAIL\n");
+        printf("ERROR >>>>   Setup failed in %f seconds, exiting.\n\n", ((double)(time_us_64() - start_timestamp)/1000000 - 5));
+
+
+    }
+
+
+
 }

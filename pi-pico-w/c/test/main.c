@@ -293,7 +293,7 @@ int setup() {
     // Set gyroscope scale (in dps)
     writeRegister(IMU_GYRO_CONFIG, gyro_config_byte);
 
-    printf("INFO  >>>>   MPU-6050 setup --> SUCCESS\n");
+    //printf("INFO  >>>>   MPU-6050 setup --> SUCCESS\n");
 
     //Reading from registers to check if values are updated correctly
 
@@ -345,6 +345,8 @@ int setup() {
 
     //Motors Setup
 
+    printf("INFO  >>>> Setting up motors \n");
+
     gpio_set_function(PIN_MOTOR1, GPIO_FUNC_PWM);
     gpio_set_function(PIN_MOTOR2, GPIO_FUNC_PWM);
     gpio_set_function(PIN_MOTOR3, GPIO_FUNC_PWM);
@@ -364,6 +366,9 @@ int setup() {
     pwm_set_wrap(slice_num2, 500000); 
     pwm_set_wrap(slice_num3, 500000); 
     pwm_set_wrap(slice_num4, 500000); 
+
+    
+    
 }
 
 void calc_gyro_bias() {
@@ -531,8 +536,8 @@ void main() {
             if (motors_are_armed == true) {
                 rc_read();
 
-                if (normalised_rc_values[RC_SWA] == 0) {
-                    if (normalised_rc_values[RC_THROTTLE] == 0.0){
+                if (normalised_rc_values[RC_SWA] == 0) {  // does this need to be SWA or SWB? need to confirm
+                    if (normalised_rc_values[RC_THROTTLE] < 0.08){   //so that motors stop even if throttle control is not exactly = 0
                         pwm_set_gpio_level(PIN_MOTOR1, 0); //motors running at 0% duty cycle. motors not rotating
                         pwm_set_gpio_level(PIN_MOTOR2, 0);
                         pwm_set_gpio_level(PIN_MOTOR3, 0);
@@ -625,8 +630,8 @@ void main() {
             
             else {
                 rc_read();
-                if (normalised_rc_values[RC_SWA] == 1) {
-                    if (normalised_rc_values[RC_THROTTLE] == 0.0) {
+                if (normalised_rc_values[RC_SWA] == 1) { //SWA or SWB
+                    if (normalised_rc_values[RC_THROTTLE] == 0.0) {  // again, is this condition correct?
                         motors_are_armed = true;
                         uint64_t spin_up_delay= time_us_64 + 1000;
 

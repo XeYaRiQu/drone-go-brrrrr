@@ -362,10 +362,23 @@ int setup() {
     pwm_set_enabled(slice_num3, true);
     pwm_set_enabled(slice_num4, true);
 
+    pwm_set_clkdiv(slice_num1, 100.0 );
+    pwm_set_clkdiv(slice_num2, 100.0 );
+    pwm_set_clkdiv(slice_num3, 100.0 );
+    pwm_set_clkdiv(slice_num4, 100.0 ); //so now the clock runs at 125kHz instead of 125MHz
+
+    pwm_set_wrap(slice_num1, 4999); //For 250Hz freq, wrap num = 125000/250  - 1 = 4999
+    pwm_set_wrap(slice_num2, 4999); 
+    pwm_set_wrap(slice_num3, 4999); 
+    pwm_set_wrap(slice_num4, 4999); 
+
+    /*
     pwm_set_wrap(slice_num1, 500000); //For 250Hz freq, time = 4ms. 4ms/8ns = 500000 cycles
     pwm_set_wrap(slice_num2, 500000); 
     pwm_set_wrap(slice_num3, 500000); 
     pwm_set_wrap(slice_num4, 500000); 
+    */
+
 
     
     
@@ -536,8 +549,9 @@ void main() {
             if (motors_are_armed == true) {
                 rc_read();
 
+
                 if (normalised_rc_values[RC_SWA] == 0) {  // does this need to be SWA or SWB? need to confirm
-                    if (normalised_rc_values[RC_THROTTLE] < 0.08){   //so that motors stop even if throttle control is not exactly = 0
+                    if (normalised_rc_values[RC_THROTTLE] < 0.05){   //so that motors stop even if throttle control is not exactly = 0
                         pwm_set_gpio_level(PIN_MOTOR1, 0); //motors running at 0% duty cycle. motors not rotating
                         pwm_set_gpio_level(PIN_MOTOR2, 0);
                         pwm_set_gpio_level(PIN_MOTOR3, 0);
@@ -615,10 +629,10 @@ void main() {
                 float motor4_dutycycle = motor4_ns/4000000;
 
                 //Convert duty cycle to setpoint for gpio_set_level. setpoint = wrap number * duty cycle
-                u_int16_t setpoint_motor1 = 500000 * motor1_dutycycle;
-                u_int16_t setpoint_motor2 = 500000 * motor2_dutycycle;
-                u_int16_t setpoint_motor3 = 500000 * motor3_dutycycle;
-                u_int16_t setpoint_motor4 = 500000 * motor4_dutycycle;
+                u_int16_t setpoint_motor1 = 4999 * motor1_dutycycle;
+                u_int16_t setpoint_motor2 = 4999 * motor2_dutycycle;
+                u_int16_t setpoint_motor3 = 4999 * motor3_dutycycle;
+                u_int16_t setpoint_motor4 = 4999 * motor4_dutycycle;
 
                 pwm_set_gpio_level(PIN_MOTOR1, setpoint_motor1);
                 pwm_set_gpio_level(PIN_MOTOR2, setpoint_motor2);
@@ -637,10 +651,10 @@ void main() {
 
                         while (time_us_64 < spin_up_delay) {
 
-                            pwm_set_gpio_level(PIN_MOTOR1, 500000 * 0.25); //motors running at 25% duty cycle
-                            pwm_set_gpio_level(PIN_MOTOR2, 500000 * 0.25);
-                            pwm_set_gpio_level(PIN_MOTOR3, 500000 * 0.25);
-                            pwm_set_gpio_level(PIN_MOTOR4, 500000 * 0.25);
+                            pwm_set_gpio_level(PIN_MOTOR1, 4999 * 0.25); //motors running at 25% duty cycle
+                            pwm_set_gpio_level(PIN_MOTOR2, 4999 * 0.25);
+                            pwm_set_gpio_level(PIN_MOTOR3, 4999 * 0.25);
+                            pwm_set_gpio_level(PIN_MOTOR4, 4999 * 0.25);
                             
                         }
 

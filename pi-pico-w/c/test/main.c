@@ -107,12 +107,12 @@ static const float I_LIMIT_NEG = -100.0;
 #define IMU_TEMP_HI     65
 #define IMU_TEMP_LO     66
 //not using define for these cause i2c_read_blocking needs uint8_t type
-const uint8_t IMU_REG_GYRO_X_HI = 67;
-const uint8_t IMU_REG_GYRO_X_LO = 68;
-const uint8_t IMU_REG_GYRO_Y_HI = 69;
-const uint8_t IMU_REG_GYRO_Y_LO = 70;
-const uint8_t IMU_REG_GYRO_Z_HI = 71;
-const uint8_t IMU_REG_GYRO_Z_LO = 72;
+uint8_t IMU_REG_GYRO_X_HI = 67;
+uint8_t IMU_REG_GYRO_X_LO = 68;
+uint8_t IMU_REG_GYRO_Y_HI = 69;
+uint8_t IMU_REG_GYRO_Y_LO = 70;
+uint8_t IMU_REG_GYRO_Z_HI = 71;
+uint8_t IMU_REG_GYRO_Z_LO = 72;
 
 
 ////////////////// Constants //////////////////
@@ -142,6 +142,7 @@ bool motors_are_armed = false;
 float normalised_rc_values[6] = {0.0f};
 float normalised_gyro_values[3] = {0.0f};
 float gyro_offset_bias[3] = {0.0f};
+int16_t gyro[3];
 
 #define RC_BUFFER 30
 #define UART_ID uart1
@@ -202,7 +203,13 @@ void writeRegister(uint8_t reg, uint8_t value) {
 
 bool verifySetting(uint8_t address, uint8_t reg, uint8_t expected_value, const char *success_msg, const char *fail_msg) {
     uint8_t data;
-    i2c_read_blocking(i2c_default, address, reg, 1, false);
+    //uint8_t output[1] = {reg};
+    uint8_t input[1];
+
+    i2c_write_blocking (i2c_default, address, &reg, 1, true);
+    i2c_read_blocking(i2c_default, address, input, 1, false);
+    data = input[0];
+
     if (data == expected_value) {
         printf("INFO  >>>>   %s -> SUCCESS\n", success_msg);
         return true;
@@ -224,16 +231,29 @@ void imu_read() {
 
     //The code reads the high and low bytes separately and combines them to form the 16-bit values 
     //for X, Y, and Z axes.
-    uint8_t x_hi = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_X_HI, 1, false);
+    
+    // Now gyro data from reg 0x43 for 6 bytes (0x43 is the register with GYRO_X_HI byte)
+    // The register is auto incrementing on each read
+    uint8_t gyro_buffer[6];
+    uint8_t val = 0x43;
+    i2c_write_blocking(i2c_default, IMU_I2C_ADDRESS, &val, 1, true);
+    i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, gyro_buffer, 6, false);  // False - finished with bus
+
+    for (int i = 0; i < 3; i++) {
+        gyro[i] = (gyro_buffer[i * 2] << 8 | gyro_buffer[(i * 2) + 1]);;
+    }
+
+    //not needed anymore
+    /*uint8_t x_hi = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_X_HI, 1, false);
     uint8_t x_lo = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_X_LO, 1, false);
     uint8_t y_hi = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_HI, 1, false);
     uint8_t y_lo = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_LO, 1, false);
     uint8_t z_hi = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_HI, 1, false);
-    uint8_t z_lo = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_LO, 1, false);
+    uint8_t z_lo = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_LO, 1, false);*/
 
-    int x_value = (x_hi << 8) | x_lo; //x_value is 16 bit
-    int y_value = (y_hi << 8) | y_lo;
-    int z_value = (z_hi << 8) | z_lo;
+    int x_value = gyro[0];//x_value is 16 bit
+    int y_value = gyro[1];
+    int z_value = gyro[2];
     
     // Normalize X axis
     if (x_value > 32767) {

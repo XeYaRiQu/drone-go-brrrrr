@@ -106,12 +106,13 @@ static const float I_LIMIT_NEG = -100.0;
 #define IMU_ACCE_Z_L    64
 #define IMU_TEMP_HI     65
 #define IMU_TEMP_LO     66
-#define IMU_REG_GYRO_X_HI    67
-#define IMU_REG_GYRO_X_LO    68
-#define IMU_REG_GYRO_Y_HI    69
-#define IMU_REG_GYRO_Y_LO    70
-#define IMU_REG_GYRO_Z_HI    71
-#define IMU_REG_GYRO_Z_LO    72
+//not using define for these cause i2c_read_blocking needs uint8_t type
+const uint8_t IMU_REG_GYRO_X_HI = 67;
+const uint8_t IMU_REG_GYRO_X_LO = 68;
+const uint8_t IMU_REG_GYRO_Y_HI = 69;
+const uint8_t IMU_REG_GYRO_Y_LO = 70;
+const uint8_t IMU_REG_GYRO_Z_HI = 71;
+const uint8_t IMU_REG_GYRO_Z_LO = 72;
 
 
 ////////////////// Constants //////////////////
@@ -209,6 +210,94 @@ bool verifySetting(uint8_t address, uint8_t reg, uint8_t expected_value, const c
         printf("ERROR >>>>   %s -> FAIL\n", fail_msg);
         return false;
     }
+}
+
+void imu_read() {
+    /*
+    The IMU measurements are 16-bit 2's complement values ranging from -32768
+    to 32767 which needs to be multiplied by the scale multipliers to obtain the
+    physical values. These scale multipliers change depending on the range set
+    in their respective register configs. The high byte is read before the low
+    byte for each measurement.
+    */
+ 
+
+    //The code reads the high and low bytes separately and combines them to form the 16-bit values 
+    //for X, Y, and Z axes.
+    uint8_t x_hi = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_X_HI, 1, false);
+    uint8_t x_lo = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_X_LO, 1, false);
+    uint8_t y_hi = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_HI, 1, false);
+    uint8_t y_lo = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_LO, 1, false);
+    uint8_t z_hi = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_HI, 1, false);
+    uint8_t z_lo = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_LO, 1, false);
+
+    int x_value = (x_hi << 8) | x_lo; //x_value is 16 bit
+    int y_value = (y_hi << 8) | y_lo;
+    int z_value = (z_hi << 8) | z_lo;
+    
+    // Normalize X axis
+    if (x_value > 32767) {
+        normalised_gyro_values[GYRO_ROLL] = (x_value - 65536) * gyro_multiplier - gyro_offset_bias[GYRO_ROLL];
+    } else {
+        normalised_gyro_values[GYRO_ROLL] = x_value * gyro_multiplier - gyro_offset_bias[GYRO_ROLL];
+    }
+
+    // Normalize Y axis
+    if (y_value > 32767) {
+        normalised_gyro_values[GYRO_PITCH] = (y_value - 65536) * gyro_multiplier - gyro_offset_bias[GYRO_PITCH];
+    } else {
+        normalised_gyro_values[GYRO_PITCH] = y_value * gyro_multiplier - gyro_offset_bias[GYRO_PITCH];
+    }
+
+    // Normalize Z axis
+    if (z_value > 32767) {
+        normalised_gyro_values[GYRO_YAW] = (z_value - 65536) * gyro_multiplier - gyro_offset_bias[GYRO_YAW];
+    } else {
+        normalised_gyro_values[GYRO_YAW] = z_value * gyro_multiplier - gyro_offset_bias[GYRO_YAW];
+    }
+
+
+}
+
+
+void calc_gyro_bias() {
+    float gyro_bias_x_data[GYRO_ARRAY_SIZE] = {0.0f};
+    float gyro_bias_y_data[GYRO_ARRAY_SIZE] = {0.0f};
+    float gyro_bias_z_data[GYRO_ARRAY_SIZE] = {0.0f};
+    int gyro_bias_data_points = 0;
+    uint32_t gyro_bias_duration = time_us_64() + 5000000;
+    
+    printf("INFO  >>>>   Calculating gyroscope bias. Keep vehicle still.\n");
+
+    while (time_us_64() < gyro_bias_duration) {
+        imu_read();
+        gyro_bias_x_data[gyro_bias_data_points] = normalised_gyro_values[0];
+        gyro_bias_y_data[gyro_bias_data_points] = normalised_gyro_values[1];
+        gyro_bias_z_data[gyro_bias_data_points] = normalised_gyro_values[2];
+        gyro_bias_data_points++;
+        sleep_ms(50);
+    }
+
+    gyro_offset_bias[GYRO_X_OFFSET] = 0.0f;
+    gyro_offset_bias[GYRO_Y_OFFSET] = 0.0f;
+    gyro_offset_bias[GYRO_Z_OFFSET] = 0.0f;
+
+    //Summing data
+    for (int i = 0; i < gyro_bias_data_points; i++) {
+        gyro_offset_bias[GYRO_X_OFFSET] += gyro_bias_x_data[i];
+        gyro_offset_bias[GYRO_Y_OFFSET] += gyro_bias_y_data[i];
+        gyro_offset_bias[GYRO_Z_OFFSET] += gyro_bias_z_data[i];
+    }
+
+    //Dividing by number of data points to get average
+    gyro_offset_bias[GYRO_X_OFFSET] /= gyro_bias_data_points;
+    gyro_offset_bias[GYRO_Y_OFFSET] /= gyro_bias_data_points;
+    gyro_offset_bias[GYRO_Z_OFFSET] /= gyro_bias_data_points;
+
+    printf("INFO  >>>>   Gyroscope offsets saved. Offsets:\n");
+    printf("INFO  >>>>   X: %f\n", gyro_offset_bias[GYRO_X_OFFSET]);
+    printf("INFO  >>>>   Y: %f\n", gyro_offset_bias[GYRO_Y_OFFSET]);
+    printf("INFO  >>>>   Z: %f\n", gyro_offset_bias[GYRO_Z_OFFSET]);
 }
 
 
@@ -384,46 +473,6 @@ int setup() {
     
 }
 
-void calc_gyro_bias() {
-    float gyro_bias_x_data[GYRO_ARRAY_SIZE] = {0.0f};
-    float gyro_bias_y_data[GYRO_ARRAY_SIZE] = {0.0f};
-    float gyro_bias_z_data[GYRO_ARRAY_SIZE] = {0.0f};
-    int gyro_bias_data_points = 0;
-    uint32_t gyro_bias_duration = time_ms() + 5000;
-    
-    printf("INFO  >>>>   Calculating gyroscope bias. Keep vehicle still.\n");
-
-    while (time_ms() < gyro_bias_duration) {
-        imu_read();
-        gyro_bias_x_data[gyro_bias_data_points] = normalised_gyro_values[0];
-        gyro_bias_y_data[gyro_bias_data_points] = normalised_gyro_values[1];
-        gyro_bias_z_data[gyro_bias_data_points] = normalised_gyro_values[2];
-        gyro_bias_data_points++;
-        sleep_ms(50);
-    }
-
-    gyro_offset_bias[GYRO_X_OFFSET] = 0.0f;
-    gyro_offset_bias[GYRO_Y_OFFSET] = 0.0f;
-    gyro_offset_bias[GYRO_Z_OFFSET] = 0.0f;
-
-    //Summing data
-    for (int i = 0; i < gyro_bias_data_points; i++) {
-        gyro_offset_bias[GYRO_X_OFFSET] += gyro_bias_x_data[i];
-        gyro_offset_bias[GYRO_Y_OFFSET] += gyro_bias_y_data[i];
-        gyro_offset_bias[GYRO_Z_OFFSET] += gyro_bias_z_data[i];
-    }
-
-    //Dividing by number of data points to get average
-    gyro_offset_bias[GYRO_X_OFFSET] /= gyro_bias_data_points;
-    gyro_offset_bias[GYRO_Y_OFFSET] /= gyro_bias_data_points;
-    gyro_offset_bias[GYRO_Z_OFFSET] /= gyro_bias_data_points;
-
-    printf("INFO  >>>>   Gyroscope offsets saved. Offsets:\n");
-    printf("INFO  >>>>   X: %f\n", gyro_offset_bias[GYRO_X_OFFSET]);
-    printf("INFO  >>>>   Y: %f\n", gyro_offset_bias[GYRO_Y_OFFSET]);
-    printf("INFO  >>>>   Z: %f\n", gyro_offset_bias[GYRO_Z_OFFSET]);
-}
-
 void rc_read() {
     /* 
         An iBus packet comprises 32 bytes:
@@ -482,54 +531,6 @@ void rc_read() {
             }
         }
     }
-}
-
-
-void imu_read() {
-    /*
-    The IMU measurements are 16-bit 2's complement values ranging from -32768
-    to 32767 which needs to be multiplied by the scale multipliers to obtain the
-    physical values. These scale multipliers change depending on the range set
-    in their respective register configs. The high byte is read before the low
-    byte for each measurement.
-    */
- 
-
-    //The code reads the high and low bytes separately and combines them to form the 16-bit values 
-    //for X, Y, and Z axes.
-    uint8_t x_hi = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_X_HI, 1, false);
-    uint8_t x_lo = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_X_LO, 1, false);
-    uint8_t y_hi = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_HI, 1, false);
-    uint8_t y_lo = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_LO, 1, false);
-    uint8_t z_hi = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_HI, 1, false);
-    uint8_t z_lo = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_LO, 1, false);
-
-    int x_value = (x_hi << 8) | x_lo; //x_value is 16 bit
-    int y_value = (y_hi << 8) | y_lo;
-    int z_value = (z_hi << 8) | z_lo;
-    
-    // Normalize X axis
-    if (x_value > 32767) {
-        normalised_gyro_values[GYRO_ROLL] = (x_value - 65536) * gyro_multiplier - gyro_offset_bias[GYRO_ROLL];
-    } else {
-        normalised_gyro_values[GYRO_ROLL] = x_value * gyro_multiplier - gyro_offset_bias[GYRO_ROLL];
-    }
-
-    // Normalize Y axis
-    if (y_value > 32767) {
-        normalised_gyro_values[GYRO_PITCH] = (y_value - 65536) * gyro_multiplier - gyro_offset_bias[GYRO_PITCH];
-    } else {
-        normalised_gyro_values[GYRO_PITCH] = y_value * gyro_multiplier - gyro_offset_bias[GYRO_PITCH];
-    }
-
-    // Normalize Z axis
-    if (z_value > 32767) {
-        normalised_gyro_values[GYRO_YAW] = (z_value - 65536) * gyro_multiplier - gyro_offset_bias[GYRO_YAW];
-    } else {
-        normalised_gyro_values[GYRO_YAW] = z_value * gyro_multiplier - gyro_offset_bias[GYRO_YAW];
-    }
-
-
 }
 #endif
 
@@ -647,14 +648,15 @@ void main() {
                 if (normalised_rc_values[RC_SWA] == 1) { //SWA or SWB
                     if (normalised_rc_values[RC_THROTTLE] == 0.0) {  // again, is this condition correct?
                         motors_are_armed = true;
-                        uint64_t spin_up_delay= time_us_64 + 1000;
+                        uint16_t startup_pwm = (uint16_t)(4999 * 0.25f);//setting 25% dutycycle
+                        uint64_t spin_up_delay= time_us_64() + 1000;
 
-                        while (time_us_64 < spin_up_delay) {
+                        while (time_us_64() < spin_up_delay) {
 
-                            pwm_set_gpio_level(PIN_MOTOR1, 4999 * 0.25); //motors running at 25% duty cycle
-                            pwm_set_gpio_level(PIN_MOTOR2, 4999 * 0.25);
-                            pwm_set_gpio_level(PIN_MOTOR3, 4999 * 0.25);
-                            pwm_set_gpio_level(PIN_MOTOR4, 4999 * 0.25);
+                            pwm_set_gpio_level(PIN_MOTOR1, startup_pwm); //motors running at 25% duty cycle
+                            pwm_set_gpio_level(PIN_MOTOR2, startup_pwm);
+                            pwm_set_gpio_level(PIN_MOTOR3, startup_pwm);
+                            pwm_set_gpio_level(PIN_MOTOR4, startup_pwm);
                             
                         }
 
@@ -665,7 +667,7 @@ void main() {
                         float prev_pid_inte_pitch = 0.0;
                         float prev_pid_inte_yaw = 0.0;
 
-                        prev_pid_timestamp = time_us_64;
+                        prev_pid_timestamp = time_us_64();
 
                     }
                 }

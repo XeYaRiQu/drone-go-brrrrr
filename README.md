@@ -2,25 +2,25 @@
 
 Welcome to our GitHub repository for EE4002D AY23/24!
 
-
 ## Project Roles:
-Hardware design         - @XeYaRiQu
+
+Hardware design - @XeYaRiQu
 
 Software implementation - @ShreshthSarda
 
-Simulation & tuning     - @ieaxls
+Simulation & tuning - @ieaxls
 
-Theoretical analysis    - @jersst
-
+Theoretical analysis - @jersst
 
 ## Deliverables:
+
 1. Testbed
 2. Multirotor
 3. Simulator
 4. Report
 
-
 ## Tasks:
+
 - [x] Literature review
 - [x] Finalise testbed design
 - [x] Purchase components
@@ -31,12 +31,13 @@ Theoretical analysis    - @jersst
 - [x] Perform test flight
 
 ## Workflow:
+
 main - All finalised and validated work (code, designs, etc.) will be checked-in here by creating a PR from the dev branch.
 
 dev - Primary development branch.
 
-
 ## Useful references:
+
 https://ardupilot.org/copter/index.html
 
 https://www.hackster.io/akarsh98/diy-arduino-based-quadcopter-drone-948153
@@ -60,6 +61,7 @@ https://forum.pjrc.com/index.php?threads/teensy-3-1-flightcontroller-quadcopter-
 https://timhanewich.medium.com/how-i-developed-the-scout-flight-controller-part-7-full-flight-controller-code-4269c83b3b48
 
 ## Given literature:
+
 https://doi.org/10.1155/2020/8829329
 
 https://underactuated.mit.edu/lqr.html

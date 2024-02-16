@@ -36,7 +36,7 @@ def main():
 
     # Create a publisher to send Twist messages for drone control
     global publisher
-    publisher = node.create_publisher(Twist, 'drone/cmd_vel', 10) #publishing to gazebo?
+    publisher = node.create_publisher(Twist, 'drone/cmd_vel', 10) #publishing to gazebo
 
     rclpy.spin(node)
     rclpy.shutdown()

@@ -47,7 +47,7 @@ void DroneSimpleController::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
   gt_topic_ = "gt_pose";
   gt_vel_topic_ = "gt_vel";
   gt_acc_topic_ = "gt_acc";
-  
+    
   
   if (!_sdf->HasElement("bodyName"))
   {

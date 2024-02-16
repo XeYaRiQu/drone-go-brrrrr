@@ -37,27 +37,46 @@ def generate_launch_description():
             output='screen',
             
         ),
+        # Node(
+        #     package='teleop_twist_joy', 
+        #     executable='teleop_node',
+        #     name='teleop_twist_joy_node', 
+        #     parameters=[
+        #         {'enable_button': -1},
+        #         {'require_enable_button': False},
+
+        #         # {'axis_linear.x': 0}, #roll
+        #         # {'axis_linear.y': 2}, #pitch
+        #         # {'axis_linear.z': 6}, #yaw
+
+        #         {'axis_linear.x': 7}, #roll
+        #         {'axis_linear.y': 3}, #pitch
+        #         {'axis_linear.z': 5}, #yaw
+
+        #         # {'scale_linear.x': 0.5}, #sensitivity
+        #         # {'scale_linear.y': 0.5},
+        #         # {'scale_linear.z': 0.5},
+
+        #         # {'axis_angular.pitch': 7}, #parameters for roll pitch yaw
+        #         # {'axis_angular.roll':  3},
+        #         # {'axis_angular.yaw': 5},
+
+        #         # {'scale_angular.pitch': 0.5}, #sensitivity
+        #         # {'scale_angular.roll': 0.5},
+        #         # {'scale_angular.yaw': 0.5}
+        #     ]
+        # ),
+
         Node(
             package='teleop_twist_joy', 
             executable='teleop_node',
             name='teleop_twist_joy_node', 
             parameters=[
-                {'enable_button': -1},
-                {'require_enable_button': False},
-                {'axis_linear.x': 0},
-                {'axis_linear.y': 2},
-                {'axis_linear.z': 6},
-                {'axis_angular.pitch': 5},
-                {'axis_angular.roll': 3},
-                {'axis_angular.yaw': 7},
-                {'scale_linear.x': 1.0},
-                {'scale_linear.y': 1.0},
-                {'scale_linear.z': 1.0},
-                {'scale_angular.pitch': 1.0},
-                {'scale_angular.roll': 1.0},
-                {'scale_angular.yaw': 1.0}
+                     {'config_filepath': '/drone_bringup/launch/config/ps3.config.yaml'}
             ]
         ),
+
+
         Node(
             package='drone_bringup',
             executable='joystick_control',

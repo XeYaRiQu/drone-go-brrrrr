@@ -1,4 +1,5 @@
-FROM osrf/ros:rolling-desktop-full
+# FROM osrf/ros:rolling-desktop-full
+FROM georgno/drone:latest
 
 ENV HOME /home/user
 

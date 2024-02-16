@@ -2,7 +2,8 @@
 XSOCK=/tmp/.X11-unix
 XAUTH=$HOME/.Xauthority
 
-docker build -t georgno/drone .
+docker build --tag georgno/drone .
+
 
 if [ $? -ne 0 ]; then
     exit 1

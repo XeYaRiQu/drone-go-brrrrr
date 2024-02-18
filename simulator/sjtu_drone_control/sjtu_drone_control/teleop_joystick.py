@@ -73,12 +73,12 @@ class TeleopNode(Node):
         5 	TRIGGERRIGHT
         """
         linear_vec = Vector3()
-        linear_vec.x = msg.axes[1]
-        linear_vec.y = msg.axes[0]
-        linear_vec.z = msg.axes[3]
+        linear_vec.x = msg.axes[1] #roll forward/backwards
+        linear_vec.y = msg.axes[0] #roll left/right
+        # linear_vec.z = msg.axes[3] #throttle
 
         angular_vec = Vector3()
-        angular_vec.z = msg.axes[2]
+        angular_vec.z = msg.axes[2] #yaw
 
         self.cmd_vel_publisher.publish(Twist(linear=linear_vec, angular=angular_vec))
 
@@ -88,7 +88,7 @@ class TeleopNode(Node):
             self.takeoff_publisher.publish(Empty())
         elif msg.buttons[1] == 1:
             # Land
-            self.publish_cmd_vel()
+            self.cmd_vel_publisher.publish(Twist())
             self.land_publisher.publish(Empty())
 
 

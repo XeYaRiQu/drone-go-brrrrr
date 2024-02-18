@@ -18,6 +18,7 @@ RUN echo "deb http://packages.osrfoundation.org/gazebo/ubuntu `lsb_release -cs` 
     ros-humble-gazebo-ros-pkgs \
     ros-humble-joy \   
     ros-humble-rqt-graph \ 
+    ros-humble-rqt-plot \
     python3-colcon-common-extensions python3-rosdep --no-install-recommends \
     && apt-get clean
 RUN rosdep init && rosdep update

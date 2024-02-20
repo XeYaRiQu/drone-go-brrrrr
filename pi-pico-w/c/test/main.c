@@ -107,12 +107,12 @@ static const float I_LIMIT_NEG = -100.0;
 #define IMU_TEMP_HI     65
 #define IMU_TEMP_LO     66
 //not using define for these cause i2c_read_blocking needs uint8_t type
-const uint8_t IMU_REG_GYRO_X_HI = 67;
-const uint8_t IMU_REG_GYRO_X_LO = 68;
-const uint8_t IMU_REG_GYRO_Y_HI = 69;
-const uint8_t IMU_REG_GYRO_Y_LO = 70;
-const uint8_t IMU_REG_GYRO_Z_HI = 71;
-const uint8_t IMU_REG_GYRO_Z_LO = 72;
+uint8_t IMU_REG_GYRO_X_HI = 67;
+uint8_t IMU_REG_GYRO_X_LO = 68;
+uint8_t IMU_REG_GYRO_Y_HI = 69;
+uint8_t IMU_REG_GYRO_Y_LO = 70;
+uint8_t IMU_REG_GYRO_Z_HI = 71;
+uint8_t IMU_REG_GYRO_Z_LO = 72;
 
 
 ////////////////// Constants //////////////////

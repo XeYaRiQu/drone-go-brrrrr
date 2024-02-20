@@ -1,4 +1,4 @@
-/**
+/*
  * Only change values in Settings.
 */
 
@@ -16,7 +16,6 @@
 #include "hardware/timer.h"
 #include "hardware/uart.h"
 #include "hardware/clocks.h"
-
 
 
 ////////////////// Settings //////////////////
@@ -63,12 +62,19 @@ enum ACCEL_RANGE {
     RANGE_16G
 };
 
+enum DLPF_BANDWIDTH {
+    GYRO_256Hz = 0, // 0.98 ms delay
+    GYRO_188Hz,     // 1.9 ms delay
+    GYRO_98Hz,      // 2.8 ms delay
+    GYRO_42Hz,      // 4.8 ms delay
+    GYRO_20Hz,      // 8.3 ms delay
+    GYRO_10Hz,      // 13.4 ms delay
+    GYRO_5Hz,       // 18.6 ms delay
+};
+
 int GYRO_RANGE = RANGE_1000DPS;
 int ACCEL_RANGE = RANGE_4G;
-int lpf_config_byte = 2;
-//lpf config byte, acc lpf, gyro lpf --- 0,260,256 :: 1,184,188 :: 2,94,98 :: 3,44,42 :: 4,21,20 ::5,10,10 :: 6,5,5
-
-
+int LPF_CONFIG_BYTE = GYRO_98Hz;
 
 
 ////////////////// PID //////////////////

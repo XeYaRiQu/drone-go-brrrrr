@@ -132,7 +132,7 @@ void main() {
 
     printf("INFO  >>>>   Executing setup sequence.\n\n");
     if (setup() == 0) {
-        printf("INFO  >>>>   Setup completed in %f seconds, looping.\n\n", ((double)(time_us_64() - start_timestamp)/1000000 - 5));
+        printf("INFO  >>>>   Setup completed in %f seconds, looping.\n\n", ((float)time_us_64() - (float)start_timestamp)*0.000001 - 5.0);
 
         //cyw43_arch_gpio_put(PIN_LED, 1);
 
@@ -147,12 +147,12 @@ void main() {
             printf("%f ", normalised_rc_values[RC_YAW]);
             printf("%f ", normalised_rc_values[RC_SWA]);
             printf("%f\n", normalised_rc_values[RC_SWB]);
-            printf("Loop duration: %f seconds\n", (double)(time_us_64() - start_timestamp)/1000000);
+            printf("Loop duration: %f seconds\n", ((float)time_us_64() - (float)start_timestamp)*0.000001);
 
             while (time_us_64() - start_timestamp < 4000); // Do nothing until 4 ms has passed since loop start
         }
     }
     else {
-        printf("ERROR >>>>   Setup failed in %f seconds, exiting.\n\n", ((double)(time_us_64() - start_timestamp)/1000000 - 5));
+        printf("ERROR >>>>   Setup failed in %f seconds, exiting.\n\n", ((float)time_us_64() - (float)start_timestamp)*0.000001 - 5.0);
     }
 }

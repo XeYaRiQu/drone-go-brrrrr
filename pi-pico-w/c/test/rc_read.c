@@ -24,7 +24,6 @@
 #define RC_SWB      5
 
 /* Pin placement */
-#define PIN_LED     0 // The LED pin is tied to CYW43
 #define PIN_RC_RX   5
 #define PIN_RC_TX   4
 
@@ -59,7 +58,7 @@ void rc_read() {
             // Validate start bytes
             if (char1 == 0x20 && char2 == 0x40) {
                 // Read the rest of the data into the buffer
-                uart_read_blocking(UART_ID, buffer, RC_BUFFER);
+                uart_read_blocking(uart1, buffer, 30);
 
                 uint16_t checksum = 0xFF9F; // 0xFFFF - 0x20 - 0x40
 
@@ -110,15 +109,6 @@ int setup() {
         printf("ERROR >>>>   Overclock RP2040 to 250 MHz --> FAIL\n\n");
     }
 
-    // Initialise WiFi chip for LED
-    if (cyw43_arch_init() == 0) {
-        printf("INFO  >>>>   Initialise WiFi chip --> SUCCESS\n\n");
-    }
-    else {
-        fail_flag = 1;
-        printf("ERROR >>>>   Initialise WiFi chip --> FAIL\n\n");
-    }
-
     // Initialise UART for RC
     int baud = uart_init(uart1, 115200);
     if (baud > 115100 && baud < 115300) {
@@ -137,29 +127,32 @@ int setup() {
 
 ////////////////// Main //////////////////
 
-int main() {
+void main() {
     uint64_t start_timestamp = time_us_64();
 
     printf("INFO  >>>>   Executing setup sequence.\n\n");
     if (setup() == 0) {
         printf("INFO  >>>>   Setup completed in %f seconds, looping.\n\n", ((double)(time_us_64() - start_timestamp)/1000000 - 5));
 
-        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
+        //cyw43_arch_gpio_put(PIN_LED, 1);
 
         ////////////////// Loop //////////////////
         while (true) {
             start_timestamp = time_us_64();
 
             rc_read();
-            printf("%d ", normalised_rc_values[RC_THROTTLE]);
-            printf("%d ", normalised_rc_values[RC_ROLL]);
-            printf("%d ", normalised_rc_values[RC_PITCH]);
-            printf("%d ", normalised_rc_values[RC_YAW]);
-            printf("%d ", normalised_rc_values[RC_SWA]);
-            printf("%d\n", normalised_rc_values[RC_SWB]);
+            printf("%f ", normalised_rc_values[RC_THROTTLE]);
+            printf("%f ", normalised_rc_values[RC_ROLL]);
+            printf("%f ", normalised_rc_values[RC_PITCH]);
+            printf("%f ", normalised_rc_values[RC_YAW]);
+            printf("%f ", normalised_rc_values[RC_SWA]);
+            printf("%f\n", normalised_rc_values[RC_SWB]);
+            printf("Loop duration: %f seconds\n", (double)(time_us_64() - start_timestamp)/1000000);
 
             while (time_us_64() - start_timestamp < 4000); // Do nothing until 4 ms has passed since loop start
         }
-
+    }
+    else {
+        printf("ERROR >>>>   Setup failed in %f seconds, exiting.\n\n", ((double)(time_us_64() - start_timestamp)/1000000 - 5));
     }
 }

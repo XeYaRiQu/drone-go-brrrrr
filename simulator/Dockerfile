@@ -1,5 +1,5 @@
-FROM georgno/drone:latest
-# FROM ros:humble-ros-core-jammy
+ARG ROS_HUMBLE
+FROM ros:humble-ros-core-jammy
 
 RUN apt-get update \
     && apt-get install -y \
@@ -16,25 +16,21 @@ RUN echo "deb http://packages.osrfoundation.org/gazebo/ubuntu `lsb_release -cs` 
     && apt-get install -y \
     gazebo \
     ros-humble-gazebo-ros-pkgs \
-    ros-humble-joy \
-    ros-humble-teleop-twist-joy \
-    ros-humble-rqt-graph \
+    ros-humble-joy \   
+    ros-humble-rqt-graph \ 
+    ros-humble-rqt-plot \
     python3-colcon-common-extensions python3-rosdep --no-install-recommends \
     && apt-get clean
-# RUN rosdep init && rosdep update
-RUN rosdep update
+RUN rosdep init && rosdep update
+
+RUN curl -L https://github.com/osrf/gazebo_models/archive/refs/heads/master.zip -o /tmp/gazebo_models.zip \
+    && unzip /tmp/gazebo_models.zip -d /tmp && mkdir -p ~/.gazebo/models/ && mv /tmp/gazebo_models-master/* ~/.gazebo/models/ \
+    && rm -r /tmp/gazebo_models.zip
 
 RUN mkdir -p /ros2_ws/src
-COPY ./drone_description /ros2_ws/src/drone_description
-COPY ./drone_bringup /ros2_ws/src/drone_bringup
-
-RUN curl -L https://github.com/osrf/gazebo_models/archive/refs/heads/master.zip -o /tmp/gazebo_models.zip 
-
-RUN unzip -o /tmp/gazebo_models.zip -d /tmp 
-RUN mkdir -p ~/.gazebo/models/ 
-RUN rm -rf ~/.gazebo/models/*
-RUN mv /tmp/gazebo_models-master/* ~/.gazebo/models/
-RUN rm -r /tmp/gazebo_models.zip
+COPY ./sjtu_drone_description /ros2_ws/src/sjtu_drone_description
+COPY ./sjtu_drone_bringup /ros2_ws/src/sjtu_drone_bringup
+COPY ./sjtu_drone_control /ros2_ws/src/sjtu_drone_control
 
 WORKDIR /ros2_ws
 RUN /bin/bash -c 'cd /ros2_ws/ \
@@ -42,4 +38,4 @@ RUN /bin/bash -c 'cd /ros2_ws/ \
     && rosdep install --from-paths src --ignore-src -r -y \
     && colcon build'
 
-CMD ["/bin/bash", "-c", "source /opt/ros/humble/setup.bash && source /ros2_ws/install/setup.bash && ros2 launch drone_bringup drone_bringup.launch.py"]
+CMD ["/bin/bash", "-c", "source /opt/ros/humble/setup.bash && source /ros2_ws/install/setup.bash && ros2 launch sjtu_drone_bringup sjtu_drone_bringup.launch.py controller:='joystick'"]

@@ -144,12 +144,19 @@ int main() {
     if (setup() == 0) {
         printf("INFO  >>>>   Setup completed in %f seconds, looping.\n\n", ((double)(time_us_64() - start_timestamp)/1000000 - 5));
 
+        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
+
         ////////////////// Loop //////////////////
         while (true) {
             start_timestamp = time_us_64();
 
             rc_read();
-            printf("%d %d %d %d %d %d\n", )
+            printf("%d ", normalised_rc_values[RC_THROTTLE]);
+            printf("%d ", normalised_rc_values[RC_ROLL]);
+            printf("%d ", normalised_rc_values[RC_PITCH]);
+            printf("%d ", normalised_rc_values[RC_YAW]);
+            printf("%d ", normalised_rc_values[RC_SWA]);
+            printf("%d\n", normalised_rc_values[RC_SWB]);
 
             while (time_us_64() - start_timestamp < 4000); // Do nothing until 4 ms has passed since loop start
         }

@@ -123,6 +123,7 @@ static const float I_LIMIT_NEG = -100.0f;
 #define RESET_ALL_BYTE         128
 #define WAKE_TEMP_DISABLE_BYTE 9
 #define WAKE_TEMP_ENABLE_BYTE  1
+#define SAMPLE_RATE_BYTE       0
 
 
 ////////////////// Global variables //////////////////
@@ -211,7 +212,7 @@ int mpu6050_init() {
     sleep_ms(10);
 
     // Set sensor sample rate to 250 Hz (Sample Rate = Gyroscope Output Rate / (1 + SMPLRT_DIV))
-    write_register(i2c0, IMU_I2C_ADDRESS, IMU_SMPLRT_DIV, 0x03);
+    write_register(i2c0, IMU_I2C_ADDRESS, IMU_SMPLRT_DIV, SAMPLE_RATE_BYTE);
     sleep_ms(10);
 
     // Set DLPF
@@ -237,7 +238,7 @@ int mpu6050_init() {
         printf("ERROR >>>>   Verify MPU-6050 register: PWR_MGMT_1 --> FAIL\n\n");
     }
 
-    if (read_register(i2c0, IMU_I2C_ADDRESS, IMU_SMPLRT_DIV) != 0x03) {
+    if (read_register(i2c0, IMU_I2C_ADDRESS, IMU_SMPLRT_DIV) != SAMPLE_RATE_BYTE) {
         fail_flag = 1;
         printf("ERROR >>>>   Verify MPU-6050 register: SMPLRT_DIV --> FAIL\n\n");
     }
@@ -381,31 +382,39 @@ void imu_read() {
 void mpu_6050_cali() {
     // Add self-test function
 
-    int data_points = 0;
-    uint64_t calibration_time = time_us_64() + 6000000;
+    // int data_points = 0;
+    // uint64_t calibration_time = time_us_64() + 6000000;
 
-    while (time_us_64() < calibration_time) {
-        imu_read();
+    // while (time_us_64() < calibration_time) {
+    //     imu_read();
 
-        accel_x_bias += normalised_gyro_values[0];
-        accel_y_bias += normalised_gyro_values[1];
-        accel_z_bias += normalised_gyro_values[2];
-        gyro_x_bias += normalised_gyro_values[0];
-        gyro_y_bias += normalised_gyro_values[1];
-        gyro_z_bias += normalised_gyro_values[2];
-        printf("X: %f    Y: %f    Z: %f\n", normalised_gyro_values[0], normalised_gyro_values[1], normalised_gyro_values[2]);
-        data_points = ++data_points;
-        sleep_ms(10);
-    }
+    //     accel_x_bias += normalised_accel_values[0];
+    //     accel_y_bias += normalised_accel_values[1];
+    //     accel_z_bias += normalised_accel_values[2];
+    //     gyro_x_bias += normalised_gyro_values[0];
+    //     gyro_y_bias += normalised_gyro_values[1];
+    //     gyro_z_bias += normalised_gyro_values[2];
+    //     printf("X: %f    Y: %f    Z: %f\n", normalised_gyro_values[0], normalised_gyro_values[1], normalised_gyro_values[2]);
+    //     data_points = ++data_points;
+    //     sleep_ms(10);
+    // }
 
-    // Averaging
-    printf("INFO  >>>>   %d data points collected. Averaging bias values\n\n", data_points);
-    accel_x_bias = accel_x_bias/(float)data_points;
-    accel_y_bias = accel_y_bias/(float)data_points;
-    accel_z_bias = accel_z_bias/(float)data_points;
-    gyro_x_bias = gyro_x_bias/(float)data_points;
-    gyro_y_bias = gyro_y_bias/(float)data_points;
-    gyro_z_bias = gyro_z_bias/(float)data_points;
+    // // Averaging
+    // printf("INFO  >>>>   %d data points collected. Averaging bias values\n\n", data_points);
+    // accel_x_bias = accel_x_bias/(float)data_points;
+    // accel_y_bias = accel_y_bias/(float)data_points;
+    // accel_z_bias = accel_z_bias/(float)data_points;
+    // gyro_x_bias = gyro_x_bias/(float)data_points;
+    // gyro_y_bias = gyro_y_bias/(float)data_points;
+    // gyro_z_bias = gyro_z_bias/(float)data_points;
+
+    imu_read();
+    accel_x_bias = normalised_accel_values[0];
+    accel_y_bias = normalised_accel_values[1];
+    accel_z_bias = normalised_accel_values[2];
+    gyro_x_bias = normalised_gyro_values[0];
+    gyro_y_bias = normalised_gyro_values[1];
+    gyro_z_bias = normalised_gyro_values[2];
 
     printf("INFO  >>>>   ACCELEROMETER OFFSETS\n");
     printf("INFO  >>>>   X: %f    Y: %f    Z: %f\n", accel_x_bias, accel_y_bias, accel_z_bias);

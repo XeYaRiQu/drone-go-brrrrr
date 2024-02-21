@@ -449,7 +449,7 @@ int setup() {
     uint64_t setup_delay = setup_start + 5000000;
     stdio_init_all();
 
-    while (time_us_64()  < setup_delay); // Delay for serial monitor to establish connection
+    while (time_us_64() < setup_delay); // Delay for serial monitor to establish connection
 
     // Overclock RP2040
     set_sys_clock_khz(250000, true);

@@ -408,6 +408,34 @@ void mpu_6050_cali() {
 }
 
 
+void motor_pwm_init() {
+    int slice_num1 = pwm_gpio_to_slice_num(PIN_MOTOR1);
+    int slice_num2 = pwm_gpio_to_slice_num(PIN_MOTOR2);
+    int slice_num3 = pwm_gpio_to_slice_num(PIN_MOTOR3);
+    int slice_num4 = pwm_gpio_to_slice_num(PIN_MOTOR4);
+
+    gpio_set_function(PIN_MOTOR1, GPIO_FUNC_PWM);
+    gpio_set_function(PIN_MOTOR2, GPIO_FUNC_PWM);
+    gpio_set_function(PIN_MOTOR3, GPIO_FUNC_PWM);
+    gpio_set_function(PIN_MOTOR3, GPIO_FUNC_PWM);
+
+    pwm_set_enabled(slice_num1, true);
+    pwm_set_enabled(slice_num2, true);
+    pwm_set_enabled(slice_num3, true);
+    pwm_set_enabled(slice_num4, true);
+
+    pwm_set_clkdiv(slice_num1, 100.0f);
+    pwm_set_clkdiv(slice_num2, 100.0f);
+    pwm_set_clkdiv(slice_num3, 100.0f);
+    pwm_set_clkdiv(slice_num4, 100.0f); //so now the clock runs at 125kHz instead of 125MHz
+
+    pwm_set_wrap(slice_num1, 4999); //For 250Hz freq, wrap num = 125000/250  - 1 = 4999
+    pwm_set_wrap(slice_num2, 4999);
+    pwm_set_wrap(slice_num3, 4999);
+    pwm_set_wrap(slice_num4, 4999);
+}
+
+
 ////////////////// Setup //////////////////
 
 int setup() {
@@ -477,34 +505,11 @@ int setup() {
     printf("INFO  >>>>   Calibrating MPU-6050\n\n");
     mpu_6050_cali();
 
+    // Configure PWM generators for ESC output
+    printf("INFO  >>>>   Configuring PWM generators\n\n");
+    motor_pwm_init();
+
     return fail_flag;
-
-    printf("INFO  >>>> Setting up motors \n");
-
-    gpio_set_function(PIN_MOTOR1, GPIO_FUNC_PWM);
-    gpio_set_function(PIN_MOTOR2, GPIO_FUNC_PWM);
-    gpio_set_function(PIN_MOTOR3, GPIO_FUNC_PWM);
-    gpio_set_function(PIN_MOTOR3, GPIO_FUNC_PWM);
-
-    int slice_num1 =  pwm_gpio_to_slice_num(PIN_MOTOR1);
-    int slice_num2 =  pwm_gpio_to_slice_num(PIN_MOTOR2);
-    int slice_num3 =  pwm_gpio_to_slice_num(PIN_MOTOR3);
-    int slice_num4 =  pwm_gpio_to_slice_num(PIN_MOTOR4);
-
-    pwm_set_enabled(slice_num1, true);
-    pwm_set_enabled(slice_num2, true);
-    pwm_set_enabled(slice_num3, true);
-    pwm_set_enabled(slice_num4, true);
-
-    pwm_set_clkdiv(slice_num1, 100.0f);
-    pwm_set_clkdiv(slice_num2, 100.0f);
-    pwm_set_clkdiv(slice_num3, 100.0f);
-    pwm_set_clkdiv(slice_num4, 100.0f); //so now the clock runs at 125kHz instead of 125MHz
-
-    pwm_set_wrap(slice_num1, 4999); //For 250Hz freq, wrap num = 125000/250  - 1 = 4999
-    pwm_set_wrap(slice_num2, 4999);
-    pwm_set_wrap(slice_num3, 4999);
-    pwm_set_wrap(slice_num4, 4999);
 }
 
 

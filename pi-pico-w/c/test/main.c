@@ -445,8 +445,7 @@ void motor_pwm_init() {
 
 int setup() {
     int fail_flag = 0;
-    uint64_t setup_start = time_us_64();
-    uint64_t setup_delay = setup_start + 5000000;
+    uint64_t setup_delay = time_us_64() + 5000000;
     stdio_init_all();
 
     while (time_us_64() < setup_delay); // Delay for serial monitor to establish connection

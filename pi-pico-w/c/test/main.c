@@ -153,11 +153,11 @@ void write_register(i2c_inst_t *i2c, int addr, int reg, int val) {
 
 
 int read_register(i2c_inst_t *i2c, int addr, int reg) {
-    uint8_t *val = reg;
-    int *readout;
-    i2c_write_blocking(i2c, addr, val, 1, true);
-    i2c_read_blocking(i2c, addr, readout, 1, false);
-    return *readout;
+    uint8_t val = reg;
+    uint8_t readout;
+    i2c_write_blocking(i2c, addr, &val, 1, true);
+    i2c_read_blocking(i2c, addr, &readout, 1, false);
+    return readout;
 }
 
 
@@ -328,15 +328,15 @@ void imu_read() {
     */
     uint8_t accel_buffer[6], gyro_buffer[6];
     uint16_t raw_accel_data[3], raw_gyro_data[3];
-    uint8_t *accel_xout_h = IMU_ACCE_X_H;
-    uint8_t *gyro_xout_h = IMU_GYRO_X_H;
+    uint8_t accel_xout_h = IMU_ACCE_X_H;
+    uint8_t gyro_xout_h = IMU_GYRO_X_H;
 
     // Get raw accelerometer data
-    i2c_write_blocking(i2c_default, IMU_I2C_ADDRESS, accel_xout_h, 1, true);
+    i2c_write_blocking(i2c_default, IMU_I2C_ADDRESS, &accel_xout_h, 1, true);
     i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, accel_buffer, 6, false);
 
     // Get raw gyro data
-    i2c_write_blocking(i2c_default, IMU_I2C_ADDRESS, gyro_xout_h, 1, true);
+    i2c_write_blocking(i2c_default, IMU_I2C_ADDRESS, &gyro_xout_h, 1, true);
     i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, gyro_buffer, 6, false);
 
     for (int i = 0; i < 3; ++i) {

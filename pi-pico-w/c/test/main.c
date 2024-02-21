@@ -21,7 +21,7 @@
 ////////////////// Settings //////////////////
 
 #define MIN_THROTTLE   0.07f
-#define MAX_THROTTLE   0.80f
+#define MAX_THROTTLE   0.70f
 #define THROTTLE_RANGE (MAX_THROTTLE-MIN_THROTTLE)
 #define MAX_YAW_RATE   30.0
 #define MAX_ROLL_RATE  30.0
@@ -137,7 +137,6 @@ volatile float prev_integ_yaw = 0.0f;
 float gyro_multiplier, accel_multiplier;
 int gyro_config_byte, accel_config_byte;
 
-bool motors_are_armed = false;
 float normalised_rc_values[6];
 float normalised_gyro_values[3];
 float gyro_x_bias, gyro_y_bias, gyro_z_bias;
@@ -429,10 +428,10 @@ void motor_pwm_init() {
     pwm_set_enabled(slice_num3, true);
     pwm_set_enabled(slice_num4, true);
 
-    pwm_set_clkdiv(slice_num1, 100.0f);
-    pwm_set_clkdiv(slice_num2, 100.0f);
-    pwm_set_clkdiv(slice_num3, 100.0f);
-    pwm_set_clkdiv(slice_num4, 100.0f); //so now the clock runs at 125kHz instead of 125MHz
+    pwm_set_clkdiv(slice_num1, 200.0f);
+    pwm_set_clkdiv(slice_num2, 200.0f);
+    pwm_set_clkdiv(slice_num3, 200.0f);
+    pwm_set_clkdiv(slice_num4, 200.0f); //so now the clock runs at 125kHz instead of 125MHz
 
     pwm_set_wrap(slice_num1, 4999); //For 250Hz freq, wrap num = 125000/250  - 1 = 4999
     pwm_set_wrap(slice_num2, 4999);
@@ -520,6 +519,7 @@ int setup() {
 ////////////////// Main //////////////////
 
 void main() {
+    bool motors_are_armed = false;
     uint64_t start_timestamp = time_us_64();
 
     printf("INFO  >>>>   Executing setup sequence.\n\n");
@@ -530,11 +530,11 @@ void main() {
 
         ////////////////// Loop //////////////////
         while (true) {
-            start_timestamp = time_us_64();
             if (motors_are_armed == true) {
+                start_timestamp = time_us_64();
                 rc_read();
 
-                if (normalised_rc_values[RC_SWA] == 0) {  // does this need to be SWA or SWB? need to confirm
+                if (normalised_rc_values[RC_SWA] == 0.0f) {  // does this need to be SWA or SWB? need to confirm
                     if (normalised_rc_values[RC_THROTTLE] < 0.05f){   //so that motors stop even if throttle control is not exactly = 0
                         pwm_set_gpio_level(PIN_MOTOR1, 0); //motors running at 0% duty cycle. motors not rotating
                         pwm_set_gpio_level(PIN_MOTOR2, 0);
@@ -560,22 +560,15 @@ void main() {
                 float pid_prop_pitch = pid_error_pitch * KP_PITCH;
                 float pid_prop_yaw = pid_error_yaw * KP_YAW;
 
-                // Calculate time elapsed since previous PID calculations
-                float pid_cycle_time = 1.0f / ((time_us_64() - prev_pid_timestamp) * 0.000001f);
-
-                /* DOUBLE CHECK CALCULATIONS - INTEGRAL SHOULD NOT BE MULTIPLIED WITH RECIPROCAL */
                 // Integral calculations
-                float pid_inte_roll = pid_error_roll * KI_ROLL * pid_cycle_time + prev_integ_roll;
-                float pid_inte_pitch = pid_error_pitch * KI_PITCH * pid_cycle_time + prev_integ_pitch;
-                float pid_inte_yaw = pid_error_yaw * KI_YAW * pid_cycle_time + prev_integ_yaw;
+                float pid_inte_roll = pid_error_roll * KI_ROLL * 0.004f + prev_integ_roll;
+                float pid_inte_pitch = pid_error_pitch * KI_PITCH * 0.004f + prev_integ_pitch;
+                float pid_inte_yaw = pid_error_yaw * KI_YAW * 0.004f + prev_integ_yaw;
 
                 // Derivative calculations
-                float pid_deri_roll = (pid_error_roll - prev_error_roll) * KD_ROLL * pid_cycle_time;
-                float pid_deri_pitch = (pid_error_pitch - prev_error_pitch) * KD_PITCH * pid_cycle_time;
-                float pid_deri_yaw = (pid_error_yaw - prev_error_yaw) * KD_YAW * pid_cycle_time;
-
-                // Capture end timestamp for current PID loop
-                prev_pid_timestamp = time_us_64();
+                float pid_deri_roll = (pid_error_roll - prev_error_roll) * KD_ROLL * 250;
+                float pid_deri_pitch = (pid_error_pitch - prev_error_pitch) * KD_PITCH * 250;
+                float pid_deri_yaw = (pid_error_yaw - prev_error_yaw) * KD_YAW * 250;
 
                 float throttle_rate = desired_throttle_rate * THROTTLE_RANGE + MIN_THROTTLE;
                 float pid_roll = pid_prop_roll + pid_inte_roll + pid_deri_roll;
@@ -607,7 +600,7 @@ void main() {
                 int motor3_ns = (motor3_temp > 2000000) ? 2000000 : (int)motor3_temp;
                 int motor4_ns = (motor4_temp > 2000000) ? 2000000 : (int)motor4_temp;
 
-                float motor1_dutycycle = motor1_ns/4000000;  //motor1_ns is between 1000000 and 2000000. 25%-50% duty cycle
+                float motor1_dutycycle = motor1_ns/4000000; //motor1_ns is between 1000000 and 2000000. 25%-50% duty cycle
                 float motor2_dutycycle = motor2_ns/4000000;
                 float motor3_dutycycle = motor3_ns/4000000;
                 float motor4_dutycycle = motor4_ns/4000000;
@@ -656,6 +649,7 @@ void main() {
                     pwm_set_gpio_level(PIN_MOTOR4, 0);
                 }
             }
+            printf("Loop duration: %f seconds\n", ((float)time_us_64() - (float)start_timestamp)*0.000001);
             while (time_us_64() - start_timestamp < 4000); // Do nothing until 4 ms has passed since loop start
         } // End of main loop
     }

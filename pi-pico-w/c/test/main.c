@@ -98,27 +98,30 @@ static const float I_LIMIT_NEG = -100.0;
 
 ////////////////// IMU //////////////////
 
-#define IMU_I2C_ADDRESS (uint8_t)104
-#define IMU_SMPLRT_DIV  (uint8_t)25
-#define IMU_PWR_MGMT1   (uint8_t)107
-#define IMU_WHO_AM_I    (uint8_t)117
-#define IMU_CONFIG      (uint8_t)26
-#define IMU_GYRO_CONFIG (uint8_t)27
-#define IMU_ACCE_CONFIG (uint8_t)28
-#define IMU_ACCE_X_H    (uint8_t)59
-#define IMU_ACCE_X_L    (uint8_t)60
-#define IMU_ACCE_Y_H    (uint8_t)61
-#define IMU_ACCE_Y_L    (uint8_t)62
-#define IMU_ACCE_Z_H    (uint8_t)3
-#define IMU_ACCE_Z_L    (uint8_t)64
-#define IMU_TEMP_HI     (uint8_t)65
-#define IMU_TEMP_LO     (uint8_t)66
-#define IMU_GYRO_X_H    (uint8_t)67
-#define IMU_GYRO_X_L    (uint8_t)68
-#define IMU_GYRO_Y_H    (uint8_t)69
-#define IMU_GYRO_Y_L    (uint8_t)70
-#define IMU_GYRO_Z_H    (uint8_t)71
-#define IMU_GYRO_Z_L    (uint8_t)72
+#define IMU_I2C_ADDRESS  104
+#define IMU_SMPLRT_DIV   25
+#define IMU_PWR_MGMT1    107
+#define IMU_WHO_AM_I     117
+#define IMU_CONFIG       26
+#define IMU_GYRO_CONFIG  27
+#define IMU_ACCEL_CONFIG 28
+#define IMU_ACCE_X_H     59
+#define IMU_ACCE_X_L     60
+#define IMU_ACCE_Y_H     61
+#define IMU_ACCE_Y_L     62
+#define IMU_ACCE_Z_H     3
+#define IMU_ACCE_Z_L     64
+#define IMU_TEMP_HI      65
+#define IMU_TEMP_LO      66
+#define IMU_GYRO_X_H     67
+#define IMU_GYRO_X_L     68
+#define IMU_GYRO_Y_H     69
+#define IMU_GYRO_Y_L     70
+#define IMU_GYRO_Z_H     71
+#define IMU_GYRO_Z_L     72
+
+#define RESET_ALL_BYTE    128
+#define WAKE_NO_TEMP_BYTE 9
 
 
 ////////////////// Global variables //////////////////
@@ -131,7 +134,6 @@ volatile float prev_integ_pitch = 0.0;
 volatile float prev_integ_yaw = 0.0;
 
 float gyro_multiplier, accel_multiplier;
-int gyro_config_byte, accel_config_byte;
 
 bool motors_are_armed = false;
 float normalised_rc_values[6];
@@ -141,7 +143,14 @@ float gyro_x_bias, gyro_y_bias, gyro_z_bias;
 
 ////////////////// Functions //////////////////
 
+void write_register(i2c_inst_t *i2c, int addr, int reg, int val) {
+    uint8_t buffer[] = {(uint8_t) reg, (uint8_t) val};
+    i2c_write_blocking(i2c, (uint8_t) addr, buffer, 2, false);
+}
+
 int mpu6050_init() {
+    int gyro_config_byte, accel_config_byte;
+
     switch (GYRO_RANGE) {
         case RANGE_250DPS:
             gyro_multiplier = 250.0/32768.0;
@@ -164,23 +173,46 @@ int mpu6050_init() {
     switch (ACCEL_RANGE) {
         case RANGE_2G:
             accel_multiplier = 2.0/32768.0;
+            accel_config_byte = 0x00;
             break;
         case RANGE_4G:
             accel_multiplier = 4.0/32768.0;
+            accel_config_byte = 0x08;
             break;
         case RANGE_8G:
             accel_multiplier = 8.0/32768.0;
+            accel_config_byte = 0x10;
             break;
         case RANGE_16G:
             accel_multiplier = 16.0/32768.0;
+            accel_config_byte = 0x18;
             break;
     }
     return 0;
-};
 
-void writeRegister(uint8_t reg, uint8_t value) {
-    uint8_t buffer[2] = {reg, value};
-    i2c_write_blocking(i2c_default, IMU_I2C_ADDRESS, buffer, 2, false);
+    // Reset all registers
+    write_register(i2c0, IMU_I2C_ADDRESS, IMU_PWR_MGMT1, 0x80);
+    sleep_ms(10);
+
+    // Wake, disable temperature sensor
+    write_register(i2c0, IMU_I2C_ADDRESS, IMU_PWR_MGMT1, 0x09);
+    sleep_ms(10);
+
+    // Set sensor sample rate to 250 Hz (Sample Rate = Gyroscope Output Rate / (1 + SMPLRT_DIV))
+    write_register(i2c0, IMU_I2C_ADDRESS, IMU_SMPLRT_DIV, 0x03);
+    sleep_ms(10);
+
+    // Set DLPF
+    write_register(i2c0, IMU_I2C_ADDRESS, IMU_CONFIG, LPF_CONFIG_BYTE);
+    sleep_ms(10);
+
+    // Set gyroscope scale (in dps)
+    write_register(i2c0, IMU_I2C_ADDRESS, IMU_GYRO_CONFIG, gyro_config_byte);
+    sleep_ms(10);
+
+    // Set accelerometer scale (in G)
+    write_register(i2c0, IMU_I2C_ADDRESS, IMU_ACCEL_CONFIG, accel_config_byte);
+    sleep_ms(10);
 };
 
 
@@ -368,25 +400,8 @@ int setup() {
     }
 
     return fail_flag;
-    //Writing into registers
-    // Reset all registers
-    writeRegister(IMU_PWR_MGMT1, 0x80);
-    sleep_ms(100);
 
-    // Wake, disable temperature sensor
-    writeRegister(IMU_PWR_MGMT1, 0x09);
-    sleep_ms(100);
-
-    // Set sensor sample rate to 250 Hz
-    writeRegister(IMU_SMPLRT_DIV, 0x03);
-    sleep_ms(100);
-
-    // Set accelerometer LPF and gyroscope LPF 
-    writeRegister(IMU_CONFIG, LPF_CONFIG_BYTE);
-    sleep_ms(100);
-
-    // Set gyroscope scale (in dps)
-    writeRegister(IMU_GYRO_CONFIG, gyro_config_byte);
+    
 
     //printf("INFO  >>>>   MPU-6050 setup --> SUCCESS\n");
 

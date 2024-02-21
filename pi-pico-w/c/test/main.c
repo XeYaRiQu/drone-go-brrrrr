@@ -139,6 +139,7 @@ int gyro_config_byte, accel_config_byte;
 
 float normalised_rc_values[6];
 float normalised_gyro_values[3];
+float normalised_accel_values[3];
 float gyro_x_bias, gyro_y_bias, gyro_z_bias;
 float accel_x_bias, accel_y_bias, accel_z_bias;
 
@@ -392,6 +393,7 @@ void mpu_6050_cali() {
         gyro_x_bias += normalised_gyro_values[0];
         gyro_y_bias += normalised_gyro_values[1];
         gyro_z_bias += normalised_gyro_values[2];
+        printf("X: %f    Y: %f    Z: %f\n", normalised_gyro_values[0], normalised_gyro_values[1], normalised_gyro_values[2]);
         data_points = ++data_points;
         sleep_ms(10);
     }
@@ -649,7 +651,8 @@ void main() {
                     pwm_set_gpio_level(PIN_MOTOR4, 0);
                 }
             }
-            printf("Loop duration: %f seconds\n", ((float)time_us_64() - (float)start_timestamp)*0.000001);
+            // printf("Loop duration: %f seconds\n", ((float)time_us_64() - (float)start_timestamp)*0.000001);
+            printf("X: %f    Y: %f    Z: %f\n", normalised_gyro_values[0], normalised_gyro_values[1], normalised_gyro_values[2]);
             while (time_us_64() - start_timestamp < 4000); // Do nothing until 4 ms has passed since loop start
         } // End of main loop
     }

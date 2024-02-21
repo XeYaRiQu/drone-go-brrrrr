@@ -600,10 +600,10 @@ void main() {
                 int motor3_ns = (motor3_temp > 2000000) ? 2000000 : (int)motor3_temp;
                 int motor4_ns = (motor4_temp > 2000000) ? 2000000 : (int)motor4_temp;
 
-                float motor1_dutycycle = motor1_ns/4000000; //motor1_ns is between 1000000 and 2000000. 25%-50% duty cycle
-                float motor2_dutycycle = motor2_ns/4000000;
-                float motor3_dutycycle = motor3_ns/4000000;
-                float motor4_dutycycle = motor4_ns/4000000;
+                float motor1_dutycycle = motor1_ns * 0.00000025f; //motor1_ns is between 1000000 and 2000000. 25%-50% duty cycle
+                float motor2_dutycycle = motor2_ns * 0.00000025f;
+                float motor3_dutycycle = motor3_ns * 0.00000025f;
+                float motor4_dutycycle = motor4_ns * 0.00000025f;
 
                 //Convert duty cycle to setpoint for gpio_set_level. setpoint = wrap number * duty cycle
                 u_int16_t setpoint_motor1 = 4999 * motor1_dutycycle;

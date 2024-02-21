@@ -120,8 +120,9 @@ static const float I_LIMIT_NEG = -100.0;
 #define IMU_GYRO_Z_H     71
 #define IMU_GYRO_Z_L     72
 
-#define RESET_ALL_BYTE    128
-#define WAKE_NO_TEMP_BYTE 9
+#define RESET_ALL_BYTE         128
+#define WAKE_TEMP_DISABLE_BYTE 9
+#define WAKE_TEMP_ENABLE_BYTE  1
 
 
 ////////////////// Global variables //////////////////
@@ -134,6 +135,7 @@ volatile float prev_integ_pitch = 0.0;
 volatile float prev_integ_yaw = 0.0;
 
 float gyro_multiplier, accel_multiplier;
+int gyro_config_byte, accel_config_byte;
 
 bool motors_are_armed = false;
 float normalised_rc_values[6];
@@ -148,8 +150,18 @@ void write_register(i2c_inst_t *i2c, int addr, int reg, int val) {
     i2c_write_blocking(i2c, (uint8_t) addr, buffer, 2, false);
 }
 
+
+int read_register(i2c_inst_t *i2c, int addr, int reg) {
+    uint8_t *val = reg;
+    int *readout;
+    i2c_write_blocking(i2c, addr, val, 1, true);
+    i2c_read_blocking(i2c, addr, readout, 1, false);
+    return *readout;
+}
+
+
 int mpu6050_init() {
-    int gyro_config_byte, accel_config_byte;
+    int fail_flag = 0;
 
     switch (GYRO_RANGE) {
         case RANGE_250DPS:
@@ -188,14 +200,13 @@ int mpu6050_init() {
             accel_config_byte = 0x18;
             break;
     }
-    return 0;
 
     // Reset all registers
-    write_register(i2c0, IMU_I2C_ADDRESS, IMU_PWR_MGMT1, 0x80);
+    write_register(i2c0, IMU_I2C_ADDRESS, IMU_PWR_MGMT1, RESET_ALL_BYTE);
     sleep_ms(10);
 
     // Wake, disable temperature sensor
-    write_register(i2c0, IMU_I2C_ADDRESS, IMU_PWR_MGMT1, 0x09);
+    write_register(i2c0, IMU_I2C_ADDRESS, IMU_PWR_MGMT1, WAKE_TEMP_DISABLE_BYTE);
     sleep_ms(10);
 
     // Set sensor sample rate to 250 Hz (Sample Rate = Gyroscope Output Rate / (1 + SMPLRT_DIV))
@@ -213,48 +224,36 @@ int mpu6050_init() {
     // Set accelerometer scale (in G)
     write_register(i2c0, IMU_I2C_ADDRESS, IMU_ACCEL_CONFIG, accel_config_byte);
     sleep_ms(10);
+
+    // Verify registers
+    if (read_register(i2c0, IMU_I2C_ADDRESS, IMU_PWR_MGMT1) != WAKE_TEMP_DISABLE_BYTE) {
+        fail_flag = 1;
+        printf("ERROR >>>>   Verify MPU-6050 register: PWR_MGMT_1 --> FAIL\n\n");
+    }
+
+    if (read_register(i2c0, IMU_I2C_ADDRESS, IMU_SMPLRT_DIV) != 0x03) {
+        fail_flag = 1;
+        printf("ERROR >>>>   Verify MPU-6050 register: SMPLRT_DIV --> FAIL\n\n");
+    }
+
+    if (read_register(i2c0, IMU_I2C_ADDRESS, IMU_CONFIG) != LPF_CONFIG_BYTE) {
+        fail_flag = 1;
+        printf("ERROR >>>>   Verify MPU-6050 register: CONFIG --> FAIL\n\n");
+    }
+
+    if (read_register(i2c0, IMU_I2C_ADDRESS, IMU_GYRO_CONFIG) != gyro_config_byte) {
+        fail_flag = 1;
+        printf("ERROR >>>>   Verify MPU-6050 register: GYRO_CONFIG --> FAIL\n\n");
+    }
+
+    if (read_register(i2c0, IMU_I2C_ADDRESS, IMU_ACCEL_CONFIG) != accel_config_byte) {
+        fail_flag = 1;
+        printf("ERROR >>>>   Verify MPU-6050 register: ACCEL_CONFIG --> FAIL\n\n");
+    }
+
+    return fail_flag;
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-bool verifySetting(uint8_t address, uint8_t reg, uint8_t expected_value, const char *success_msg, const char *fail_msg) {
-    uint8_t data;
-    //uint8_t output[1] = {reg};
-    uint8_t input[1];
-
-    i2c_write_blocking (i2c_default, address, &reg, 1, true);
-    i2c_read_blocking(i2c_default, address, input, 1, false);
-    data = input[0];
-
-    if (data == expected_value) {
-        printf("INFO  >>>>   %s -> SUCCESS\n", success_msg);
-        return true;
-    } else {
-        printf("ERROR >>>>   %s -> FAIL\n", fail_msg);
-        return false;
-    }
-}
 
 void imu_read() {
     /*
@@ -279,23 +278,23 @@ void imu_read() {
     
     // Normalize X axis
     if (x_value > 32767) {
-        normalised_gyro_values[GYRO_ROLL] = (x_value - 65536) * gyro_multiplier - gyro_offset_bias[GYRO_ROLL];
+        normalised_gyro_values[GYRO_ROLL] = (x_value - 65536) * gyro_multiplier - gyro_x_bias;
     } else {
-        normalised_gyro_values[GYRO_ROLL] = x_value * gyro_multiplier - gyro_offset_bias[GYRO_ROLL];
+        normalised_gyro_values[GYRO_ROLL] = x_value * gyro_multiplier - gyro_x_bias;
     }
 
     // Normalize Y axis
     if (y_value > 32767) {
-        normalised_gyro_values[GYRO_PITCH] = (y_value - 65536) * gyro_multiplier - gyro_offset_bias[GYRO_PITCH];
+        normalised_gyro_values[GYRO_PITCH] = (y_value - 65536) * gyro_multiplier - gyro_y_bias;
     } else {
-        normalised_gyro_values[GYRO_PITCH] = y_value * gyro_multiplier - gyro_offset_bias[GYRO_PITCH];
+        normalised_gyro_values[GYRO_PITCH] = y_value * gyro_multiplier - gyro_y_bias;
     }
 
     // Normalize Z axis
     if (z_value > 32767) {
-        normalised_gyro_values[GYRO_YAW] = (z_value - 65536) * gyro_multiplier - gyro_offset_bias[GYRO_YAW];
+        normalised_gyro_values[GYRO_YAW] = (z_value - 65536) * gyro_multiplier - gyro_z_bias;
     } else {
-        normalised_gyro_values[GYRO_YAW] = z_value * gyro_multiplier - gyro_offset_bias[GYRO_YAW];
+        normalised_gyro_values[GYRO_YAW] = z_value * gyro_multiplier - gyro_z_bias;
     }
 
 
@@ -399,59 +398,18 @@ int setup() {
         printf("INFO  >>>>   Initialise I2C --> FAIL\n\n");
     }
 
+    // Initialise IMU
+    if (mpu6050_init() == 0) {
+        printf("INFO  >>>>   Initialise MPU-6050 --> SUCCESS\n\n");
+    }
+    else {
+        fail_flag = 1;
+        printf("ERROR >>>>   Initialise MPU-6050 --> FAIL\n\n");
+    }
+
     return fail_flag;
 
-    
-
-    //printf("INFO  >>>>   MPU-6050 setup --> SUCCESS\n");
-
-    //Reading from registers to check if values are updated correctly
-
-    bool error_raised_flag = false;
-    
-
-    // Who am I check
-    if (!verifySetting(IMU_I2C_ADDRESS, IMU_WHO_AM_I, IMU_I2C_ADDRESS, "MPU-6050 verify WHO_AM_I", "MPU-6050 WHO_AM_I read error.")) {
-        error_raised_flag = true;
-    }
-
-    // Sleep and temperature sensor disabled check
-    if (!verifySetting(IMU_I2C_ADDRESS, IMU_PWR_MGMT1, 9, "MPU-6050 verify IMU_REG_PWR_MGMT1", "MPU-6050 IMU_REG_PWR_MGMT1 not set.")) {
-        error_raised_flag = true;
-    }
-
-    // Low pass filter check
-    if (!verifySetting(IMU_I2C_ADDRESS, IMU_CONFIG, lpf_config_byte, "MPU-6050 verify IMU_REG_CONFIG", "MPU-6050 IMU_REG_CONFIG not set.")) {
-        error_raised_flag = true;
-    }
-
-    // Sample rate check
-    if (!verifySetting(IMU_I2C_ADDRESS, IMU_SMPLRT_DIV, 3, "MPU-6050 verify IMU_REG_SMPLRT_DIV", "MPU-6050 IMU_REG_SMPLRT_DIV not set.")) {
-        error_raised_flag = true;
-    }
-
-    // Gyroscope scale check
-    if (!verifySetting(IMU_I2C_ADDRESS, IMU_GYRO_CONFIG, gyro_config_byte, "MPU-6050 verify IMU_REG_GYRO_CONFIG", "MPU-6050 IMU_REG_GYRO_CONFIG not set.")) {
-        error_raised_flag = true;
-    }
-
-    if (error_raised_flag) {
-        printf("ERROR >>>>   MPU-6050 verify settings -> FAIL\n");
-    } else {
-        printf("INFO  >>>>   MPU-6050 verify settings -> SUCCESS\n");
-    }
-
-
-    // Cleanup
-    //i2c_deinit(i2c_default); ---- not deinitialising because i2c will be used in imu_read function as well.
-
     calc_gyro_bias();
-
-    if  (!error_raised_flag){
-        return 0;
-    } else {
-        return 1;
-    }
 
     //Motors Setup
 
@@ -481,18 +439,8 @@ int setup() {
     pwm_set_wrap(slice_num2, 4999); 
     pwm_set_wrap(slice_num3, 4999); 
     pwm_set_wrap(slice_num4, 4999); 
-
-    /*
-    pwm_set_wrap(slice_num1, 500000); //For 250Hz freq, time = 4ms. 4ms/8ns = 500000 cycles
-    pwm_set_wrap(slice_num2, 500000); 
-    pwm_set_wrap(slice_num3, 500000); 
-    pwm_set_wrap(slice_num4, 500000); 
-    */
-
-
-    
-    
 }
+
 
 void rc_read() {
     /* 
@@ -546,14 +494,11 @@ void rc_read() {
                     
                     break;
                 }
-
-
-
             }
         }
     }
 }
-#endif
+
 
 ////////////////// Main //////////////////
 
@@ -562,7 +507,7 @@ void main() {
 
     printf("INFO  >>>>   Executing setup sequence.\n\n");
     if (setup() == 0) {
-    
+
         printf("INFO  >>>>   Setup completed in %f seconds, looping.\n\n", ((double)(time_us_64() - start_timestamp)/1000000 - 5));
         uint64_t prev_pid_timestamp = time_us_64();
         ////////////////// Loop //////////////////
@@ -570,7 +515,6 @@ void main() {
             start_timestamp = time_us_64();
             if (motors_are_armed == true) {
                 rc_read();
-
 
                 if (normalised_rc_values[RC_SWA] == 0) {  // does this need to be SWA or SWB? need to confirm
                     if (normalised_rc_values[RC_THROTTLE] < 0.05){   //so that motors stop even if throttle control is not exactly = 0
@@ -587,7 +531,7 @@ void main() {
                 float desired_pitch_rate = normalised_rc_values[RC_PITCH];
                 float desired_roll_rate = normalised_rc_values[RC_ROLL];
                 float desired_yaw_rate = normalised_rc_values[RC_YAW];
-                
+
                 // Error calculations (desired - actual)
                 float pid_error_roll = desired_roll_rate * MAX_ROLL_RATE - normalised_gyro_values[GYRO_ROLL];
                 float pid_error_pitch = desired_pitch_rate * MAX_PITCH_RATE - normalised_gyro_values[GYRO_PITCH];
@@ -632,7 +576,6 @@ void main() {
                 prev_integ_roll = pid_inte_roll;
                 prev_integ_pitch = pid_inte_pitch;
                 prev_integ_yaw = pid_inte_yaw;
-                
 
                 //Calculating duty cycle
                 float motor1_temp = ((motor1_throttle * 1000000 > 0) ? motor1_throttle * 1000000 : 0) + 1000000;
@@ -660,10 +603,7 @@ void main() {
                 pwm_set_gpio_level(PIN_MOTOR2, setpoint_motor2);
                 pwm_set_gpio_level(PIN_MOTOR3, setpoint_motor3);
                 pwm_set_gpio_level(PIN_MOTOR4, setpoint_motor4);
-
-
             }
-            
             else {
                 rc_read();
                 if (normalised_rc_values[RC_SWA] == 1) { //SWA or SWB
@@ -673,14 +613,11 @@ void main() {
                         uint64_t spin_up_delay= time_us_64() + 1000;
 
                         while (time_us_64() < spin_up_delay) {
-
                             pwm_set_gpio_level(PIN_MOTOR1, startup_pwm); //motors running at 25% duty cycle
                             pwm_set_gpio_level(PIN_MOTOR2, startup_pwm);
                             pwm_set_gpio_level(PIN_MOTOR3, startup_pwm);
                             pwm_set_gpio_level(PIN_MOTOR4, startup_pwm);
-                            
                         }
-
                         float prev_pid_error_roll = 0.0;
                         float prev_pid_error_pitch = 0.0;
                         float prev_pid_error_yaw = 0.0;
@@ -689,32 +626,20 @@ void main() {
                         float prev_pid_inte_yaw = 0.0;
 
                         prev_pid_timestamp = time_us_64();
-
                     }
                 }
-                else{
+                else {
                     pwm_set_gpio_level(PIN_MOTOR1, 0); //motors running at 0% duty cycle. motors not rotating
                     pwm_set_gpio_level(PIN_MOTOR2, 0);
                     pwm_set_gpio_level(PIN_MOTOR3, 0);
                     pwm_set_gpio_level(PIN_MOTOR4, 0);
-
-                }                
-
-
-
+                }
             }
-
             while (time_us_64() - start_timestamp < 4000); // Do nothing until 4 ms has passed since loop start
         }
     }
-    
     else {
         printf("ERROR >>>> -> SETUP FAIL\n");
         printf("ERROR >>>>   Setup failed in %f seconds, exiting.\n\n", ((double)(time_us_64() - start_timestamp)/1000000 - 5));
-
-
     }
-
-
-
 }

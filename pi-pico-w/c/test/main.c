@@ -51,16 +51,16 @@
 
 enum GYRO_RANGE {
     RANGE_250DPS = 0,
-    RANGE_500DPS,
-    RANGE_1000DPS,
-    RANGE_2000DPS
+    RANGE_500DPS = 4,
+    RANGE_1000DPS = 8,
+    RANGE_2000DPS = 12
 };
 
 enum ACCEL_RANGE {
     RANGE_2G = 0,
-    RANGE_4G,
-    RANGE_8G,
-    RANGE_16G
+    RANGE_4G = 4,
+    RANGE_8G = 8,
+    RANGE_16G = 16
 };
 
 enum DLPF_BANDWIDTH {

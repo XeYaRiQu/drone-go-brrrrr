@@ -227,6 +227,11 @@ int mpu6050_init() {
     sleep_ms(10);
 
     // Verify registers
+    if (read_register(i2c0, IMU_I2C_ADDRESS, IMU_WHO_AM_I) != IMU_I2C_ADDRESS) {
+        fail_flag = 1;
+        printf("ERROR >>>>   Verify MPU-6050 register: WHO_AM_I --> FAIL\n\n");
+    }
+
     if (read_register(i2c0, IMU_I2C_ADDRESS, IMU_PWR_MGMT1) != WAKE_TEMP_DISABLE_BYTE) {
         fail_flag = 1;
         printf("ERROR >>>>   Verify MPU-6050 register: PWR_MGMT_1 --> FAIL\n\n");

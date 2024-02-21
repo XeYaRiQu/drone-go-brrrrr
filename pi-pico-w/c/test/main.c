@@ -20,12 +20,12 @@
 
 ////////////////// Settings //////////////////
 
-#define MIN_THROTTLE 0.07
-#define MAX_THROTTLE 0.80
-#define THROTTLE_RANGE    (MAX_THROTTLE-MIN_THROTTLE)
-#define MAX_YAW_RATE      30.0
-#define MAX_ROLL_RATE     30.0
-#define MAX_PITCH_RATE    30.0
+#define MIN_THROTTLE   0.07f
+#define MAX_THROTTLE   0.80f
+#define THROTTLE_RANGE (MAX_THROTTLE-MIN_THROTTLE)
+#define MAX_YAW_RATE   30.0
+#define MAX_ROLL_RATE  30.0
+#define MAX_PITCH_RATE 30.0
 
 #define RC_THROTTLE 2
 #define RC_ROLL     0
@@ -80,20 +80,20 @@ int LPF_CONFIG_BYTE = GYRO_98Hz;
 
 ////////////////// PID //////////////////
 
-static const float KP_ROLL = 0.00043714285;
-static const float KP_PITCH = 0.00043714285;
-static const float KP_YAW = 0.001714287;
+static const double KP_ROLL = 0.00043714285;
+static const double KP_PITCH = 0.00043714285;
+static const double KP_YAW = 0.001714287;
 
-static const float KI_ROLL = 0.00255;
-static const float KI_PITCH = 0.00255;
-static const float KI_YAW = 0.003428571;
+static const double KI_ROLL = 0.00255;
+static const double KI_PITCH = 0.00255;
+static const double KI_YAW = 0.003428571;
 
-static const float KD_ROLL = 0.00002571429;
-static const float KD_PITCH = 0.00002571429;
-static const float KD_YAW = 0.0;
+static const double KD_ROLL = 0.00002571429;
+static const double KD_PITCH = 0.00002571429;
+static const double KD_YAW = 0.0;
 
-static const float I_LIMIT_POS = 100.0;
-static const float I_LIMIT_NEG = -100.0;
+static const float I_LIMIT_POS = 100.0f;
+static const float I_LIMIT_NEG = -100.0f;
 
 
 ////////////////// IMU //////////////////
@@ -127,12 +127,12 @@ static const float I_LIMIT_NEG = -100.0;
 
 ////////////////// Global variables //////////////////
 
-volatile float prev_error_roll = 0.0;
-volatile float prev_error_pitch = 0.0;
-volatile float prev_error_yaw = 0.0;
-volatile float prev_integ_roll = 0.0;
-volatile float prev_integ_pitch = 0.0;
-volatile float prev_integ_yaw = 0.0;
+volatile float prev_error_roll = 0.0f;
+volatile float prev_error_pitch = 0.0f;
+volatile float prev_error_yaw = 0.0f;
+volatile float prev_integ_roll = 0.0f;
+volatile float prev_integ_pitch = 0.0f;
+volatile float prev_integ_yaw = 0.0f;
 
 float gyro_multiplier, accel_multiplier;
 int gyro_config_byte, accel_config_byte;
@@ -141,6 +141,7 @@ bool motors_are_armed = false;
 float normalised_rc_values[6];
 float normalised_gyro_values[3];
 float gyro_x_bias, gyro_y_bias, gyro_z_bias;
+float accel_x_bias, accel_y_bias, accel_z_bias;
 
 
 ////////////////// Functions //////////////////
@@ -165,38 +166,38 @@ int mpu6050_init() {
 
     switch (GYRO_RANGE) {
         case RANGE_250DPS:
-            gyro_multiplier = 250.0/32768.0;
+            gyro_multiplier = 250.0f/32768.0f;
             gyro_config_byte = 0x00;
             break;
         case RANGE_500DPS:
-            gyro_multiplier = 500.0/32768.0;
+            gyro_multiplier = 500.0f/32768.0f;
             gyro_config_byte = 0x08;
             break;
         case RANGE_1000DPS:
-            gyro_multiplier = 1000.0/32768.0;
+            gyro_multiplier = 1000.0f/32768.0f;
             gyro_config_byte = 0x10;
             break;
         case RANGE_2000DPS:
-            gyro_multiplier = 2000.0/32768.0;
+            gyro_multiplier = 2000.0f/32768.0f;
             gyro_config_byte = 0x18;
             break;
     }
 
     switch (ACCEL_RANGE) {
         case RANGE_2G:
-            accel_multiplier = 2.0/32768.0;
+            accel_multiplier = 2.0f/32768.0f;
             accel_config_byte = 0x00;
             break;
         case RANGE_4G:
-            accel_multiplier = 4.0/32768.0;
+            accel_multiplier = 4.0f/32768.0f;
             accel_config_byte = 0x08;
             break;
         case RANGE_8G:
-            accel_multiplier = 8.0/32768.0;
+            accel_multiplier = 8.0f/32768.0f;
             accel_config_byte = 0x10;
             break;
         case RANGE_16G:
-            accel_multiplier = 16.0/32768.0;
+            accel_multiplier = 16.0f/32768.0f;
             accel_config_byte = 0x18;
             break;
     }
@@ -276,7 +277,7 @@ void imu_read() {
     i2c_write_blocking(i2c_default, IMU_I2C_ADDRESS, gyro_xout_h, 1, true);
     i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, gyro_buffer, 6, false);
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; ++i) {
         raw_accel_data[i] = (accel_buffer[i * 2] << 8 | accel_buffer[(i * 2) + 1]);
         raw_gyro_data[i] = (gyro_buffer[i * 2] << 8 | gyro_buffer[(i * 2) + 1]);
     }
@@ -316,43 +317,37 @@ void imu_read() {
 
 
 void mpu_6050_cali() {
-    float gyro_bias_x_data[GYRO_ARRAY_SIZE] = {0.0f};
-    float gyro_bias_y_data[GYRO_ARRAY_SIZE] = {0.0f};
-    float gyro_bias_z_data[GYRO_ARRAY_SIZE] = {0.0f};
-    int gyro_bias_data_points = 0;
-    uint32_t gyro_bias_duration = time_us_64() + 5000000;
-    
-    printf("INFO  >>>>   Calculating gyroscope bias. Keep vehicle still.\n");
+    // Add self-test function
 
-    while (time_us_64() < gyro_bias_duration) {
+    int data_points = 0;
+    uint64_t calibration_time = time_us_64() + 6000000;
+
+    while (time_us_64() < calibration_time) {
         imu_read();
-        gyro_bias_x_data[gyro_bias_data_points] = normalised_gyro_values[0];
-        gyro_bias_y_data[gyro_bias_data_points] = normalised_gyro_values[1];
-        gyro_bias_z_data[gyro_bias_data_points] = normalised_gyro_values[2];
-        gyro_bias_data_points++;
-        sleep_ms(50);
+
+        accel_x_bias += normalised_gyro_values[0];
+        accel_y_bias += normalised_gyro_values[1];
+        accel_z_bias += normalised_gyro_values[2];
+        gyro_x_bias += normalised_gyro_values[0];
+        gyro_y_bias += normalised_gyro_values[1];
+        gyro_z_bias += normalised_gyro_values[2];
+        data_points = ++data_points;
+        sleep_ms(10);
     }
 
-    gyro_offset_bias[GYRO_X_OFFSET] = 0.0f;
-    gyro_offset_bias[GYRO_Y_OFFSET] = 0.0f;
-    gyro_offset_bias[GYRO_Z_OFFSET] = 0.0f;
+    // Averaging
+    printf("INFO  >>>>   %d data points collected. Averaging bias values\n\n", data_points);
+    accel_x_bias = accel_x_bias/(float)data_points;
+    accel_y_bias = accel_y_bias/(float)data_points;
+    accel_z_bias = accel_z_bias/(float)data_points;
+    gyro_x_bias = gyro_x_bias/(float)data_points;
+    gyro_y_bias = gyro_y_bias/(float)data_points;
+    gyro_z_bias = gyro_z_bias/(float)data_points;
 
-    //Summing data
-    for (int i = 0; i < gyro_bias_data_points; i++) {
-        gyro_offset_bias[GYRO_X_OFFSET] += gyro_bias_x_data[i];
-        gyro_offset_bias[GYRO_Y_OFFSET] += gyro_bias_y_data[i];
-        gyro_offset_bias[GYRO_Z_OFFSET] += gyro_bias_z_data[i];
-    }
-
-    //Dividing by number of data points to get average
-    gyro_offset_bias[GYRO_X_OFFSET] /= gyro_bias_data_points;
-    gyro_offset_bias[GYRO_Y_OFFSET] /= gyro_bias_data_points;
-    gyro_offset_bias[GYRO_Z_OFFSET] /= gyro_bias_data_points;
-
-    printf("INFO  >>>>   Gyroscope offsets saved. Offsets:\n");
-    printf("INFO  >>>>   X: %f\n", gyro_offset_bias[GYRO_X_OFFSET]);
-    printf("INFO  >>>>   Y: %f\n", gyro_offset_bias[GYRO_Y_OFFSET]);
-    printf("INFO  >>>>   Z: %f\n", gyro_offset_bias[GYRO_Z_OFFSET]);
+    printf("INFO  >>>>   ACCELEROMETER OFFSETS\n");
+    printf("INFO  >>>>   X: %f    Y: %f    Z: %f\n", accel_x_bias, accel_y_bias, accel_z_bias);
+    printf("INFO  >>>>   GYROSCOPE OFFSETS\n");
+    printf("INFO  >>>>   X: %f    Y: %f    Z: %f\n\n", gyro_x_bias, gyro_y_bias, gyro_z_bias);
 }
 
 
@@ -422,6 +417,7 @@ int setup() {
     }
 
     // Perform IMU self-test and calibration
+    printf("INFO  >>>>   Calibrating MPU-6050\n\n");
     mpu_6050_cali();
 
     return fail_flag;
@@ -445,10 +441,10 @@ int setup() {
     pwm_set_enabled(slice_num3, true);
     pwm_set_enabled(slice_num4, true);
 
-    pwm_set_clkdiv(slice_num1, 100.0 );
-    pwm_set_clkdiv(slice_num2, 100.0 );
-    pwm_set_clkdiv(slice_num3, 100.0 );
-    pwm_set_clkdiv(slice_num4, 100.0 ); //so now the clock runs at 125kHz instead of 125MHz
+    pwm_set_clkdiv(slice_num1, 100.0f);
+    pwm_set_clkdiv(slice_num2, 100.0f);
+    pwm_set_clkdiv(slice_num3, 100.0f);
+    pwm_set_clkdiv(slice_num4, 100.0f); //so now the clock runs at 125kHz instead of 125MHz
 
     pwm_set_wrap(slice_num1, 4999); //For 250Hz freq, wrap num = 125000/250  - 1 = 4999
     pwm_set_wrap(slice_num2, 4999); 
@@ -458,7 +454,7 @@ int setup() {
 
 
 void rc_read() {
-    /* 
+    /*
     An iBus packet comprises 32 bytes:
         - 2 header bytes (first header is 0x20, second is 0x40)
         - 28 channel bytes (2 bytes per channel value)
@@ -485,7 +481,7 @@ void rc_read() {
 
                 // Calculate and set the checksum
                 uint16_t checksum = 0xFF9F; // 0xFFFF - 0x20 - 0x40
-                
+
                 //Validating checksum
                 for (int byte_index = 0; byte_index < 28; ++byte_index) {
                 checksum -= buffer[byte_index];
@@ -497,15 +493,15 @@ void rc_read() {
                     for (int channel = 0; channel < 6; ++channel) {
                     raw_rc_values[channel] = (buffer[channel * 2 + 1] << 8) + buffer[channel * 2];
                     }
-                   
+
                     // Normalize data
-                    normalised_rc_values[RC_THROTTLE] = (float)(raw_rc_values[RC_THROTTLE] * 0.001 - 1); // Normalize from 1000-2000 to 0.0-1.0
-                    normalised_rc_values[RC_ROLL] = (float)((raw_rc_values[RC_ROLL] - 1500) * 0.002);    // Normalize from 1000-2000 to -1-1
-                    normalised_rc_values[RC_PITCH] = (float)((raw_rc_values[RC_PITCH] - 1500) * 0.002);  // Normalize from 1000-2000 to -1-1
-                    normalised_rc_values[RC_YAW] = (float)-((raw_rc_values[RC_YAW] - 1500) * 0.002);      // Normalize from 1000-2000 to -1-1
-                    normalised_rc_values[RC_SWA] = (float)(raw_rc_values[RC_SWA] * 0.001 - 1);    // Normalize from 1000-2000 to 0-1
-                    normalised_rc_values[RC_SWB] = (float)(raw_rc_values[RC_SWB] * 0.001 - 1);    // Normalize from 1000-2000 to 0-1
-                    
+                    normalised_rc_values[RC_THROTTLE] = (float)(raw_rc_values[RC_THROTTLE] * 0.001f - 1.0f); // Normalize from 1000-2000 to 0.0-1.0
+                    normalised_rc_values[RC_ROLL] = (float)((raw_rc_values[RC_ROLL] - 1500) * 0.002f);    // Normalize from 1000-2000 to -1-1
+                    normalised_rc_values[RC_PITCH] = (float)((raw_rc_values[RC_PITCH] - 1500) * 0.002f);  // Normalize from 1000-2000 to -1-1
+                    normalised_rc_values[RC_YAW] = (float)-((raw_rc_values[RC_YAW] - 1500) * 0.002f);      // Normalize from 1000-2000 to -1-1
+                    normalised_rc_values[RC_SWA] = (float)(raw_rc_values[RC_SWA] * 0.001f - 1.0f);    // Normalize from 1000-2000 to 0-1
+                    normalised_rc_values[RC_SWB] = (float)(raw_rc_values[RC_SWB] * 0.001f - 1.0f);    // Normalize from 1000-2000 to 0-1
+
                     break;
                 }
             }
@@ -532,7 +528,7 @@ void main() {
                 rc_read();
 
                 if (normalised_rc_values[RC_SWA] == 0) {  // does this need to be SWA or SWB? need to confirm
-                    if (normalised_rc_values[RC_THROTTLE] < 0.05){   //so that motors stop even if throttle control is not exactly = 0
+                    if (normalised_rc_values[RC_THROTTLE] < 0.05f){   //so that motors stop even if throttle control is not exactly = 0
                         pwm_set_gpio_level(PIN_MOTOR1, 0); //motors running at 0% duty cycle. motors not rotating
                         pwm_set_gpio_level(PIN_MOTOR2, 0);
                         pwm_set_gpio_level(PIN_MOTOR3, 0);
@@ -558,7 +554,7 @@ void main() {
                 float pid_prop_yaw = pid_error_yaw * KP_YAW;
 
                 // Calculate time elapsed since previous PID calculations
-                float pid_cycle_time = 1.0 / ((time_us_64() - prev_pid_timestamp) * 0.000001);
+                float pid_cycle_time = 1.0f / ((time_us_64() - prev_pid_timestamp) * 0.000001f);
 
                 /* DOUBLE CHECK CALCULATIONS - INTEGRAL SHOULD NOT BE MULTIPLIED WITH RECIPROCAL */
                 // Integral calculations
@@ -622,6 +618,7 @@ void main() {
             }
             else {
                 rc_read();
+
                 if (normalised_rc_values[RC_SWA] == 1) { //SWA or SWB
                     if (normalised_rc_values[RC_THROTTLE] == 0.0) {  // again, is this condition correct?
                         motors_are_armed = true;
@@ -634,12 +631,13 @@ void main() {
                             pwm_set_gpio_level(PIN_MOTOR3, startup_pwm);
                             pwm_set_gpio_level(PIN_MOTOR4, startup_pwm);
                         }
-                        float prev_pid_error_roll = 0.0;
-                        float prev_pid_error_pitch = 0.0;
-                        float prev_pid_error_yaw = 0.0;
-                        float prev_pid_inte_roll = 0.0;
-                        float prev_pid_inte_pitch = 0.0;
-                        float prev_pid_inte_yaw = 0.0;
+
+                        float prev_pid_error_roll = 0.0f;
+                        float prev_pid_error_pitch = 0.0f;
+                        float prev_pid_error_yaw = 0.0f;
+                        float prev_pid_inte_roll = 0.0f;
+                        float prev_pid_inte_pitch = 0.0f;
+                        float prev_pid_inte_yaw = 0.0f;
 
                         prev_pid_timestamp = time_us_64();
                     }
@@ -652,7 +650,7 @@ void main() {
                 }
             }
             while (time_us_64() - start_timestamp < 4000); // Do nothing until 4 ms has passed since loop start
-        }
+        } // End of main loop
     }
     else {
         printf("ERROR >>>>   Setup failed in %f seconds, exiting.\n\n", ((double)(time_us_64() - start_timestamp)/1000000 - 5));

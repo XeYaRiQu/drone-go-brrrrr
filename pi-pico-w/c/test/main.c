@@ -20,8 +20,9 @@
 
 ////////////////// Settings //////////////////
 
-#define MIN_THROTTLE_RATE 0.07
-#define MAX_THROTTLE_RATE 0.80
+#define MIN_THROTTLE 0.07
+#define MAX_THROTTLE 0.80
+#define THROTTLE_RANGE    (MAX_THROTTLE-MIN_THROTTLE)
 #define MAX_YAW_RATE      30.0
 #define MAX_ROLL_RATE     30.0
 #define MAX_PITCH_RATE    30.0
@@ -38,15 +39,15 @@
 #define GYRO_YAW   2
 
 /* Pin placement */
-#define PIN_LED     0 // The LED pin is tied to CYW43
-#define PIN_RC_RX   5
-#define PIN_RC_TX   4
-#define PIN_IMU_SDA 12
-#define PIN_IMU_SCL 13
-#define PIN_MOTOR1  2
-#define PIN_MOTOR2  28
-#define PIN_MOTOR3  16
-#define PIN_MOTOR4  15
+#define PIN_LED     0  // The LED pin is tied to CYW43
+#define PIN_RC_RX   5  // UART1
+#define PIN_RC_TX   4  // UART1
+#define PIN_IMU_SDA 12 // I2C0
+#define PIN_IMU_SCL 13 // I2C0
+#define PIN_MOTOR1  2  // PWM channel: 1A
+#define PIN_MOTOR2  28 // PWM channel: 6A
+#define PIN_MOTOR3  16 // PWM channel: 0A
+#define PIN_MOTOR4  15 // PWM channel: 7B
 
 enum GYRO_RANGE {
     RANGE_250DPS = 0,
@@ -95,37 +96,30 @@ static const float I_LIMIT_POS = 100.0;
 static const float I_LIMIT_NEG = -100.0;
 
 
-////////////////// Defines //////////////////
+////////////////// IMU //////////////////
 
-#define IMU_I2C_ADDRESS 104
-#define IMU_SMPLRT_DIV  25
-#define IMU_PWR_MGMT1   107
-#define IMU_WHO_AM_I    117
-#define IMU_CONFIG      26
-#define IMU_GYRO_CONFIG 27
-#define IMU_ACCE_CONFIG 28
-#define IMU_ACCE_X_H    59
-#define IMU_ACCE_X_L    60
-#define IMU_ACCE_Y_H    61
-#define IMU_ACCE_Y_L    62
-#define IMU_ACCE_Z_H    3
-#define IMU_ACCE_Z_L    64
-#define IMU_TEMP_HI     65
-#define IMU_TEMP_LO     66
-//not using define for these cause i2c_read_blocking needs uint8_t type
-uint8_t IMU_REG_GYRO_X_HI = 67;
-uint8_t IMU_REG_GYRO_X_LO = 68;
-uint8_t IMU_REG_GYRO_Y_HI = 69;
-uint8_t IMU_REG_GYRO_Y_LO = 70;
-uint8_t IMU_REG_GYRO_Z_HI = 71;
-uint8_t IMU_REG_GYRO_Z_LO = 72;
+#define IMU_I2C_ADDRESS (uint8_t)104
+#define IMU_SMPLRT_DIV  (uint8_t)25
+#define IMU_PWR_MGMT1   (uint8_t)107
+#define IMU_WHO_AM_I    (uint8_t)117
+#define IMU_CONFIG      (uint8_t)26
+#define IMU_GYRO_CONFIG (uint8_t)27
+#define IMU_ACCE_CONFIG (uint8_t)28
+#define IMU_ACCE_X_H    (uint8_t)59
+#define IMU_ACCE_X_L    (uint8_t)60
+#define IMU_ACCE_Y_H    (uint8_t)61
+#define IMU_ACCE_Y_L    (uint8_t)62
+#define IMU_ACCE_Z_H    (uint8_t)3
+#define IMU_ACCE_Z_L    (uint8_t)64
+#define IMU_TEMP_HI     (uint8_t)65
+#define IMU_TEMP_LO     (uint8_t)66
+#define IMU_GYRO_X_H    (uint8_t)67
+#define IMU_GYRO_X_L    (uint8_t)68
+#define IMU_GYRO_Y_H    (uint8_t)69
+#define IMU_GYRO_Y_L    (uint8_t)70
+#define IMU_GYRO_Z_H    (uint8_t)71
+#define IMU_GYRO_Z_L    (uint8_t)72
 
-
-////////////////// Constants //////////////////
-
-static const int MIN_THROTTLE = MIN_THROTTLE_RATE;
-static const int MAX_THROTTLE = MAX_THROTTLE_RATE;
-int THROTTLE_RANGE = MAX_THROTTLE_RATE - MIN_THROTTLE_RATE;
 
 ////////////////// Global variables //////////////////
 
@@ -139,25 +133,11 @@ volatile float prev_integ_yaw = 0.0;
 float gyro_multiplier, accel_multiplier;
 int gyro_config_byte, accel_config_byte;
 
-#define GYRO_X_OFFSET 0
-#define GYRO_Y_OFFSET 1
-#define GYRO_Z_OFFSET 2
-#define GYRO_ARRAY_SIZE 101
-
 bool motors_are_armed = false;
-float normalised_rc_values[6] = {0.0f};
-float normalised_gyro_values[3] = {0.0f};
-float gyro_offset_bias[3] = {0.0f};
-int16_t gyro[3];
+float normalised_rc_values[6];
+float normalised_gyro_values[3];
+float gyro_x_bias, gyro_y_bias, gyro_z_bias;
 
-#define RC_BUFFER 30
-#define UART_ID uart1
-
-//for motors
-uint slice_num1 = 0;
-uint slice_num2 = 0;
-uint slice_num3 = 0;
-uint slice_num4 = 0;
 
 ////////////////// Functions //////////////////
 
@@ -197,15 +177,34 @@ int mpu6050_init() {
     }
     return 0;
 };
-#ifdef i2c_default
-// Function to write a byte to IMU registers using I2C
 
 void writeRegister(uint8_t reg, uint8_t value) {
     uint8_t buffer[2] = {reg, value};
     i2c_write_blocking(i2c_default, IMU_I2C_ADDRESS, buffer, 2, false);
 };
 
-//Function to verify if gyro registers have been written correctly
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 bool verifySetting(uint8_t address, uint8_t reg, uint8_t expected_value, const char *success_msg, const char *fail_msg) {
     uint8_t data;
@@ -231,15 +230,8 @@ void imu_read() {
     to 32767 which needs to be multiplied by the scale multipliers to obtain the
     physical values. These scale multipliers change depending on the range set
     in their respective register configs. The high byte is read before the low
-    byte for each measurement.
+    byte for each axis measurement which is then combined to form the 16-bit values.
     */
- 
-
-    //The code reads the high and low bytes separately and combines them to form the 16-bit values 
-    //for X, Y, and Z axes.
-    
-    // Now gyro data from reg 0x43 for 6 bytes (0x43 is the register with GYRO_X_HI byte)
-    // The register is auto incrementing on each read
     uint8_t gyro_buffer[6];
     uint8_t val = 0x43;
     i2c_write_blocking(i2c_default, IMU_I2C_ADDRESS, &val, 1, true);
@@ -248,14 +240,6 @@ void imu_read() {
     for (int i = 0; i < 3; i++) {
         gyro[i] = (gyro_buffer[i * 2] << 8 | gyro_buffer[(i * 2) + 1]);;
     }
-
-    //not needed anymore
-    /*uint8_t x_hi = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_X_HI, 1, false);
-    uint8_t x_lo = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_X_LO, 1, false);
-    uint8_t y_hi = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_HI, 1, false);
-    uint8_t y_lo = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_Y_LO, 1, false);
-    uint8_t z_hi = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_HI, 1, false);
-    uint8_t z_lo = i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, IMU_REG_GYRO_Z_LO, 1, false);*/
 
     int x_value = gyro[0];//x_value is 16 bit
     int y_value = gyro[1];
@@ -335,7 +319,7 @@ int setup() {
     uint64_t setup_delay = setup_start + 5000000;
     stdio_init_all();
 
-    while (time_us_64()  < setup_delay);
+    while (time_us_64()  < setup_delay); // Delay for serial monitor to establish connection
 
     // Overclock RP2040
     set_sys_clock_khz(250000, true);
@@ -369,10 +353,7 @@ int setup() {
     }
 
     // Initialise I2C for IMU
-    //i2c_inst_t *i2c = i2c0; using i2c_default instead
-
-    if (i2c_init(i2c_default, 400000) == 400000) {
-        
+    if (i2c_init(i2c0, 400000) == 400000) {
         gpio_set_function(PIN_IMU_SCL, GPIO_FUNC_I2C);
         gpio_set_function(PIN_IMU_SDA, GPIO_FUNC_I2C);
         gpio_pull_up(PIN_IMU_SCL);
@@ -402,7 +383,7 @@ int setup() {
     sleep_ms(100);
 
     // Set accelerometer LPF and gyroscope LPF 
-    writeRegister(IMU_CONFIG, lpf_config_byte);
+    writeRegister(IMU_CONFIG, LPF_CONFIG_BYTE);
     sleep_ms(100);
 
     // Set gyroscope scale (in dps)
@@ -467,10 +448,10 @@ int setup() {
     gpio_set_function(PIN_MOTOR3, GPIO_FUNC_PWM);
     gpio_set_function(PIN_MOTOR3, GPIO_FUNC_PWM);
 
-    slice_num1 =  pwm_gpio_to_slice_num(PIN_MOTOR1);
-    slice_num2 =  pwm_gpio_to_slice_num(PIN_MOTOR2);
-    slice_num3 =  pwm_gpio_to_slice_num(PIN_MOTOR3);
-    slice_num4 =  pwm_gpio_to_slice_num(PIN_MOTOR4);
+    int slice_num1 =  pwm_gpio_to_slice_num(PIN_MOTOR1);
+    int slice_num2 =  pwm_gpio_to_slice_num(PIN_MOTOR2);
+    int slice_num3 =  pwm_gpio_to_slice_num(PIN_MOTOR3);
+    int slice_num4 =  pwm_gpio_to_slice_num(PIN_MOTOR4);
 
     pwm_set_enabled(slice_num1, true);
     pwm_set_enabled(slice_num2, true);
@@ -514,17 +495,17 @@ void rc_read() {
     */
     for (int attempt = 0; attempt < 6; ++attempt) {
         // Check if data is available in the UART buffer
-        if (uart_is_readable(UART_ID)) {
-            uint8_t buffer[RC_BUFFER];
+        if (uart_is_readable(uart1)) {
+            uint8_t buffer[30];
 
             // Read start bytes
-            uint8_t char1 = uart_getc(UART_ID);
-            uint8_t char2 = uart_getc(UART_ID);
+            uint8_t char1 = uart_getc(uart1);
+            uint8_t char2 = uart_getc(uart1);
 
             // Validate start bytes
             if (char1 == 0x20 && char2 == 0x40) {
                 // Read the rest of the data into the buffer
-                uart_read_blocking(UART_ID, buffer, RC_BUFFER);
+                uart_read_blocking(uart1, buffer, 30);
 
                 // Calculate and set the checksum
                 uint16_t checksum = 0xFF9F; // 0xFFFF - 0x20 - 0x40

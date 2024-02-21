@@ -361,7 +361,6 @@ int setup() {
         // Make the I2C pins available to picotool (copied from mpu6050_i2c.c in pico-examples)
         bi_decl(bi_2pins_with_func(PIN_IMU_SDA, PIN_IMU_SCL, GPIO_FUNC_I2C));
         printf("INFO  >>>>   Initialise I2C --> SUCCESS\n\n");
-        i2c_set_slave_mode(i2c_default, false, IMU_I2C_ADDRESS); //master mode set as mpu6050 (slave) needs to be configured by microcontroller (master)
     }
     else {
         fail_flag = 1;

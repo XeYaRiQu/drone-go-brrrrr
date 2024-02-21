@@ -263,45 +263,59 @@ void imu_read() {
     in their respective register configs. The high byte is read before the low
     byte for each axis measurement which is then combined to form the 16-bit values.
     */
-    uint8_t gyro_buffer[6];
-    uint8_t val = 0x43;
-    i2c_write_blocking(i2c_default, IMU_I2C_ADDRESS, &val, 1, true);
-    i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, gyro_buffer, 6, false);  // False - finished with bus
+    uint8_t accel_buffer[6], gyro_buffer[6];
+    uint16_t raw_accel_data[3], raw_gyro_data[3];
+    uint8_t *accel_xout_h = IMU_ACCE_X_H;
+    uint8_t *gyro_xout_h = IMU_GYRO_X_H;
+
+    // Get raw accelerometer data
+    i2c_write_blocking(i2c_default, IMU_I2C_ADDRESS, accel_xout_h, 1, true);
+    i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, accel_buffer, 6, false);
+
+    // Get raw gyro data
+    i2c_write_blocking(i2c_default, IMU_I2C_ADDRESS, gyro_xout_h, 1, true);
+    i2c_read_blocking(i2c_default, IMU_I2C_ADDRESS, gyro_buffer, 6, false);
 
     for (int i = 0; i < 3; i++) {
-        gyro[i] = (gyro_buffer[i * 2] << 8 | gyro_buffer[(i * 2) + 1]);;
+        raw_accel_data[i] = (accel_buffer[i * 2] << 8 | accel_buffer[(i * 2) + 1]);
+        raw_gyro_data[i] = (gyro_buffer[i * 2] << 8 | gyro_buffer[(i * 2) + 1]);
     }
 
-    int x_value = gyro[0];//x_value is 16 bit
-    int y_value = gyro[1];
-    int z_value = gyro[2];
-    
-    // Normalize X axis
-    if (x_value > 32767) {
-        normalised_gyro_values[GYRO_ROLL] = (x_value - 65536) * gyro_multiplier - gyro_x_bias;
+    uint16_t accel_x = raw_accel_data[0];
+    uint16_t accel_y = raw_accel_data[1];
+    uint16_t accel_z = raw_accel_data[2];
+    uint16_t gyro_x = raw_gyro_data[0];
+    uint16_t gyro_y = raw_gyro_data[1];
+    uint16_t gyro_z = raw_gyro_data[2];
+
+    /* DOUBLE CHECK THE SENSOR ORIENTATION TO COMPLY WITH NORTH-EAST-DOWN (NED) */
+    // Normalise roll
+    if (gyro_x > 32767) {
+        normalised_gyro_values[GYRO_ROLL] = (gyro_x - 65536) * gyro_multiplier - gyro_x_bias;
     } else {
-        normalised_gyro_values[GYRO_ROLL] = x_value * gyro_multiplier - gyro_x_bias;
+        normalised_gyro_values[GYRO_ROLL] = gyro_x * gyro_multiplier - gyro_x_bias;
     }
 
-    // Normalize Y axis
-    if (y_value > 32767) {
-        normalised_gyro_values[GYRO_PITCH] = (y_value - 65536) * gyro_multiplier - gyro_y_bias;
+    // Normalise pitch
+    if (gyro_y > 32767) {
+        normalised_gyro_values[GYRO_PITCH] = (gyro_y - 65536) * gyro_multiplier - gyro_y_bias;
     } else {
-        normalised_gyro_values[GYRO_PITCH] = y_value * gyro_multiplier - gyro_y_bias;
+        normalised_gyro_values[GYRO_PITCH] = gyro_y * gyro_multiplier - gyro_y_bias;
     }
 
-    // Normalize Z axis
-    if (z_value > 32767) {
-        normalised_gyro_values[GYRO_YAW] = (z_value - 65536) * gyro_multiplier - gyro_z_bias;
+    // Normalise yaw
+    if (gyro_z > 32767) {
+        normalised_gyro_values[GYRO_YAW] = (gyro_z - 65536) * gyro_multiplier - gyro_z_bias;
     } else {
-        normalised_gyro_values[GYRO_YAW] = z_value * gyro_multiplier - gyro_z_bias;
+        normalised_gyro_values[GYRO_YAW] = gyro_z * gyro_multiplier - gyro_z_bias;
     }
 
+    // Add normalisation for accelerometer values
 
 }
 
 
-void calc_gyro_bias() {
+void mpu_6050_cali() {
     float gyro_bias_x_data[GYRO_ARRAY_SIZE] = {0.0f};
     float gyro_bias_y_data[GYRO_ARRAY_SIZE] = {0.0f};
     float gyro_bias_z_data[GYRO_ARRAY_SIZE] = {0.0f};
@@ -407,9 +421,10 @@ int setup() {
         printf("ERROR >>>>   Initialise MPU-6050 --> FAIL\n\n");
     }
 
-    return fail_flag;
+    // Perform IMU self-test and calibration
+    mpu_6050_cali();
 
-    calc_gyro_bias();
+    return fail_flag;
 
     //Motors Setup
 
@@ -444,7 +459,7 @@ int setup() {
 
 void rc_read() {
     /* 
-        An iBus packet comprises 32 bytes:
+    An iBus packet comprises 32 bytes:
         - 2 header bytes (first header is 0x20, second is 0x40)
         - 28 channel bytes (2 bytes per channel value)
         - 2 checksum bytes (1 checksum value)
@@ -453,7 +468,6 @@ void rc_read() {
     Each packet takes 32*8/115200 seconds to transmit (about 2.22 ms).
     Checksum = 0xFFFF - sum of first 30 bytes
     The channels' values are transmitted sequentially in little endian byte order.
-    
     */
     for (int attempt = 0; attempt < 6; ++attempt) {
         // Check if data is available in the UART buffer

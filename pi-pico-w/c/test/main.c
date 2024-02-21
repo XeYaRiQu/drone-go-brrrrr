@@ -521,9 +521,10 @@ void main() {
 
     printf("INFO  >>>>   Executing setup sequence.\n\n");
     if (setup() == 0) {
-
         printf("INFO  >>>>   Setup completed in %f seconds, looping.\n\n", ((double)(time_us_64() - start_timestamp)/1000000 - 5));
         uint64_t prev_pid_timestamp = time_us_64();
+        //cyw43_arch_gpio_put(PIN_LED, 1); // Only uncomment this when storing in flash
+
         ////////////////// Loop //////////////////
         while (true) {
             start_timestamp = time_us_64();
@@ -557,8 +558,9 @@ void main() {
                 float pid_prop_yaw = pid_error_yaw * KP_YAW;
 
                 // Calculate time elapsed since previous PID calculations
-                float pid_cycle_time = 1.0 / (((float)(time_us_64() - prev_pid_timestamp)) * 0.000001);
+                float pid_cycle_time = 1.0 / ((time_us_64() - prev_pid_timestamp) * 0.000001);
 
+                /* DOUBLE CHECK CALCULATIONS - INTEGRAL SHOULD NOT BE MULTIPLIED WITH RECIPROCAL */
                 // Integral calculations
                 float pid_inte_roll = pid_error_roll * KI_ROLL * pid_cycle_time + prev_integ_roll;
                 float pid_inte_pitch = pid_error_pitch * KI_PITCH * pid_cycle_time + prev_integ_pitch;
@@ -653,7 +655,6 @@ void main() {
         }
     }
     else {
-        printf("ERROR >>>> -> SETUP FAIL\n");
         printf("ERROR >>>>   Setup failed in %f seconds, exiting.\n\n", ((double)(time_us_64() - start_timestamp)/1000000 - 5));
     }
 }

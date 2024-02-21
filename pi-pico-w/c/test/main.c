@@ -256,6 +256,63 @@ int mpu6050_init() {
 };
 
 
+void rc_read() {
+    /*
+    An iBus packet comprises 32 bytes:
+        - 2 header bytes (first header is 0x20, second is 0x40)
+        - 28 channel bytes (2 bytes per channel value)
+        - 2 checksum bytes (1 checksum value)
+
+    The protocol data rate is 115200 baud. A packet is transmitted every 7 ms.
+    Each packet takes 32*8/115200 seconds to transmit (about 2.22 ms).
+    Checksum = 0xFFFF - sum of first 30 bytes
+    The channels' values are transmitted sequentially in little endian byte order.
+    */
+    for (int attempt = 0; attempt < 6; ++attempt) {
+        // Check if data is available in the UART buffer
+        if (uart_is_readable(uart1)) {
+            uint8_t buffer[30];
+
+            // Read start bytes
+            uint8_t char1 = uart_getc(uart1);
+            uint8_t char2 = uart_getc(uart1);
+
+            // Validate start bytes
+            if (char1 == 0x20 && char2 == 0x40) {
+                // Read the rest of the data into the buffer
+                uart_read_blocking(uart1, buffer, 30);
+
+                // Calculate and set the checksum
+                uint16_t checksum = 0xFF9F; // 0xFFFF - 0x20 - 0x40
+
+                //Validating checksum
+                for (int byte_index = 0; byte_index < 28; ++byte_index) {
+                checksum -= buffer[byte_index];
+                }
+
+                if (checksum == (buffer[29] << 8) | buffer[28]) { // Convert to big endian
+                // Process raw values
+                    int raw_rc_values[6];
+                    for (int channel = 0; channel < 6; ++channel) {
+                    raw_rc_values[channel] = (buffer[channel * 2 + 1] << 8) + buffer[channel * 2];
+                    }
+
+                    // Normalize data
+                    normalised_rc_values[RC_THROTTLE] = (float)(raw_rc_values[RC_THROTTLE] * 0.001f - 1.0f); // Normalize from 1000-2000 to 0.0-1.0
+                    normalised_rc_values[RC_ROLL] = (float)((raw_rc_values[RC_ROLL] - 1500) * 0.002f);    // Normalize from 1000-2000 to -1-1
+                    normalised_rc_values[RC_PITCH] = (float)((raw_rc_values[RC_PITCH] - 1500) * 0.002f);  // Normalize from 1000-2000 to -1-1
+                    normalised_rc_values[RC_YAW] = (float)-((raw_rc_values[RC_YAW] - 1500) * 0.002f);      // Normalize from 1000-2000 to -1-1
+                    normalised_rc_values[RC_SWA] = (float)(raw_rc_values[RC_SWA] * 0.001f - 1.0f);    // Normalize from 1000-2000 to 0-1
+                    normalised_rc_values[RC_SWB] = (float)(raw_rc_values[RC_SWB] * 0.001f - 1.0f);    // Normalize from 1000-2000 to 0-1
+
+                    break;
+                }
+            }
+        }
+    }
+}
+
+
 void imu_read() {
     /*
     The IMU measurements are 16-bit 2's complement values ranging from -32768
@@ -422,8 +479,6 @@ int setup() {
 
     return fail_flag;
 
-    //Motors Setup
-
     printf("INFO  >>>> Setting up motors \n");
 
     gpio_set_function(PIN_MOTOR1, GPIO_FUNC_PWM);
@@ -447,66 +502,9 @@ int setup() {
     pwm_set_clkdiv(slice_num4, 100.0f); //so now the clock runs at 125kHz instead of 125MHz
 
     pwm_set_wrap(slice_num1, 4999); //For 250Hz freq, wrap num = 125000/250  - 1 = 4999
-    pwm_set_wrap(slice_num2, 4999); 
-    pwm_set_wrap(slice_num3, 4999); 
-    pwm_set_wrap(slice_num4, 4999); 
-}
-
-
-void rc_read() {
-    /*
-    An iBus packet comprises 32 bytes:
-        - 2 header bytes (first header is 0x20, second is 0x40)
-        - 28 channel bytes (2 bytes per channel value)
-        - 2 checksum bytes (1 checksum value)
-
-    The protocol data rate is 115200 baud. A packet is transmitted every 7 ms.
-    Each packet takes 32*8/115200 seconds to transmit (about 2.22 ms).
-    Checksum = 0xFFFF - sum of first 30 bytes
-    The channels' values are transmitted sequentially in little endian byte order.
-    */
-    for (int attempt = 0; attempt < 6; ++attempt) {
-        // Check if data is available in the UART buffer
-        if (uart_is_readable(uart1)) {
-            uint8_t buffer[30];
-
-            // Read start bytes
-            uint8_t char1 = uart_getc(uart1);
-            uint8_t char2 = uart_getc(uart1);
-
-            // Validate start bytes
-            if (char1 == 0x20 && char2 == 0x40) {
-                // Read the rest of the data into the buffer
-                uart_read_blocking(uart1, buffer, 30);
-
-                // Calculate and set the checksum
-                uint16_t checksum = 0xFF9F; // 0xFFFF - 0x20 - 0x40
-
-                //Validating checksum
-                for (int byte_index = 0; byte_index < 28; ++byte_index) {
-                checksum -= buffer[byte_index];
-                }
-
-                if (checksum == (buffer[29] << 8) | buffer[28]) { // Convert to big endian
-                // Process raw values
-                    int raw_rc_values[6];
-                    for (int channel = 0; channel < 6; ++channel) {
-                    raw_rc_values[channel] = (buffer[channel * 2 + 1] << 8) + buffer[channel * 2];
-                    }
-
-                    // Normalize data
-                    normalised_rc_values[RC_THROTTLE] = (float)(raw_rc_values[RC_THROTTLE] * 0.001f - 1.0f); // Normalize from 1000-2000 to 0.0-1.0
-                    normalised_rc_values[RC_ROLL] = (float)((raw_rc_values[RC_ROLL] - 1500) * 0.002f);    // Normalize from 1000-2000 to -1-1
-                    normalised_rc_values[RC_PITCH] = (float)((raw_rc_values[RC_PITCH] - 1500) * 0.002f);  // Normalize from 1000-2000 to -1-1
-                    normalised_rc_values[RC_YAW] = (float)-((raw_rc_values[RC_YAW] - 1500) * 0.002f);      // Normalize from 1000-2000 to -1-1
-                    normalised_rc_values[RC_SWA] = (float)(raw_rc_values[RC_SWA] * 0.001f - 1.0f);    // Normalize from 1000-2000 to 0-1
-                    normalised_rc_values[RC_SWB] = (float)(raw_rc_values[RC_SWB] * 0.001f - 1.0f);    // Normalize from 1000-2000 to 0-1
-
-                    break;
-                }
-            }
-        }
-    }
+    pwm_set_wrap(slice_num2, 4999);
+    pwm_set_wrap(slice_num3, 4999);
+    pwm_set_wrap(slice_num4, 4999);
 }
 
 

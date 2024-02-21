@@ -524,7 +524,7 @@ void main() {
 
     printf("INFO  >>>>   Executing setup sequence.\n\n");
     if (setup() == 0) {
-        printf("INFO  >>>>   Setup completed in %f seconds, looping.\n\n", ((double)(time_us_64() - start_timestamp)/1000000 - 5));
+        printf("INFO  >>>>   Setup completed in %f seconds, looping.\n\n", ((time_us_64() - start_timestamp) * 0.000001f - 5.0f));
         uint64_t prev_pid_timestamp = time_us_64();
         //cyw43_arch_gpio_put(PIN_LED, 1); // Only uncomment this when storing in flash
 
@@ -660,6 +660,6 @@ void main() {
         } // End of main loop
     }
     else {
-        printf("ERROR >>>>   Setup failed in %f seconds, exiting.\n\n", ((double)(time_us_64() - start_timestamp)/1000000 - 5));
+        printf("ERROR >>>>   Setup failed in %f seconds, exiting.\n\n", ((time_us_64() - start_timestamp) * 0.000001f - 5.0f));
     }
 }

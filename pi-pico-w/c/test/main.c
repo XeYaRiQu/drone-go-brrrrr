@@ -144,12 +144,7 @@ float normalised_accel_values[3];
 float gyro_x_bias = 0;
 float gyro_y_bias = 0; 
 float gyro_z_bias = 0;
-float gyro_x_sum = 0;
-float gyro_y_sum = 0; 
-float gyro_z_sum = 0;
-float accel_x_sum = 0;
-float accel_y_sum = 0;
-float accel_z_sum = 0;
+
 float accel_x_bias, accel_y_bias, accel_z_bias;
 
 
@@ -388,8 +383,13 @@ void imu_read() {
 
 
 void mpu_6050_cali() {
-    // Add self-test function
-
+     // Add self-test function
+     float gyro_x_sum = 0;
+     float gyro_y_sum = 0; 
+     float gyro_z_sum = 0;
+     float accel_x_sum = 0;
+     float accel_y_sum = 0;
+     float accel_z_sum = 0;
      int data_points = 0;
      uint64_t calibration_time = time_us_64() + 6000000;
 

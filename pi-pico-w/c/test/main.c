@@ -141,7 +141,15 @@ int gyro_config_byte, accel_config_byte;
 float normalised_rc_values[6];
 float normalised_gyro_values[3];
 float normalised_accel_values[3];
-float gyro_x_bias, gyro_y_bias, gyro_z_bias;
+float gyro_x_bias = 0;
+float gyro_y_bias = 0; 
+float gyro_z_bias = 0;
+float gyro_x_sum = 0;
+float gyro_y_sum = 0; 
+float gyro_z_sum = 0;
+float accel_x_sum = 0;
+float accel_y_sum = 0;
+float accel_z_sum = 0;
 float accel_x_bias, accel_y_bias, accel_z_bias;
 
 
@@ -382,39 +390,31 @@ void imu_read() {
 void mpu_6050_cali() {
     // Add self-test function
 
-    // int data_points = 0;
-    // uint64_t calibration_time = time_us_64() + 6000000;
+     int data_points = 0;
+     uint64_t calibration_time = time_us_64() + 6000000;
 
-    // while (time_us_64() < calibration_time) {
-    //     imu_read();
+     while (time_us_64() < calibration_time) {
+         imu_read();
 
-    //     accel_x_bias += normalised_accel_values[0];
-    //     accel_y_bias += normalised_accel_values[1];
-    //     accel_z_bias += normalised_accel_values[2];
-    //     gyro_x_bias += normalised_gyro_values[0];
-    //     gyro_y_bias += normalised_gyro_values[1];
-    //     gyro_z_bias += normalised_gyro_values[2];
-    //     printf("X: %f    Y: %f    Z: %f\n", normalised_gyro_values[0], normalised_gyro_values[1], normalised_gyro_values[2]);
-    //     data_points = ++data_points;
-    //     sleep_ms(10);
-    // }
+         accel_x_sum += normalised_accel_values[0];
+         accel_y_sum += normalised_accel_values[1];
+         accel_z_sum += normalised_accel_values[2];
+         gyro_x_sum += normalised_gyro_values[0];
+         gyro_y_sum += normalised_gyro_values[1];
+         gyro_z_sum += normalised_gyro_values[2];
+         printf("X: %f    Y: %f    Z: %f\n", normalised_gyro_values[0], normalised_gyro_values[1], normalised_gyro_values[2]);
+         data_points = ++data_points;
+         sleep_ms(10);
+     }
 
-    // // Averaging
-    // printf("INFO  >>>>   %d data points collected. Averaging bias values\n\n", data_points);
-    // accel_x_bias = accel_x_bias/(float)data_points;
-    // accel_y_bias = accel_y_bias/(float)data_points;
-    // accel_z_bias = accel_z_bias/(float)data_points;
-    // gyro_x_bias = gyro_x_bias/(float)data_points;
-    // gyro_y_bias = gyro_y_bias/(float)data_points;
-    // gyro_z_bias = gyro_z_bias/(float)data_points;
-
-    imu_read();
-    accel_x_bias = normalised_accel_values[0];
-    accel_y_bias = normalised_accel_values[1];
-    accel_z_bias = normalised_accel_values[2];
-    gyro_x_bias = normalised_gyro_values[0];
-    gyro_y_bias = normalised_gyro_values[1];
-    gyro_z_bias = normalised_gyro_values[2];
+    // Averaging
+    printf("INFO  >>>>   %d data points collected. Averaging bias values\n\n", data_points);
+    accel_x_bias = accel_x_sum/(float)data_points;
+    accel_y_bias = accel_y_sum/(float)data_points;
+    accel_z_bias = accel_z_sum/(float)data_points;
+    gyro_x_bias = gyro_x_sum/(float)data_points;
+    gyro_y_bias = gyro_y_sum/(float)data_points;
+    gyro_z_bias = gyro_z_sum/(float)data_points;
 
     printf("INFO  >>>>   ACCELEROMETER OFFSETS\n");
     printf("INFO  >>>>   X: %f    Y: %f    Z: %f\n", accel_x_bias, accel_y_bias, accel_z_bias);

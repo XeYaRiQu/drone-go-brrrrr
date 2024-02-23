@@ -11,7 +11,7 @@ yaw_i = 0; %radians
 pitch_i = 0; %radians
 
 %Angular Accelerations - Body Frame - vdot
-I_xx = 4.856 * 10^-3  ;% kg m^2 - Inertia of XX Axis
+I_xx = 4.856 * 10^-3  ;% kg m^2 - Inertia of XX Axis - might need to change this due to the weight and inertia
 I_yy = 4.856 * 10^-3 ; %kg m^2 - Inertia of YY axis
 I_zz = 8.801 * 10^-3 ;% kg m^2 - Inertia of ZZ Axis
 

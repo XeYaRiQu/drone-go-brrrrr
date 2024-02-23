@@ -1,5 +1,5 @@
 %Position Controls
-Kdx = 1.3; % X point Gain
+Kdx = 1.8; % X point Gain
 Kpxy = 3.5;% % Kp gain for both x and y
 Kdy = 1.3;% Y point Gain
 Kdz = 0.30; % Z point Gain
@@ -21,7 +21,7 @@ l = 0.225 ;% m
 b = 1.140 * 10^-7 ;% Drag Coefficient
 
 %Declare Initial Conditions Desired Positions
-x_desired = 15;% X coordinate
+x_desired = 10;% X coordinate
 y_desired = 10; %Y Coordinate
 z_desired = 0.1;
 z_initial= 0.0; %Setting initial coordinate
@@ -58,7 +58,7 @@ z_initial= 0.0; %Setting initial coordinate
 roll_d = 0.10; % Desired Roll  - this replaces Phi Desired
 pitch_d = 0.09; %Desired Pitch - this replaces Theta Desired
 yaw_d = 0.05 ;%Desired Yaw - this replaces Psi Desired in the parameter
-altitude_d = 5; %Desired Altitude
+altitude_d = 10; %Desired Altitude
 z_dot_desired = 0.01; %Desired Linear Velocity
 
 %Gain PD Controllers

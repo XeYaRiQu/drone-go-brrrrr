@@ -44,10 +44,10 @@
 #define PIN_RC_TX   4  // UART1
 #define PIN_IMU_SDA 12 // I2C0
 #define PIN_IMU_SCL 13 // I2C0
-#define PIN_MOTOR1  2  // PWM channel: 1A
-#define PIN_MOTOR2  28 // PWM channel: 6A
-#define PIN_MOTOR3  16 // PWM channel: 0A
-#define PIN_MOTOR4  15 // PWM channel: 7B
+#define PIN_MOTOR1  16  // PWM channel: 1A
+#define PIN_MOTOR2  15 // PWM channel: 6A
+#define PIN_MOTOR3  2 // PWM channel: 0A
+#define PIN_MOTOR4  28 // PWM channel: 7B
 
 enum GYRO_RANGE {
     RANGE_250DPS = 0,
@@ -141,11 +141,13 @@ int gyro_config_byte, accel_config_byte;
 float normalised_rc_values[6];
 float normalised_gyro_values[3];
 float normalised_accel_values[3];
-float gyro_x_bias = 0;
-float gyro_y_bias = 0; 
-float gyro_z_bias = 0;
 
-float accel_x_bias, accel_y_bias, accel_z_bias;
+float gyro_x_bias = 0f;
+float gyro_y_bias = 0f; 
+float gyro_z_bias = 0f;
+float accel_x_bias = 0f;
+float accel_y_bias = 0f;
+float accel_z_bias = 0f;
 
 
 ////////////////// Functions //////////////////
@@ -291,10 +293,9 @@ void rc_read() {
                 // Read the rest of the data into the buffer
                 uart_read_blocking(uart1, buffer, 30);
 
-                // Calculate and set the checksum
                 uint16_t checksum = 0xFF9F; // 0xFFFF - 0x20 - 0x40
 
-                //Validating checksum
+                // Validate checksum
                 for (int byte_index = 0; byte_index < 28; ++byte_index) {
                 checksum -= buffer[byte_index];
                 }
@@ -563,6 +564,7 @@ void main() {
 
                 break;
             }
+
             if (motors_are_armed == true) {
                 start_timestamp = time_us_64();
                 rc_read();

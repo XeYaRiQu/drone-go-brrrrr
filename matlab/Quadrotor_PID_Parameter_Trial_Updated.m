@@ -1,8 +1,8 @@
 %Position Controls
-Kdx = 1.5; % X point Gain
-Kpxy = 0.90;% % Kp gain for both x and y
-Kdy = 2.5;% Y point Gain
-Kdz = 0.25; % Z point Gain
+Kdx = 1.3; % X point Gain
+Kpxy = 3.5;% % Kp gain for both x and y
+Kdy = 1.3;% Y point Gain
+Kdz = 0.30; % Z point Gain
 m = 0.468; %kg
 g = 9.82; %m / s^2 - Gravity
 %altitude_i = 50; %metres
@@ -21,8 +21,9 @@ l = 0.225 ;% m
 b = 1.140 * 10^-7 ;% Drag Coefficient
 
 %Declare Initial Conditions Desired Positions
-x_desired = 2;% X coordinate
-y_desired = 2; %Y Coordinate
+x_desired = 15;% X coordinate
+y_desired = 10; %Y Coordinate
+z_desired = 0.1;
 z_initial= 0.0; %Setting initial coordinate
 %z_desired = 0;% ; %Z coordinate
 %phi_desired = 0.02; % Phi Angle in Radians
@@ -54,8 +55,8 @@ z_initial= 0.0; %Setting initial coordinate
 %Kzd = 0; 
 
 % Desired Conditions in Parameters
-roll_d = 0.06; % Desired Roll  - this replaces Phi Desired
-pitch_d = 0.06; %Desired Pitch - this replaces Theta Desired
+roll_d = 0.10; % Desired Roll  - this replaces Phi Desired
+pitch_d = 0.09; %Desired Pitch - this replaces Theta Desired
 yaw_d = 0.05 ;%Desired Yaw - this replaces Psi Desired in the parameter
 altitude_d = 5; %Desired Altitude
 z_dot_desired = 0.01; %Desired Linear Velocity

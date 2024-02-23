@@ -142,12 +142,12 @@ float normalised_rc_values[6];
 float normalised_gyro_values[3];
 float normalised_accel_values[3];
 
-float gyro_x_bias = 0f;
-float gyro_y_bias = 0f; 
-float gyro_z_bias = 0f;
-float accel_x_bias = 0f;
-float accel_y_bias = 0f;
-float accel_z_bias = 0f;
+float gyro_x_bias = 0.0f;
+float gyro_y_bias = 0.0f; 
+float gyro_z_bias = 0.0f;
+float accel_x_bias = 0.0f;
+float accel_y_bias = 0.0f;
+float accel_z_bias = 0.0f;
 
 
 ////////////////// Functions //////////////////
@@ -550,7 +550,7 @@ void main() {
     if (setup() == 0) {
         printf("INFO  >>>>   Setup completed in %f seconds, looping.\n\n", ((time_us_64() - start_timestamp) * 0.000001f - 5.0f));
         uint64_t prev_pid_timestamp = time_us_64();
-        //cyw43_arch_gpio_put(PIN_LED, 1); // Only uncomment this when storing in flash
+        cyw43_arch_gpio_put(PIN_LED, 1); // Only uncomment this when storing in flash
 
         ////////////////// Loop //////////////////
         while (true) {

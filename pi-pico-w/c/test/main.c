@@ -450,6 +450,18 @@ void motor_pwm_init() {
     pwm_set_wrap(slice_num4, 4999);
 }
 
+void motor_pwm_deinit() {
+    int slice_num1 = pwm_gpio_to_slice_num(PIN_MOTOR1);
+    int slice_num2 = pwm_gpio_to_slice_num(PIN_MOTOR2);
+    int slice_num3 = pwm_gpio_to_slice_num(PIN_MOTOR3);
+    int slice_num4 = pwm_gpio_to_slice_num(PIN_MOTOR4);
+
+    pwm_set_enabled(slice_num1, false);
+    pwm_set_enabled(slice_num2, false);
+    pwm_set_enabled(slice_num3, false);
+    pwm_set_enabled(slice_num4, false);
+
+}
 
 ////////////////// Setup //////////////////
 
@@ -541,12 +553,22 @@ void main() {
 
         ////////////////// Loop //////////////////
         while (true) {
+            if (normalised_rc_values[RC_SWB] > 0.95f){ //if swb is on, switch off motors regardless of other things
+                pwm_set_gpio_level(PIN_MOTOR1, 0); //motors running at 0% duty cycle. motors not rotating
+                pwm_set_gpio_level(PIN_MOTOR2, 0);
+                pwm_set_gpio_level(PIN_MOTOR3, 0);
+                pwm_set_gpio_level(PIN_MOTOR4, 0);
+
+                motor_pwm_deinit();
+
+                break;
+            }
             if (motors_are_armed == true) {
                 start_timestamp = time_us_64();
                 rc_read();
 
-                if (normalised_rc_values[RC_SWA] == 0.0f) {  // does this need to be SWA or SWB? need to confirm
-                    if (normalised_rc_values[RC_THROTTLE] < 0.05f){   //so that motors stop even if throttle control is not exactly = 0
+                if (normalised_rc_values[RC_SWA] == 0.0f) {  
+                    if (normalised_rc_values[RC_THROTTLE] < 0.05f){ //so that motors stop even if throttle control is not exactly = 0
                         pwm_set_gpio_level(PIN_MOTOR1, 0); //motors running at 0% duty cycle. motors not rotating
                         pwm_set_gpio_level(PIN_MOTOR2, 0);
                         pwm_set_gpio_level(PIN_MOTOR3, 0);

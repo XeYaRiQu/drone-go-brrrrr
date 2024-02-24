@@ -14,10 +14,12 @@
 # limitations under the License.
 
 import rclpy
+from math import sqrt
 from geometry_msgs.msg import Twist, Vector3
 from rclpy.node import Node
 from sensor_msgs.msg import Joy
 from std_msgs.msg import Empty
+from std_msgs.msg import Float32
 
 
 class TeleopNode(Node):
@@ -31,9 +33,10 @@ class TeleopNode(Node):
         self.cmd_vel_publisher = self.create_publisher(Twist, 'cmd_vel', 10)
         self.takeoff_publisher = self.create_publisher(Empty, 'takeoff', 10)
         self.land_publisher = self.create_publisher(Empty, 'land', 10)
+        self.magnitude_publisher = self.create_publisher(Float32, 'magnitude', 10)
 
-    def get_velocity_msg(self) -> str:
-        return f"Linear Velocity: {self.linear_velocity}\nAngular Velocity: {self.angular_velocity}\n"
+    # def get_velocity_msg(self) -> str:
+    #     return f"Linear Velocity: {self.linear_velocity}\nAngular Velocity: {self.angular_velocity}\n"
 
     def joy_callback(self, msg: Joy) -> None:
         """
@@ -75,13 +78,16 @@ class TeleopNode(Node):
         linear_vec = Vector3()
         linear_vec.x = msg.axes[1] #roll forward/backwards
         linear_vec.y = msg.axes[0] #roll left/right
-        # linear_vec.z = msg.axes[3] #throttle
+        linear_vec.z = msg.axes[3] #throttle
 
         angular_vec = Vector3()
         angular_vec.z = msg.axes[2] #yaw
 
         self.cmd_vel_publisher.publish(Twist(linear=linear_vec, angular=angular_vec))
 
+        linear_magnitude = sqrt(linear_vec.x*linear_vec.x + linear_vec.y*linear_vec.y + angular_vec.z*angular_vec.z)
+        self.magnitude_publisher.publish(Float32(linear_magnitude))
+        
         # Handle other keys for different movements
         if msg.buttons[0] == 1:
             # Takeoff

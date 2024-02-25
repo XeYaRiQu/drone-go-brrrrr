@@ -22,21 +22,10 @@
 
 #define MIN_THROTTLE   0.07f
 #define MAX_THROTTLE   0.70f
-#define THROTTLE_RANGE (MAX_THROTTLE-MIN_THROTTLE)
+#define THROTTLE_RANGE (MAX_THROTTLE - MIN_THROTTLE)
 #define MAX_YAW_RATE   30.0
 #define MAX_ROLL_RATE  30.0
 #define MAX_PITCH_RATE 30.0
-
-#define RC_THROTTLE 2
-#define RC_ROLL     0
-#define RC_PITCH    1
-#define RC_YAW      3
-#define RC_SWA      4
-#define RC_SWB      5
-
-#define GYRO_ROLL  0
-#define GYRO_PITCH 1
-#define GYRO_YAW   2
 
 /* Pin placement */
 #define PIN_LED     0  // The LED pin is tied to CYW43
@@ -44,11 +33,12 @@
 #define PIN_RC_TX   4  // UART1
 #define PIN_IMU_SDA 12 // I2C0
 #define PIN_IMU_SCL 13 // I2C0
-#define PIN_MOTOR1  16  // PWM channel: 1A
+#define PIN_MOTOR1  16 // PWM channel: 1A
 #define PIN_MOTOR2  15 // PWM channel: 6A
-#define PIN_MOTOR3  2 // PWM channel: 0A
+#define PIN_MOTOR3  2  // PWM channel: 0A
 #define PIN_MOTOR4  28 // PWM channel: 7B
 
+/* IMU settings */
 enum GYRO_RANGE {
     RANGE_250DPS = 0,
     RANGE_500DPS = 4,
@@ -96,7 +86,7 @@ static const float I_LIMIT_POS = 100.0f;
 static const float I_LIMIT_NEG = -100.0f;
 
 
-////////////////// IMU //////////////////
+////////////////// Constants //////////////////
 
 #define IMU_I2C_ADDRESS  104
 #define IMU_SMPLRT_DIV   25
@@ -120,10 +110,22 @@ static const float I_LIMIT_NEG = -100.0f;
 #define IMU_GYRO_Z_H     71
 #define IMU_GYRO_Z_L     72
 
-#define RESET_ALL_BYTE         128
-#define WAKE_TEMP_DISABLE_BYTE 9
-#define WAKE_TEMP_ENABLE_BYTE  1
-#define SAMPLE_RATE_BYTE       0
+#define RESET_ALL_BYTE         0b10000000
+#define WAKE_TEMP_DISABLE_BYTE 0b00001001
+#define WAKE_TEMP_ENABLE_BYTE  0b00000001
+#define SAMPLE_RATE_BYTE       0b00000000
+
+#define GYRO_ROLL  0
+#define GYRO_PITCH 1
+#define GYRO_YAW   2
+
+/* Channel order in IBUS packet */
+#define RC_THROTTLE 2
+#define RC_ROLL     0
+#define RC_PITCH    1
+#define RC_YAW      3
+#define RC_SWA      4
+#define RC_SWB      5
 
 
 ////////////////// Global variables //////////////////
@@ -173,64 +175,58 @@ int mpu6050_init() {
     switch (GYRO_RANGE) {
         case RANGE_250DPS:
             gyro_multiplier = 250.0f/32768.0f;
-            gyro_config_byte = 0x00;
+            gyro_config_byte = 0b00000000; // 0x00, 0
             break;
         case RANGE_500DPS:
             gyro_multiplier = 500.0f/32768.0f;
-            gyro_config_byte = 0x08;
+            gyro_config_byte = 0b00001000; // 0x08, 8
             break;
         case RANGE_1000DPS:
             gyro_multiplier = 1000.0f/32768.0f;
-            gyro_config_byte = 0x10;
+            gyro_config_byte = 0b00010000; // 0x10, 16
             break;
         case RANGE_2000DPS:
             gyro_multiplier = 2000.0f/32768.0f;
-            gyro_config_byte = 0x18;
+            gyro_config_byte = 0b00011000; // 0x18, 24
             break;
     }
 
     switch (ACCEL_RANGE) {
         case RANGE_2G:
             accel_multiplier = 2.0f/32768.0f;
-            accel_config_byte = 0x00;
+            accel_config_byte = 0b00000000; // 0x00, 0
             break;
         case RANGE_4G:
             accel_multiplier = 4.0f/32768.0f;
-            accel_config_byte = 0x08;
+            accel_config_byte = 0b00001000; // 0x08, 8
             break;
         case RANGE_8G:
             accel_multiplier = 8.0f/32768.0f;
-            accel_config_byte = 0x10;
+            accel_config_byte = 0b00010000; // 0x10, 16
             break;
         case RANGE_16G:
             accel_multiplier = 16.0f/32768.0f;
-            accel_config_byte = 0x18;
+            accel_config_byte = 0b00011000; // 0x18, 24
             break;
     }
 
     // Reset all registers
     write_register(i2c0, IMU_I2C_ADDRESS, IMU_PWR_MGMT1, RESET_ALL_BYTE);
-    sleep_ms(10);
 
     // Wake, disable temperature sensor
     write_register(i2c0, IMU_I2C_ADDRESS, IMU_PWR_MGMT1, WAKE_TEMP_DISABLE_BYTE);
-    sleep_ms(10);
 
     // Set sensor sample rate to 250 Hz (Sample Rate = Gyroscope Output Rate / (1 + SMPLRT_DIV))
     write_register(i2c0, IMU_I2C_ADDRESS, IMU_SMPLRT_DIV, SAMPLE_RATE_BYTE);
-    sleep_ms(10);
 
     // Set DLPF
     write_register(i2c0, IMU_I2C_ADDRESS, IMU_CONFIG, LPF_CONFIG_BYTE);
-    sleep_ms(10);
 
     // Set gyroscope scale (in dps)
     write_register(i2c0, IMU_I2C_ADDRESS, IMU_GYRO_CONFIG, gyro_config_byte);
-    sleep_ms(10);
 
     // Set accelerometer scale (in G)
     write_register(i2c0, IMU_I2C_ADDRESS, IMU_ACCEL_CONFIG, accel_config_byte);
-    sleep_ms(10);
 
     // Verify registers
     if (read_register(i2c0, IMU_I2C_ADDRESS, IMU_WHO_AM_I) != IMU_I2C_ADDRESS) {
@@ -295,16 +291,17 @@ void rc_read() {
 
                 uint16_t checksum = 0xFF9F; // 0xFFFF - 0x20 - 0x40
 
-                // Validate checksum
                 for (int byte_index = 0; byte_index < 28; ++byte_index) {
-                checksum -= buffer[byte_index];
+                    checksum -= buffer[byte_index];
                 }
 
-                if (checksum == (buffer[29] << 8) | buffer[28]) { // Convert to big endian
-                // Process raw values
+                // Validate checksum
+                if (checksum == ((buffer[29] << 8) | buffer[28])) { // Convert to big endian
+                    // Process raw RC values
                     int raw_rc_values[6];
+
                     for (int channel = 0; channel < 6; ++channel) {
-                    raw_rc_values[channel] = (buffer[channel * 2 + 1] << 8) + buffer[channel * 2];
+                        raw_rc_values[channel] = (buffer[channel * 2 + 1] << 8) + buffer[channel * 2];
                     }
 
                     // Normalize data
@@ -356,6 +353,30 @@ void imu_read() {
     uint16_t gyro_y = raw_gyro_data[1];
     uint16_t gyro_z = raw_gyro_data[2];
 
+    // Normalise X
+    if (accel_x > 32767) {
+        normalised_accel_values[0] = (accel_x - 65536) * accel_multiplier - accel_x_bias;
+    }
+    else {
+        normalised_accel_values[0] = accel_x * accel_multiplier - accel_x_bias;
+    }
+
+    // Normalise Y
+    if (accel_y > 32767) {
+        normalised_accel_values[0] = (accel_y - 65536) * accel_multiplier - accel_y_bias;
+    }
+    else {
+        normalised_accel_values[0] = accel_y * accel_multiplier - accel_y_bias;
+    }
+
+    // Normalise Z
+    if (accel_z > 32767) {
+        normalised_accel_values[0] = (accel_z - 65536) * accel_multiplier - accel_z_bias;
+    }
+    else {
+        normalised_accel_values[0] = accel_z * accel_multiplier - accel_z_bias;
+    }
+
     // Use North-East-Down (NED) frame
     // Normalise roll
     if (gyro_x > 32767) {
@@ -377,9 +398,6 @@ void imu_read() {
     } else {
         normalised_gyro_values[GYRO_YAW] = -(gyro_z * gyro_multiplier - gyro_z_bias);
     }
-
-    // Add normalisation for accelerometer values
-
 }
 
 
@@ -391,8 +409,8 @@ void mpu_6050_cali() {
     float accel_x_sum = 0.0f;
     float accel_y_sum = 0.0f;
     float accel_z_sum = 0.0f;
-     int data_points = 0;
-     uint64_t calibration_time = time_us_64() + 6000000;
+    int data_points = 0;
+    uint64_t calibration_time = time_us_64() + 6000000;
 
      while (time_us_64() < calibration_time) {
          imu_read();
@@ -554,7 +572,7 @@ void main() {
     if (setup() == 0) {
         printf("INFO  >>>>   Setup completed in %f seconds, looping.\n\n", ((time_us_64() - start_timestamp) * 0.000001f - 5.0f));
         uint64_t prev_pid_timestamp = time_us_64();
-        cyw43_arch_gpio_put(PIN_LED, 1); // Only uncomment this when storing in flash
+        //cyw43_arch_gpio_put(PIN_LED, 1); // Only uncomment this when storing in flash
 
         ////////////////// Loop //////////////////
         while (true) {

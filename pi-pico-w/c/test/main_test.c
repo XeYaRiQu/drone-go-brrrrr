@@ -138,7 +138,8 @@ static const float I_LIMIT_NEG = -100.0f;
 float gyro_multiplier, accel_multiplier;
 int gyro_config_byte, accel_config_byte;
 
-float normalised_rc_values[6], normalised_gyro_values[3], normalised_accel_values[3];
+float normalised_rc_values[6] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+float normalised_gyro_values[3], normalised_accel_values[3];
 
 float gyro_x_bias = 0.0f;
 float gyro_y_bias = 0.0f; 
@@ -282,14 +283,20 @@ void rc_read() {
     for (int attempt = 0; attempt < 6; ++attempt) {
         // Check if data is available in the UART buffer
         if (uart_is_readable(uart1)) {
-            uint8_t buffer[30];
 
             // Read start bytes
             uint8_t char1 = uart_getc(uart1);
+
+            if (char1 == 0) { // Prevents exception when only 1 char is avail in UART1
+                break;
+            }
+
             uint8_t char2 = uart_getc(uart1);
 
             // Validate start bytes
             if (char1 == 0x20 && char2 == 0x40) {
+                uint8_t buffer[30];
+
                 // Read the rest of the data into the buffer
                 uart_read_blocking(uart1, buffer, 30);
 
@@ -566,6 +573,8 @@ void main() {
 
         ////////////////// Loop //////////////////
         while (true) {
+            loop_end_time = time_us_64() + 4000;
+
             // Emergency killswitch
             if (normalised_rc_values[RC_SWD] > 0.5f){
                 pwm_set_gpio_level(PIN_MOTOR1, 0);
@@ -578,7 +587,6 @@ void main() {
             }
 
             if (motors_are_armed) {
-                loop_end_time = time_us_64() + 4000;
                 rc_read();
 
                 // Disarm motors at low throttle

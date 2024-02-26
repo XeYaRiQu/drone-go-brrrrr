@@ -668,7 +668,7 @@ void main() {
             else {
                 rc_read();
 
-                // Arm motors
+                // Arm motors at low throttle
                 if (normalised_rc_values[RC_SWA] > 0.5f) {
                     if (normalised_rc_values[RC_THROTTLE] < 0.05f) {
                         motors_are_armed = true;

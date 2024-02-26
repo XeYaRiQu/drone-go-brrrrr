@@ -654,10 +654,10 @@ void main() {
 
                 /* TEST */
                 // Throttle calculations (cross configuration)
-                // int motor1_throttle = (throttle + pid_roll + pid_pitch + pid_yaw) * 1;
-                // int motor2_throttle = (throttle - pid_roll + pid_pitch - pid_yaw) * 1;
-                // int motor3_throttle = (throttle - pid_roll - pid_pitch + pid_yaw) * 1;
-                // int motor4_throttle = (throttle + pid_roll - pid_pitch - pid_yaw) * 1;
+                // int motor1_throttle = (throttle + pid_roll - pid_pitch + pid_yaw) * 1;
+                // int motor2_throttle = (throttle - pid_roll - pid_pitch - pid_yaw) * 1;
+                // int motor3_throttle = (throttle - pid_roll + pid_pitch + pid_yaw) * 1;
+                // int motor4_throttle = (throttle + pid_roll + pid_pitch - pid_yaw) * 1;
 
                 // // Enforce throttle limits
                 // int motor1_ns = ((motor1_throttle > 0) ? (motor1_throttle + 1) : 1);

@@ -368,7 +368,7 @@ void imu_read() {
 
 
 void mpu_6050_cali() {
-     // Add self-test function
+    // Add self-test function
     float gyro_x_sum = 0.0f;
     float gyro_y_sum = 0.0f; 
     float gyro_z_sum = 0.0f;
@@ -376,22 +376,22 @@ void mpu_6050_cali() {
     float accel_y_sum = 0.0f;
     float accel_z_sum = 0.0f;
     int data_points = 0;
-    uint64_t calibration_time = time_us_64() + 6000000;
+    uint64_t calibration_time = time_us_64() + 3000000;
 
-     while (time_us_64() < calibration_time) {
-         imu_read();
+    while (time_us_64() < calibration_time) {
+        imu_read();
 
-         accel_x_sum += normalised_accel_values[0];
-         accel_y_sum += normalised_accel_values[1];
-         accel_z_sum += normalised_accel_values[2];
-         gyro_x_sum += normalised_gyro_values[0];
-         gyro_y_sum += normalised_gyro_values[1];
-         gyro_z_sum += normalised_gyro_values[2];
+        accel_x_sum += normalised_accel_values[0];
+        accel_y_sum += normalised_accel_values[1];
+        accel_z_sum += normalised_accel_values[2];
+        gyro_x_sum += normalised_gyro_values[0];
+        gyro_y_sum += normalised_gyro_values[1];
+        gyro_z_sum += normalised_gyro_values[2];
         //  printf("X: %f    Y: %f    Z: %f\n", normalised_accel_values[0], normalised_accel_values[1], normalised_accel_values[2]);
         //  printf("X: %f    Y: %f    Z: %f\n", normalised_gyro_values[0], normalised_gyro_values[1], normalised_gyro_values[2]);
-         data_points = ++data_points;
-         sleep_ms(3);
-     }
+        data_points = ++data_points;
+        sleep_ms(3);
+    }
 
     // Average bias offsets
     printf("INFO  >>>>   %d data points collected. Averaging bias values\n\n", data_points);

@@ -653,29 +653,6 @@ void main() {
                 motor3_pwm_level = motor3_ns * 0.00000025f * wrap_num;
                 motor4_pwm_level = motor4_ns * 0.00000025f * wrap_num;
 
-                /* TEST */
-                // Throttle calculations (cross configuration)
-                // int motor1_throttle = (throttle + pid_roll - pid_pitch + pid_yaw) * 1;
-                // int motor2_throttle = (throttle - pid_roll - pid_pitch - pid_yaw) * 1;
-                // int motor3_throttle = (throttle - pid_roll + pid_pitch + pid_yaw) * 1;
-                // int motor4_throttle = (throttle + pid_roll + pid_pitch - pid_yaw) * 1;
-
-                // // Enforce throttle limits
-                // int motor1_ns = ((motor1_throttle > 0) ? (motor1_throttle + 1) : 1);
-                // int motor2_ns = ((motor2_throttle > 0) ? (motor2_throttle + 1) : 1);
-                // int motor3_ns = ((motor3_throttle > 0) ? (motor3_throttle + 1) : 1);
-                // int motor4_ns = ((motor4_throttle > 0) ? (motor4_throttle + 1) : 1);
-
-                // motor1_ns = (motor1_ns > 2) ? 2 : motor1_ns;
-                // motor2_ns = (motor2_ns > 2) ? 2 : motor2_ns;
-                // motor3_ns = (motor3_ns > 2) ? 2 : motor3_ns;
-                // motor4_ns = (motor4_ns > 2) ? 2 : motor4_ns;
-
-                // motor1_pwm_level = motor1_ns * 0.25f * wrap_num;
-                // motor2_pwm_level = motor2_ns * 0.25f * wrap_num;
-                // motor3_pwm_level = motor3_ns * 0.25f * wrap_num;
-                // motor4_pwm_level = motor4_ns * 0.25f * wrap_num;
-
                 pwm_set_gpio_level(PIN_MOTOR1, motor1_pwm_level);
                 pwm_set_gpio_level(PIN_MOTOR2, motor2_pwm_level);
                 pwm_set_gpio_level(PIN_MOTOR3, motor3_pwm_level);
@@ -698,10 +675,10 @@ void main() {
                         uint64_t spin_up_delay = time_us_64() + 10000;
 
                         while (time_us_64() < spin_up_delay) {
-                            pwm_set_gpio_level(PIN_MOTOR1, 0);
-                            pwm_set_gpio_level(PIN_MOTOR2, 0);
-                            pwm_set_gpio_level(PIN_MOTOR3, 0);
-                            pwm_set_gpio_level(PIN_MOTOR4, 0);
+                            pwm_set_gpio_level(PIN_MOTOR1, wrap_num);
+                            pwm_set_gpio_level(PIN_MOTOR2, wrap_num);
+                            pwm_set_gpio_level(PIN_MOTOR3, wrap_num);
+                            pwm_set_gpio_level(PIN_MOTOR4, wrap_num);
                         };
 
                         float prev_pid_error_roll = 0.0f;
@@ -715,10 +692,10 @@ void main() {
                     }
                 }
                 else {
-                    pwm_set_gpio_level(PIN_MOTOR1, wrap_num);
-                    pwm_set_gpio_level(PIN_MOTOR2, wrap_num);
-                    pwm_set_gpio_level(PIN_MOTOR3, wrap_num);
-                    pwm_set_gpio_level(PIN_MOTOR4, wrap_num);
+                    pwm_set_gpio_level(PIN_MOTOR1, 0);
+                    pwm_set_gpio_level(PIN_MOTOR2, 0);
+                    pwm_set_gpio_level(PIN_MOTOR3, 0);
+                    pwm_set_gpio_level(PIN_MOTOR4, 0);
                 }
             }
 

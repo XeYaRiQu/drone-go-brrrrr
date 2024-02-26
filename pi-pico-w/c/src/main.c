@@ -562,7 +562,7 @@ void main() {
         uint64_t loop_end_time;
         printf("INFO  >>>>   Setup completed in %f seconds, looping.\n\n", ((time_us_64() - start_timestamp) * 0.000001f - 5.0f));
 
-        //cyw43_arch_gpio_put(PIN_LED, 1); // Only uncomment this when storing in flash
+        cyw43_arch_gpio_put(PIN_LED, 1); // Only uncomment this when storing in flash
 
         ////////////////// Loop //////////////////
         while (true) {

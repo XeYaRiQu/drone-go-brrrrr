@@ -316,12 +316,12 @@ void rc_read() {
                     }
 
                     // Normalize data
-                    normalised_rc_values[RC_THROTTLE] = (float)(raw_rc_values[RC_THROTTLE] * 0.001f - 1.0f); // Normalize from 1000-2000 to 0.0-1.0
-                    normalised_rc_values[RC_ROLL] = (float)((raw_rc_values[RC_ROLL] - 1500) * 0.002f);       // Normalize from 1000-2000 to -1-1
-                    normalised_rc_values[RC_PITCH] = (float)((raw_rc_values[RC_PITCH] - 1500) * 0.002f);     // Normalize from 1000-2000 to -1-1
-                    normalised_rc_values[RC_YAW] = (float)-((raw_rc_values[RC_YAW] - 1500) * 0.002f);        // Normalize from 1000-2000 to -1-1
-                    normalised_rc_values[RC_SWA] = (float)(raw_rc_values[RC_SWA] * 0.001f - 1.0f);           // Normalize from 1000-2000 to 0-1
-                    normalised_rc_values[RC_SWD] = (float)(raw_rc_values[RC_SWD] * 0.001f - 1.0f);           // Normalize from 1000-2000 to 0-1
+                    normalised_rc_values[RC_THROTTLE] = raw_rc_values[RC_THROTTLE] * 0.001f - 1.0f; // Normalize from 1000-2000 to 0.0-1.0
+                    normalised_rc_values[RC_ROLL] = (raw_rc_values[RC_ROLL] - 1500) * 0.002f;       // Normalize from 1000-2000 to -1-1
+                    normalised_rc_values[RC_PITCH] = (raw_rc_values[RC_PITCH] - 1500) * 0.002f;     // Normalize from 1000-2000 to -1-1
+                    normalised_rc_values[RC_YAW] = -((raw_rc_values[RC_YAW] - 1500) * 0.002f);        // Normalize from 1000-2000 to -1-1
+                    normalised_rc_values[RC_SWA] = raw_rc_values[RC_SWA] * 0.001f - 1.0f;           // Normalize from 1000-2000 to 0-1
+                    normalised_rc_values[RC_SWD] = raw_rc_values[RC_SWD] * 0.001f - 1.0f;           // Normalize from 1000-2000 to 0-1
 
                     break;
                 }
@@ -395,12 +395,12 @@ void mpu_6050_cali() {
 
     // Average bias offsets
     printf("INFO  >>>>   %d data points collected. Averaging bias values\n\n", data_points);
-    accel_x_bias = accel_x_sum/(float)data_points;
-    accel_y_bias = accel_y_sum/(float)data_points;
-    accel_z_bias = accel_z_sum/(float)data_points;
-    gyro_x_bias = gyro_x_sum/(float)data_points;
-    gyro_y_bias = gyro_y_sum/(float)data_points;
-    gyro_z_bias = gyro_z_sum/(float)data_points;
+    accel_x_bias = accel_x_sum/data_points;
+    accel_y_bias = accel_y_sum/data_points;
+    accel_z_bias = accel_z_sum/data_points;
+    gyro_x_bias = gyro_x_sum/data_points;
+    gyro_y_bias = gyro_y_sum/data_points;
+    gyro_z_bias = gyro_z_sum/data_points;
 
     printf("INFO  >>>>   ACCELEROMETER OFFSETS (G)\n");
     printf("INFO  >>>>   X: %f    Y: %f    Z: %f\n", accel_x_bias, accel_y_bias, accel_z_bias);

@@ -33,10 +33,10 @@
 #define PIN_RC_TX   4  // UART1
 #define PIN_IMU_SDA 12 // I2C0
 #define PIN_IMU_SCL 13 // I2C0
-#define PIN_MOTOR1  16 // PWM channel: 1A
-#define PIN_MOTOR2  15 // PWM channel: 6A
-#define PIN_MOTOR3  2  // PWM channel: 0A
-#define PIN_MOTOR4  28 // PWM channel: 7B
+#define PIN_MOTOR1  16 // PWM channel: 0A
+#define PIN_MOTOR2  15 // PWM channel: 7B
+#define PIN_MOTOR3  2  // PWM channel: 1A
+#define PIN_MOTOR4  28 // PWM channel: 6A
 
 /* IMU settings */
 enum GYRO_RANGE {
@@ -685,7 +685,7 @@ void main() {
                 // printf("X: %f    Y: %f    Z: %f\n", normalised_gyro_values[0], normalised_gyro_values[1], normalised_gyro_values[2]);
                 // printf("X: %f    Y: %f    Z: %f\n", normalised_accel_values[0], normalised_accel_values[1], normalised_accel_values[2]);
                 // printf("%f    %f    %f    %f    %f    %f\n", normalised_rc_values[0], normalised_rc_values[1], normalised_rc_values[2], normalised_rc_values[3], normalised_rc_values[4], normalised_rc_values[5]);
-                printf("%d  %d  %d  %d\n", motor1_pwm_level, motor2_pwm_level, motor3_pwm_level, motor4_pwm_level);
+                // printf("%d  %d  %d  %d\n", motor1_pwm_level, motor2_pwm_level, motor3_pwm_level, motor4_pwm_level);
             }
             else {
                 rc_read();

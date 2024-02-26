@@ -154,7 +154,7 @@ float accel_x_bias = 0.0f;
 float accel_y_bias = 0.0f;
 float accel_z_bias = 0.0f;
 
-uint16_t motor1_pwm_level, motor2_pwm_level, motor3_pwm_level, motor4_pwm_level, wrap_num;
+uint16_t motor1_pwm_level, motor2_pwm_level, motor3_pwm_level, motor4_pwm_level, wrap_num, esc_max;
 
 
 ////////////////// Functions //////////////////
@@ -423,13 +423,15 @@ void motor_pwm_init() {
     */
     float clk_div = ((float) (F_SYS / (4096 * F_PWM) + 1)) / 16;
     wrap_num = F_SYS / (clk_div * F_PWM) - 1;
+    esc_max = wrap_num/2;
     int motor1_pwm_slice = pwm_gpio_to_slice_num(PIN_MOTOR1);
     int motor2_pwm_slice = pwm_gpio_to_slice_num(PIN_MOTOR2);
     int motor3_pwm_slice = pwm_gpio_to_slice_num(PIN_MOTOR3);
     int motor4_pwm_slice = pwm_gpio_to_slice_num(PIN_MOTOR4);
 
     printf("INFO  >>>>   Clock divider set to: %f\n", clk_div);
-    printf("INFO  >>>>   Wrap number set to: %d\n\n", wrap_num);
+    printf("INFO  >>>>   Wrap number set to: %d\n", wrap_num);
+    printf("INFO  >>>>   Max PWM level: %d\n\n", esc_max);
 
     gpio_set_function(PIN_MOTOR1, GPIO_FUNC_PWM);
     gpio_set_function(PIN_MOTOR2, GPIO_FUNC_PWM);
@@ -556,8 +558,10 @@ void main() {
     printf("INFO  >>>>   Executing setup sequence.\n\n");
     if (setup() == 0) {
         printf("INFO  >>>>   Setup completed in %f seconds, looping.\n\n", ((time_us_64() - start_timestamp) * 0.000001f - 5.0f));
-        uint64_t prev_pid_timestamp = time_us_64();
-        uint64_t loop_time;
+        uint64_t loop_end_time;
+        float pid_error_roll = 0.0f;
+        float pid_error_pitch = 0.0f;
+        float pid_error_yaw = 0.0f;
         //cyw43_arch_gpio_put(PIN_LED, 1); // Only uncomment this when storing in flash
 
         ////////////////// Loop //////////////////
@@ -575,7 +579,7 @@ void main() {
 
             if (motors_are_armed) {
                 // start_timestamp = time_us_64();
-                loop_time = time_us_64() + 4000;
+                loop_end_time = time_us_64() + 4000;
                 rc_read();
 
                 // Disarm motors at low throttle
@@ -596,9 +600,9 @@ void main() {
                 float desired_yaw_rate = normalised_rc_values[RC_YAW];
 
                 // Error calculations (desired - actual)
-                float pid_error_roll = desired_roll_rate * MAX_ROLL_RATE - normalised_gyro_values[GYRO_ROLL];
-                float pid_error_pitch = desired_pitch_rate * MAX_PITCH_RATE - normalised_gyro_values[GYRO_PITCH];
-                float pid_error_yaw = desired_yaw_rate * MAX_YAW_RATE - normalised_gyro_values[GYRO_YAW];
+                pid_error_roll = desired_roll_rate * MAX_ROLL_RATE - normalised_gyro_values[GYRO_ROLL];
+                pid_error_pitch = desired_pitch_rate * MAX_PITCH_RATE - normalised_gyro_values[GYRO_PITCH];
+                pid_error_yaw = desired_yaw_rate * MAX_YAW_RATE - normalised_gyro_values[GYRO_YAW];
 
                 // Proportion calculations
                 float pid_prop_roll = pid_error_roll * KP_ROLL;
@@ -667,30 +671,40 @@ void main() {
                 // printf("%f    %f    %f    %f    %f    %f\n", normalised_rc_values[0], normalised_rc_values[1], normalised_rc_values[2], normalised_rc_values[3], normalised_rc_values[4], normalised_rc_values[5]);
                 // printf("%d  %d  %d  %d\n", motor1_pwm_level, motor2_pwm_level, motor3_pwm_level, motor4_pwm_level);
             }
-            else {
+            else { // Motors not armed
                 rc_read();
 
                 // Arm motors at low throttle
                 if (normalised_rc_values[RC_SWA] > 0.5f) {
                     if (normalised_rc_values[RC_THROTTLE] < 0.05f) {
                         motors_are_armed = true;
-                        uint64_t spin_up_delay = time_us_64() + 10000;
+                        uint64_t spin_up_delay = time_us_64() + 400000;
 
                         while (time_us_64() < spin_up_delay) {
-                            pwm_set_gpio_level(PIN_MOTOR1, wrap_num);
-                            pwm_set_gpio_level(PIN_MOTOR2, wrap_num);
-                            pwm_set_gpio_level(PIN_MOTOR3, wrap_num);
-                            pwm_set_gpio_level(PIN_MOTOR4, wrap_num);
+                            pwm_set_gpio_level(PIN_MOTOR1, esc_max);
+                            pwm_set_gpio_level(PIN_MOTOR2, esc_max);
+                            pwm_set_gpio_level(PIN_MOTOR3, esc_max);
+                            pwm_set_gpio_level(PIN_MOTOR4, esc_max);
                         };
 
-                        float prev_pid_error_roll = 0.0f;
-                        float prev_pid_error_pitch = 0.0f;
-                        float prev_pid_error_yaw = 0.0f;
-                        float prev_pid_inte_roll = 0.0f;
-                        float prev_pid_inte_pitch = 0.0f;
-                        float prev_pid_inte_yaw = 0.0f;
+                        spin_up_delay = time_us_64() + 400000;
 
-                        prev_pid_timestamp = time_us_64();
+                        while (time_us_64() < spin_up_delay) {
+                            pwm_set_gpio_level(PIN_MOTOR1, 0);
+                            pwm_set_gpio_level(PIN_MOTOR2, 0);
+                            pwm_set_gpio_level(PIN_MOTOR3, 0);
+                            pwm_set_gpio_level(PIN_MOTOR4, 0);
+                        };
+
+                        prev_error_roll = 0.0f;
+                        prev_error_pitch = 0.0f;
+                        prev_error_yaw = 0.0f;
+                        prev_integ_roll = 0.0f;
+                        prev_integ_pitch = 0.0f;
+                        prev_integ_yaw = 0.0f;
+                        pid_error_roll = 0.0f;
+                        pid_error_pitch = 0.0f;
+                        pid_error_yaw = 0.0f;
                     }
                 }
                 else {
@@ -701,7 +715,7 @@ void main() {
                 }
             }
 
-            while (time_us_64() < loop_time); // Do nothing until 4 ms has passed since loop start
+            while (time_us_64() < loop_end_time); // Do nothing until 4 ms has passed since loop start
         } // End of main loop
     }
     else {

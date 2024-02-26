@@ -287,8 +287,8 @@ void rc_read() {
             // Read start bytes
             uint8_t char1 = uart_getc(uart1);
 
-            if (char1 == 0) { // Prevents exception when only 1 char is avail in UART1
-                break;
+            if (char1 == 0) {
+                break; // Prevents exception when only 1 char is avail in UART1
             }
 
             uint8_t char2 = uart_getc(uart1);
@@ -567,9 +567,9 @@ void main() {
         float prev_integ_pitch = 0.0f;
         float prev_integ_yaw = 0.0f;
         uint64_t loop_end_time;
-        printf("INFO  >>>>   Setup completed in %f seconds, looping.\n\n", ((time_us_64() - start_timestamp) * 0.000001f - 5.0f));
 
-        //cyw43_arch_gpio_put(PIN_LED, 1); // Only uncomment this when storing in flash
+        printf("INFO  >>>>   Setup completed in %f seconds, looping.\n\n", ((time_us_64() - start_timestamp) * 0.000001f - 5.0f));
+        // cyw43_arch_gpio_put(PIN_LED, 1); // Only uncomment this when storing in flash
 
         ////////////////// Loop //////////////////
         while (true) {
@@ -601,6 +601,7 @@ void main() {
                 }
 
                 imu_read();
+
                 float desired_throttle = normalised_rc_values[RC_THROTTLE];
                 float desired_pitch_rate = normalised_rc_values[RC_PITCH];
                 float desired_roll_rate = normalised_rc_values[RC_ROLL];

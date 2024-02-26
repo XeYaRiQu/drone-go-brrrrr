@@ -9,6 +9,3 @@ pico_add_extra_outputs(main)
 # enable usb output, disable uart output
 pico_enable_stdio_usb(main 1)
 pico_enable_stdio_uart(main 0)
-
-# Force program to load into RAM, saving write cycles on flash memory
-pico_set_binary_type(main no_flash)

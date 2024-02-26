@@ -557,6 +557,7 @@ void main() {
     if (setup() == 0) {
         printf("INFO  >>>>   Setup completed in %f seconds, looping.\n\n", ((time_us_64() - start_timestamp) * 0.000001f - 5.0f));
         uint64_t prev_pid_timestamp = time_us_64();
+        uint64_t loop_time;
         //cyw43_arch_gpio_put(PIN_LED, 1); // Only uncomment this when storing in flash
 
         ////////////////// Loop //////////////////
@@ -573,7 +574,8 @@ void main() {
             }
 
             if (motors_are_armed) {
-                start_timestamp = time_us_64();
+                // start_timestamp = time_us_64();
+                loop_time = time_us_64() + 4000;
                 rc_read();
 
                 // Disarm motors at low throttle
@@ -699,7 +701,7 @@ void main() {
                 }
             }
 
-            while (time_us_64() - start_timestamp < 4000); // Do nothing until 4 ms has passed since loop start
+            while (time_us_64() < loop_time); // Do nothing until 4 ms has passed since loop start
         } // End of main loop
     }
     else {

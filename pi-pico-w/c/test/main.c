@@ -357,6 +357,7 @@ void imu_read() {
         raw_gyro_data[i] = (gyro_buffer[i * 2] << 8 | gyro_buffer[(i * 2) + 1]);
     }
 
+    // Gyro is using NED frame but physical orientation is NWU so negative values are taken on the Y and Z axes
     normalised_accel_values[ACCEL_X] = (raw_accel_data[ACCEL_X] > 32767) ? ((raw_accel_data[ACCEL_X] - 65536) * accel_multiplier - accel_x_bias) : (raw_accel_data[ACCEL_X] * accel_multiplier - accel_x_bias);
     normalised_accel_values[ACCEL_Y] = (raw_accel_data[ACCEL_Y] > 32767) ? ((raw_accel_data[ACCEL_Y] - 65536) * accel_multiplier - accel_y_bias) : (raw_accel_data[ACCEL_Y] * accel_multiplier - accel_y_bias);
     normalised_accel_values[ACCEL_Z] = (raw_accel_data[ACCEL_Z] > 32767) ? ((raw_accel_data[ACCEL_Z] - 65536) * accel_multiplier - accel_z_bias) : (raw_accel_data[ACCEL_Z] * accel_multiplier - accel_z_bias);
@@ -433,7 +434,7 @@ void motor_pwm_init() {
     gpio_set_function(PIN_MOTOR1, GPIO_FUNC_PWM);
     gpio_set_function(PIN_MOTOR2, GPIO_FUNC_PWM);
     gpio_set_function(PIN_MOTOR3, GPIO_FUNC_PWM);
-    gpio_set_function(PIN_MOTOR3, GPIO_FUNC_PWM);
+    gpio_set_function(PIN_MOTOR4, GPIO_FUNC_PWM);
 
     // Reset PWM
     pwm_set_mask_enabled(0);

@@ -135,13 +135,6 @@ static const float I_LIMIT_NEG = -100.0f;
 
 ////////////////// Global variables //////////////////
 
-float prev_error_roll = 0.0f;
-float prev_error_pitch = 0.0f;
-float prev_error_yaw = 0.0f;
-float prev_integ_roll = 0.0f;
-float prev_integ_pitch = 0.0f;
-float prev_integ_yaw = 0.0f;
-
 float gyro_multiplier, accel_multiplier;
 int gyro_config_byte, accel_config_byte;
 
@@ -557,11 +550,18 @@ void main() {
 
     printf("INFO  >>>>   Executing setup sequence.\n\n");
     if (setup() == 0) {
-        printf("INFO  >>>>   Setup completed in %f seconds, looping.\n\n", ((time_us_64() - start_timestamp) * 0.000001f - 5.0f));
-        uint64_t loop_end_time;
         float pid_error_roll = 0.0f;
         float pid_error_pitch = 0.0f;
         float pid_error_yaw = 0.0f;
+        float prev_error_roll = 0.0f;
+        float prev_error_pitch = 0.0f;
+        float prev_error_yaw = 0.0f;
+        float prev_integ_roll = 0.0f;
+        float prev_integ_pitch = 0.0f;
+        float prev_integ_yaw = 0.0f;
+        uint64_t loop_end_time;
+        printf("INFO  >>>>   Setup completed in %f seconds, looping.\n\n", ((time_us_64() - start_timestamp) * 0.000001f - 5.0f));
+
         //cyw43_arch_gpio_put(PIN_LED, 1); // Only uncomment this when storing in flash
 
         ////////////////// Loop //////////////////
@@ -578,7 +578,6 @@ void main() {
             }
 
             if (motors_are_armed) {
-                // start_timestamp = time_us_64();
                 loop_end_time = time_us_64() + 4000;
                 rc_read();
 
@@ -654,6 +653,7 @@ void main() {
                 motor3_ns = (motor3_ns > 2000000) ? 2000000 : motor3_ns;
                 motor4_ns = (motor4_ns > 2000000) ? 2000000 : motor4_ns;
 
+                // Calculate PWM levels
                 motor1_pwm_level = motor1_ns * 0.00000025f * wrap_num;
                 motor2_pwm_level = motor2_ns * 0.00000025f * wrap_num;
                 motor3_pwm_level = motor3_ns * 0.00000025f * wrap_num;
@@ -665,7 +665,7 @@ void main() {
                 pwm_set_gpio_level(PIN_MOTOR4, motor4_pwm_level);
 
                 /* DEBUG PRINTS */
-                // printf("Loop duration: %f seconds\n", ((float)time_us_64() - (float)start_timestamp)*0.000001);
+                // printf("Loop duration: %f seconds\n", ((float)time_us_64() - (float)loop_end_time) * 0.000001 + 0.004f);
                 // printf("X: %f    Y: %f    Z: %f\n", normalised_gyro_values[0], normalised_gyro_values[1], normalised_gyro_values[2]);
                 // printf("X: %f    Y: %f    Z: %f\n", normalised_accel_values[0], normalised_accel_values[1], normalised_accel_values[2]);
                 // printf("%f    %f    %f    %f    %f    %f\n", normalised_rc_values[0], normalised_rc_values[1], normalised_rc_values[2], normalised_rc_values[3], normalised_rc_values[4], normalised_rc_values[5]);

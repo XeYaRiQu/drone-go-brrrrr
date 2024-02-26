@@ -670,15 +670,15 @@ void main() {
                 // motor3_ns = (motor3_ns > 2) ? 2 : motor3_ns;
                 // motor4_ns = (motor4_ns > 2) ? 2 : motor4_ns;
 
-                // motor1_pwm_level = motor1_ns * 0.25f * 3999;
-                // motor2_pwm_level = motor2_ns * 0.25f * 3999;
-                // motor3_pwm_level = motor3_ns * 0.25f * 3999;
-                // motor4_pwm_level = motor4_ns * 0.25f * 3999;
+                // motor1_pwm_level = motor1_ns * 0.25f * wrap_num;
+                // motor2_pwm_level = motor2_ns * 0.25f * wrap_num;
+                // motor3_pwm_level = motor3_ns * 0.25f * wrap_num;
+                // motor4_pwm_level = motor4_ns * 0.25f * wrap_num;
 
-                // pwm_set_gpio_level(PIN_MOTOR1, motor1_pwm_level);
-                // pwm_set_gpio_level(PIN_MOTOR2, motor2_pwm_level);
-                // pwm_set_gpio_level(PIN_MOTOR3, motor3_pwm_level);
-                // pwm_set_gpio_level(PIN_MOTOR4, motor4_pwm_level);
+                pwm_set_gpio_level(PIN_MOTOR1, motor1_pwm_level);
+                pwm_set_gpio_level(PIN_MOTOR2, motor2_pwm_level);
+                pwm_set_gpio_level(PIN_MOTOR3, motor3_pwm_level);
+                pwm_set_gpio_level(PIN_MOTOR4, motor4_pwm_level);
 
                 /* DEBUG PRINTS */
                 // printf("Loop duration: %f seconds\n", ((float)time_us_64() - (float)start_timestamp)*0.000001);

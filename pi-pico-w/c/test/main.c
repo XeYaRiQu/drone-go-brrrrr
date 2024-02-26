@@ -21,7 +21,7 @@
 ////////////////// Settings //////////////////
 
 #define MIN_THROTTLE   0.07f
-#define MAX_THROTTLE   0.70f
+#define MAX_THROTTLE   0.90f
 #define THROTTLE_RANGE (MAX_THROTTLE - MIN_THROTTLE)
 #define MAX_YAW_RATE   30.0
 #define MAX_ROLL_RATE  30.0
@@ -115,6 +115,10 @@ static const float I_LIMIT_NEG = -100.0f;
 #define WAKE_TEMP_ENABLE_BYTE  0b00000001
 #define SAMPLE_RATE_BYTE       0b00000000
 
+#define ACCEL_X 0
+#define ACCEL_Y 1
+#define ACCEL_Z 2
+
 #define GYRO_ROLL  0
 #define GYRO_PITCH 1
 #define GYRO_YAW   2
@@ -125,7 +129,10 @@ static const float I_LIMIT_NEG = -100.0f;
 #define RC_PITCH    1
 #define RC_YAW      3
 #define RC_SWA      4
-#define RC_SWB      5
+#define RC_SWD      5
+
+#define F_SYS 250000000
+#define F_PWM 250
 
 
 ////////////////// Global variables //////////////////
@@ -151,12 +158,17 @@ float accel_x_bias = 0.0f;
 float accel_y_bias = 0.0f;
 float accel_z_bias = 0.0f;
 
+uint16_t motor1_pwm_level = 0;
+uint16_t motor2_pwm_level = 0;
+uint16_t motor3_pwm_level = 0;
+uint16_t motor4_pwm_level = 0;
+uint16_t wrap_num;
 
 ////////////////// Functions //////////////////
 
 void write_register(i2c_inst_t *i2c, int addr, int reg, int val) {
     uint8_t buffer[] = {(uint8_t) reg, (uint8_t) val};
-    i2c_write_blocking(i2c, (uint8_t) addr, buffer, 2, false);
+    i2c_write_blocking(i2c, addr, buffer, 2, false);
 }
 
 
@@ -212,21 +224,27 @@ int mpu6050_init() {
 
     // Reset all registers
     write_register(i2c0, IMU_I2C_ADDRESS, IMU_PWR_MGMT1, RESET_ALL_BYTE);
+    sleep_ms(10);
 
     // Wake, disable temperature sensor
     write_register(i2c0, IMU_I2C_ADDRESS, IMU_PWR_MGMT1, WAKE_TEMP_DISABLE_BYTE);
+    sleep_ms(10);
 
     // Set sensor sample rate to 250 Hz (Sample Rate = Gyroscope Output Rate / (1 + SMPLRT_DIV))
     write_register(i2c0, IMU_I2C_ADDRESS, IMU_SMPLRT_DIV, SAMPLE_RATE_BYTE);
+    sleep_ms(10);
 
     // Set DLPF
     write_register(i2c0, IMU_I2C_ADDRESS, IMU_CONFIG, LPF_CONFIG_BYTE);
+    sleep_ms(10);
 
     // Set gyroscope scale (in dps)
     write_register(i2c0, IMU_I2C_ADDRESS, IMU_GYRO_CONFIG, gyro_config_byte);
+    sleep_ms(10);
 
     // Set accelerometer scale (in G)
     write_register(i2c0, IMU_I2C_ADDRESS, IMU_ACCEL_CONFIG, accel_config_byte);
+    sleep_ms(10);
 
     // Verify registers
     if (read_register(i2c0, IMU_I2C_ADDRESS, IMU_WHO_AM_I) != IMU_I2C_ADDRESS) {
@@ -310,7 +328,7 @@ void rc_read() {
                     normalised_rc_values[RC_PITCH] = (float)((raw_rc_values[RC_PITCH] - 1500) * 0.002f);     // Normalize from 1000-2000 to -1-1
                     normalised_rc_values[RC_YAW] = (float)-((raw_rc_values[RC_YAW] - 1500) * 0.002f);        // Normalize from 1000-2000 to -1-1
                     normalised_rc_values[RC_SWA] = (float)(raw_rc_values[RC_SWA] * 0.001f - 1.0f);           // Normalize from 1000-2000 to 0-1
-                    normalised_rc_values[RC_SWB] = (float)(raw_rc_values[RC_SWB] * 0.001f - 1.0f);           // Normalize from 1000-2000 to 0-1
+                    normalised_rc_values[RC_SWD] = (float)(raw_rc_values[RC_SWD] * 0.001f - 1.0f);           // Normalize from 1000-2000 to 0-1
 
                     break;
                 }
@@ -346,58 +364,12 @@ void imu_read() {
         raw_gyro_data[i] = (gyro_buffer[i * 2] << 8 | gyro_buffer[(i * 2) + 1]);
     }
 
-    uint16_t accel_x = raw_accel_data[0];
-    uint16_t accel_y = raw_accel_data[1];
-    uint16_t accel_z = raw_accel_data[2];
-    uint16_t gyro_x = raw_gyro_data[0];
-    uint16_t gyro_y = raw_gyro_data[1];
-    uint16_t gyro_z = raw_gyro_data[2];
-
-    // Normalise X
-    if (accel_x > 32767) {
-        normalised_accel_values[0] = (accel_x - 65536) * accel_multiplier - accel_x_bias;
-    }
-    else {
-        normalised_accel_values[0] = accel_x * accel_multiplier - accel_x_bias;
-    }
-
-    // Normalise Y
-    if (accel_y > 32767) {
-        normalised_accel_values[0] = (accel_y - 65536) * accel_multiplier - accel_y_bias;
-    }
-    else {
-        normalised_accel_values[0] = accel_y * accel_multiplier - accel_y_bias;
-    }
-
-    // Normalise Z
-    if (accel_z > 32767) {
-        normalised_accel_values[0] = (accel_z - 65536) * accel_multiplier - accel_z_bias;
-    }
-    else {
-        normalised_accel_values[0] = accel_z * accel_multiplier - accel_z_bias;
-    }
-
-    // Use North-East-Down (NED) frame
-    // Normalise roll
-    if (gyro_x > 32767) {
-        normalised_gyro_values[GYRO_ROLL] = (gyro_x - 65536) * gyro_multiplier - gyro_x_bias;
-    } else {
-        normalised_gyro_values[GYRO_ROLL] = gyro_x * gyro_multiplier - gyro_x_bias;
-    }
-
-    // Normalise pitch (take negative values as physical orientation of Y is pointing West)
-    if (gyro_y > 32767) {
-        normalised_gyro_values[GYRO_PITCH] = -((gyro_y - 65536) * gyro_multiplier - gyro_y_bias);
-    } else {
-        normalised_gyro_values[GYRO_PITCH] = -(gyro_y * gyro_multiplier - gyro_y_bias);
-    }
-
-    // Normalise yaw (take negative values as physical orientation of Z is pointing Up)
-    if (gyro_z > 32767) {
-        normalised_gyro_values[GYRO_YAW] = -((gyro_z - 65536) * gyro_multiplier - gyro_z_bias);
-    } else {
-        normalised_gyro_values[GYRO_YAW] = -(gyro_z * gyro_multiplier - gyro_z_bias);
-    }
+    normalised_accel_values[ACCEL_X] = (raw_accel_data[ACCEL_X] > 32767) ? ((raw_accel_data[ACCEL_X] - 65536) * accel_multiplier - accel_x_bias) : (raw_accel_data[ACCEL_X] * accel_multiplier - accel_x_bias);
+    normalised_accel_values[ACCEL_Y] = (raw_accel_data[ACCEL_Y] > 32767) ? ((raw_accel_data[ACCEL_Y] - 65536) * accel_multiplier - accel_y_bias) : (raw_accel_data[ACCEL_Y] * accel_multiplier - accel_y_bias);
+    normalised_accel_values[ACCEL_Z] = (raw_accel_data[ACCEL_Z] > 32767) ? ((raw_accel_data[ACCEL_Z] - 65536) * accel_multiplier - accel_z_bias) : (raw_accel_data[ACCEL_Z] * accel_multiplier - accel_z_bias);
+    normalised_gyro_values[GYRO_ROLL] = (raw_gyro_data[GYRO_ROLL] > 32767) ? ((raw_gyro_data[GYRO_ROLL] - 65536) * gyro_multiplier - gyro_x_bias) : (raw_gyro_data[GYRO_ROLL] * gyro_multiplier - gyro_x_bias);
+    normalised_gyro_values[GYRO_PITCH] = (raw_gyro_data[GYRO_PITCH] > 32767) ? -((raw_gyro_data[GYRO_PITCH] - 65536) * gyro_multiplier + gyro_y_bias) : -(raw_gyro_data[GYRO_PITCH] * gyro_multiplier + gyro_y_bias);
+    normalised_gyro_values[GYRO_YAW] = (raw_gyro_data[GYRO_YAW] > 32767) ? -((raw_gyro_data[GYRO_YAW] - 65536) * gyro_multiplier + gyro_z_bias) : -(raw_gyro_data[GYRO_YAW] * gyro_multiplier + gyro_z_bias);
 }
 
 
@@ -421,12 +393,13 @@ void mpu_6050_cali() {
          gyro_x_sum += normalised_gyro_values[0];
          gyro_y_sum += normalised_gyro_values[1];
          gyro_z_sum += normalised_gyro_values[2];
-         printf("X: %f    Y: %f    Z: %f\n", normalised_gyro_values[0], normalised_gyro_values[1], normalised_gyro_values[2]);
+        //  printf("X: %f    Y: %f    Z: %f\n", normalised_accel_values[0], normalised_accel_values[1], normalised_accel_values[2]);
+        //  printf("X: %f    Y: %f    Z: %f\n", normalised_gyro_values[0], normalised_gyro_values[1], normalised_gyro_values[2]);
          data_points = ++data_points;
-         sleep_ms(10);
+         sleep_ms(3);
      }
 
-    // Averaging
+    // Average bias offsets
     printf("INFO  >>>>   %d data points collected. Averaging bias values\n\n", data_points);
     accel_x_bias = accel_x_sum/(float)data_points;
     accel_y_bias = accel_y_sum/(float)data_points;
@@ -435,56 +408,72 @@ void mpu_6050_cali() {
     gyro_y_bias = gyro_y_sum/(float)data_points;
     gyro_z_bias = gyro_z_sum/(float)data_points;
 
-    printf("INFO  >>>>   ACCELEROMETER OFFSETS\n");
+    printf("INFO  >>>>   ACCELEROMETER OFFSETS (G)\n");
     printf("INFO  >>>>   X: %f    Y: %f    Z: %f\n", accel_x_bias, accel_y_bias, accel_z_bias);
-    printf("INFO  >>>>   GYROSCOPE OFFSETS\n");
+    printf("INFO  >>>>   GYROSCOPE OFFSETS (DPS)\n");
     printf("INFO  >>>>   X: %f    Y: %f    Z: %f\n\n", gyro_x_bias, gyro_y_bias, gyro_z_bias);
 }
 
 
 void motor_pwm_init() {
-    int slice_num1 = pwm_gpio_to_slice_num(PIN_MOTOR1);
-    int slice_num2 = pwm_gpio_to_slice_num(PIN_MOTOR2);
-    int slice_num3 = pwm_gpio_to_slice_num(PIN_MOTOR3);
-    int slice_num4 = pwm_gpio_to_slice_num(PIN_MOTOR4);
+    /*
+    The Pico has 8 PWM slices with each slice having 2 PWM channels.
+
+                  (slice)                  ┌-->  Channel A
+    sys_clk  -->  clk_div  -->  counter  --|
+                                           └-->  Channel B
+
+    The counter and clock divider are 16-bit. The sys_clk is set to 250 MHz during setup.
+    To maximise resolution of duty cycles that can be set, the wrap number should be as
+    high as possible (i.e. close to 65535).
+    */
+    float clk_div = ((float) (F_SYS / (4096 * F_PWM) + 1)) / 16;
+    wrap_num = F_SYS / (clk_div * F_PWM) - 1;
+    int motor1_pwm_slice = pwm_gpio_to_slice_num(PIN_MOTOR1);
+    int motor2_pwm_slice = pwm_gpio_to_slice_num(PIN_MOTOR2);
+    int motor3_pwm_slice = pwm_gpio_to_slice_num(PIN_MOTOR3);
+    int motor4_pwm_slice = pwm_gpio_to_slice_num(PIN_MOTOR4);
+
+    printf("INFO  >>>>   Clock divider set to: %f\n", clk_div);
+    printf("INFO  >>>>   Wrap number set to: %d\n\n", wrap_num);
 
     gpio_set_function(PIN_MOTOR1, GPIO_FUNC_PWM);
     gpio_set_function(PIN_MOTOR2, GPIO_FUNC_PWM);
     gpio_set_function(PIN_MOTOR3, GPIO_FUNC_PWM);
     gpio_set_function(PIN_MOTOR3, GPIO_FUNC_PWM);
 
-    pwm_set_enabled(slice_num1, true);
-    pwm_set_enabled(slice_num2, true);
-    pwm_set_enabled(slice_num3, true);
-    pwm_set_enabled(slice_num4, true);
+    // Reset PWM
+    pwm_set_mask_enabled(0);
+    pwm_set_counter(motor1_pwm_slice, 0);
+    pwm_set_counter(motor2_pwm_slice, 0);
+    pwm_set_counter(motor3_pwm_slice, 0);
+    pwm_set_counter(motor4_pwm_slice, 0);
 
-    pwm_set_clkdiv(slice_num1, 200.0f);
-    pwm_set_clkdiv(slice_num2, 200.0f);
-    pwm_set_clkdiv(slice_num3, 200.0f);
-    pwm_set_clkdiv(slice_num4, 200.0f); //so now the clock runs at 125kHz instead of 125MHz
+    // Re-enable PWM
+    pwm_set_enabled(motor1_pwm_slice, true);
+    pwm_set_enabled(motor2_pwm_slice, true);
+    pwm_set_enabled(motor3_pwm_slice, true);
+    pwm_set_enabled(motor4_pwm_slice, true);
 
-    pwm_set_wrap(slice_num1, 4999); //For 250Hz freq, wrap num = 125000/250  - 1 = 4999
-    pwm_set_wrap(slice_num2, 4999);
-    pwm_set_wrap(slice_num3, 4999);
-    pwm_set_wrap(slice_num4, 4999);
+    // Set the counter frequency (f_counter = f_sys / clk_div)
+    pwm_set_clkdiv(motor1_pwm_slice, clk_div);
+    pwm_set_clkdiv(motor2_pwm_slice, clk_div);
+    pwm_set_clkdiv(motor3_pwm_slice, clk_div);
+    pwm_set_clkdiv(motor4_pwm_slice, clk_div);
 
+    // Wrap number sets the frequency of the PWM signal (wrap_number = f_counter / f_pwm - 1)
+    pwm_set_wrap(motor1_pwm_slice, wrap_num);
+    pwm_set_wrap(motor2_pwm_slice, wrap_num);
+    pwm_set_wrap(motor3_pwm_slice, wrap_num);
+    pwm_set_wrap(motor4_pwm_slice, wrap_num);
+
+    // Level sets the duty cycle (level = wrap_number * duty_cycle)
     pwm_set_gpio_level(PIN_MOTOR1, 0);
     pwm_set_gpio_level(PIN_MOTOR2, 0);
     pwm_set_gpio_level(PIN_MOTOR3, 0);
     pwm_set_gpio_level(PIN_MOTOR4, 0);
 }
 
-void motor_pwm_deinit() {
-    int slice_num1 = pwm_gpio_to_slice_num(PIN_MOTOR1);
-    int slice_num2 = pwm_gpio_to_slice_num(PIN_MOTOR2);
-    int slice_num3 = pwm_gpio_to_slice_num(PIN_MOTOR3);
-    int slice_num4 = pwm_gpio_to_slice_num(PIN_MOTOR4);
-
-    pwm_set_enabled(slice_num1, false);
-    pwm_set_enabled(slice_num2, false);
-    pwm_set_enabled(slice_num3, false);
-    pwm_set_enabled(slice_num4, false);
-}
 
 ////////////////// Setup //////////////////
 
@@ -550,13 +539,15 @@ int setup() {
         printf("ERROR >>>>   Initialise MPU-6050 --> FAIL\n\n");
     }
 
-    // Perform IMU self-test and calibration
-    printf("INFO  >>>>   Calibrating MPU-6050\n\n");
-    mpu_6050_cali();
+    if (fail_flag == 0) {
+        // Perform IMU self-test and calibration
+        printf("INFO  >>>>   Calibrating MPU-6050\n\n");
+        mpu_6050_cali();
 
-    // Configure PWM generators for ESC output
-    printf("INFO  >>>>   Configuring PWM generators\n\n");
-    motor_pwm_init();
+        // Configure PWM generators for ESC output
+        printf("INFO  >>>>   Configuring PWM generators\n\n");
+        motor_pwm_init();
+    }
 
     return fail_flag;
 }
@@ -577,12 +568,12 @@ void main() {
         ////////////////// Loop //////////////////
         while (true) {
             // Emergency killswitch
-            if (normalised_rc_values[RC_SWB] > 0.5f){
+            if (normalised_rc_values[RC_SWD] > 0.5f){
                 pwm_set_gpio_level(PIN_MOTOR1, 0);
                 pwm_set_gpio_level(PIN_MOTOR2, 0);
                 pwm_set_gpio_level(PIN_MOTOR3, 0);
                 pwm_set_gpio_level(PIN_MOTOR4, 0);
-                motor_pwm_deinit();
+                pwm_set_mask_enabled(0);
 
                 break;
             }
@@ -591,8 +582,8 @@ void main() {
                 start_timestamp = time_us_64();
                 rc_read();
 
-                // Disarm motors
-                if (normalised_rc_values[RC_SWA] < 0.5f) {  
+                // Disarm motors at low throttle
+                if (normalised_rc_values[RC_SWA] < 0.5f) {
                     if (normalised_rc_values[RC_THROTTLE] < 0.05f){
                         pwm_set_gpio_level(PIN_MOTOR1, 0);
                         pwm_set_gpio_level(PIN_MOTOR2, 0);
@@ -603,7 +594,7 @@ void main() {
                 }
 
                 imu_read();
-                float desired_throttle_rate = normalised_rc_values[RC_THROTTLE];
+                float desired_throttle = normalised_rc_values[RC_THROTTLE];
                 float desired_pitch_rate = normalised_rc_values[RC_PITCH];
                 float desired_roll_rate = normalised_rc_values[RC_ROLL];
                 float desired_yaw_rate = normalised_rc_values[RC_YAW];
@@ -618,26 +609,25 @@ void main() {
                 float pid_prop_pitch = pid_error_pitch * KP_PITCH;
                 float pid_prop_yaw = pid_error_yaw * KP_YAW;
 
-                // Integral calculations
+                // Integral calculations (multiply by dt)
                 float pid_inte_roll = pid_error_roll * KI_ROLL * 0.004f + prev_integ_roll;
                 float pid_inte_pitch = pid_error_pitch * KI_PITCH * 0.004f + prev_integ_pitch;
                 float pid_inte_yaw = pid_error_yaw * KI_YAW * 0.004f + prev_integ_yaw;
 
-                // Derivative calculations
+                // Enforce integral limits
+                pid_inte_roll = (pid_inte_roll > I_LIMIT_POS) ? I_LIMIT_POS : ((pid_inte_roll < I_LIMIT_NEG) ? I_LIMIT_NEG : pid_inte_roll);
+                pid_inte_pitch = (pid_inte_pitch > I_LIMIT_POS) ? I_LIMIT_POS : ((pid_inte_pitch < I_LIMIT_NEG) ? I_LIMIT_NEG : pid_inte_pitch);
+                pid_inte_yaw = (pid_inte_yaw > I_LIMIT_POS) ? I_LIMIT_POS : ((pid_inte_yaw < I_LIMIT_NEG) ? I_LIMIT_NEG : pid_inte_yaw);
+
+                // Derivative calculations (divide by dt)
                 float pid_deri_roll = (pid_error_roll - prev_error_roll) * KD_ROLL * 250;
                 float pid_deri_pitch = (pid_error_pitch - prev_error_pitch) * KD_PITCH * 250;
                 float pid_deri_yaw = (pid_error_yaw - prev_error_yaw) * KD_YAW * 250;
 
-                float throttle_rate = desired_throttle_rate * THROTTLE_RANGE + MIN_THROTTLE;
+                float throttle = desired_throttle * THROTTLE_RANGE + MIN_THROTTLE;
                 float pid_roll = pid_prop_roll + pid_inte_roll + pid_deri_roll;
                 float pid_pitch = pid_prop_pitch + pid_inte_pitch + pid_deri_pitch;
                 float pid_yaw = pid_prop_yaw + pid_inte_yaw + pid_deri_yaw;
-
-                // Throttle calculations (cross configuration)
-                float motor1_throttle = throttle_rate + pid_roll + pid_pitch + pid_yaw;
-                float motor2_throttle = throttle_rate - pid_roll + pid_pitch - pid_yaw;
-                float motor3_throttle = throttle_rate - pid_roll - pid_pitch + pid_yaw;
-                float motor4_throttle = throttle_rate + pid_roll - pid_pitch - pid_yaw;
 
                 // Save PID values for subsequent calculations
                 prev_error_roll = pid_error_roll;
@@ -647,32 +637,62 @@ void main() {
                 prev_integ_pitch = pid_inte_pitch;
                 prev_integ_yaw = pid_inte_yaw;
 
-                //Calculating duty cycle
-                float motor1_temp = ((motor1_throttle * 1000000 > 0) ? motor1_throttle * 1000000 : 0) + 1000000;
-                float motor2_temp = ((motor2_throttle * 1000000 > 0) ? motor2_throttle * 1000000 : 0) + 1000000;
-                float motor3_temp = ((motor3_throttle * 1000000 > 0) ? motor3_throttle * 1000000 : 0) + 1000000;
-                float motor4_temp = ((motor4_throttle * 1000000 > 0) ? motor4_throttle * 1000000 : 0) + 1000000;
+                // Throttle calculations (cross configuration)
+                int motor1_throttle = (throttle + pid_roll - pid_pitch + pid_yaw) * 1000000;
+                int motor2_throttle = (throttle - pid_roll - pid_pitch - pid_yaw) * 1000000;
+                int motor3_throttle = (throttle - pid_roll + pid_pitch + pid_yaw) * 1000000;
+                int motor4_throttle = (throttle + pid_roll + pid_pitch - pid_yaw) * 1000000;
 
-                int motor1_ns = (motor1_temp > 2000000) ? 2000000 : (int)motor1_temp;
-                int motor2_ns = (motor2_temp > 2000000) ? 2000000 : (int)motor2_temp;
-                int motor3_ns = (motor3_temp > 2000000) ? 2000000 : (int)motor3_temp;
-                int motor4_ns = (motor4_temp > 2000000) ? 2000000 : (int)motor4_temp;
+                // Enforce throttle limits
+                int motor1_ns = ((motor1_throttle > 0) ? (motor1_throttle + 1000000) : 1000000);
+                int motor2_ns = ((motor2_throttle > 0) ? (motor2_throttle + 1000000) : 1000000);
+                int motor3_ns = ((motor3_throttle > 0) ? (motor3_throttle + 1000000) : 1000000);
+                int motor4_ns = ((motor4_throttle > 0) ? (motor4_throttle + 1000000) : 1000000);
 
-                float motor1_dutycycle = motor1_ns * 0.00000025f; //motor1_ns is between 1000000 and 2000000. 25%-50% duty cycle
-                float motor2_dutycycle = motor2_ns * 0.00000025f;
-                float motor3_dutycycle = motor3_ns * 0.00000025f;
-                float motor4_dutycycle = motor4_ns * 0.00000025f;
+                motor1_ns = (motor1_ns > 2000000) ? 2000000 : motor1_ns;
+                motor2_ns = (motor2_ns > 2000000) ? 2000000 : motor2_ns;
+                motor3_ns = (motor3_ns > 2000000) ? 2000000 : motor3_ns;
+                motor4_ns = (motor4_ns > 2000000) ? 2000000 : motor4_ns;
 
-                // Convert duty cycle to setpoint for gpio_set_level. setpoint = wrap number * duty cycle
-                u_int16_t setpoint_motor1 = 4999 * motor1_dutycycle;
-                u_int16_t setpoint_motor2 = 4999 * motor2_dutycycle;
-                u_int16_t setpoint_motor3 = 4999 * motor3_dutycycle;
-                u_int16_t setpoint_motor4 = 4999 * motor4_dutycycle;
+                motor1_pwm_level = motor1_ns * 0.00000025f * wrap_num;
+                motor2_pwm_level = motor2_ns * 0.00000025f * wrap_num;
+                motor3_pwm_level = motor3_ns * 0.00000025f * wrap_num;
+                motor4_pwm_level = motor4_ns * 0.00000025f * wrap_num;
 
-                pwm_set_gpio_level(PIN_MOTOR1, setpoint_motor1);
-                pwm_set_gpio_level(PIN_MOTOR2, setpoint_motor2);
-                pwm_set_gpio_level(PIN_MOTOR3, setpoint_motor3);
-                pwm_set_gpio_level(PIN_MOTOR4, setpoint_motor4);
+                /* TEST */
+                // Throttle calculations (cross configuration)
+                // int motor1_throttle = (throttle + pid_roll + pid_pitch + pid_yaw) * 1;
+                // int motor2_throttle = (throttle - pid_roll + pid_pitch - pid_yaw) * 1;
+                // int motor3_throttle = (throttle - pid_roll - pid_pitch + pid_yaw) * 1;
+                // int motor4_throttle = (throttle + pid_roll - pid_pitch - pid_yaw) * 1;
+
+                // // Enforce throttle limits
+                // int motor1_ns = ((motor1_throttle > 0) ? (motor1_throttle + 1) : 1);
+                // int motor2_ns = ((motor2_throttle > 0) ? (motor2_throttle + 1) : 1);
+                // int motor3_ns = ((motor3_throttle > 0) ? (motor3_throttle + 1) : 1);
+                // int motor4_ns = ((motor4_throttle > 0) ? (motor4_throttle + 1) : 1);
+
+                // motor1_ns = (motor1_ns > 2) ? 2 : motor1_ns;
+                // motor2_ns = (motor2_ns > 2) ? 2 : motor2_ns;
+                // motor3_ns = (motor3_ns > 2) ? 2 : motor3_ns;
+                // motor4_ns = (motor4_ns > 2) ? 2 : motor4_ns;
+
+                // motor1_pwm_level = motor1_ns * 0.25f * 3999;
+                // motor2_pwm_level = motor2_ns * 0.25f * 3999;
+                // motor3_pwm_level = motor3_ns * 0.25f * 3999;
+                // motor4_pwm_level = motor4_ns * 0.25f * 3999;
+
+                // pwm_set_gpio_level(PIN_MOTOR1, motor1_pwm_level);
+                // pwm_set_gpio_level(PIN_MOTOR2, motor2_pwm_level);
+                // pwm_set_gpio_level(PIN_MOTOR3, motor3_pwm_level);
+                // pwm_set_gpio_level(PIN_MOTOR4, motor4_pwm_level);
+
+            /* DEBUG PRINTS */
+            // printf("Loop duration: %f seconds\n", ((float)time_us_64() - (float)start_timestamp)*0.000001);
+            // printf("X: %f    Y: %f    Z: %f\n", normalised_gyro_values[0], normalised_gyro_values[1], normalised_gyro_values[2]);
+            // printf("X: %f    Y: %f    Z: %f\n", normalised_accel_values[0], normalised_accel_values[1], normalised_accel_values[2]);
+            // printf("%f    %f    %f    %f    %f    %f\n", normalised_rc_values[0], normalised_rc_values[1], normalised_rc_values[2], normalised_rc_values[3], normalised_rc_values[4], normalised_rc_values[5]);
+            printf("%d  %d  %d  %d\n", motor1_pwm_level, motor2_pwm_level, motor3_pwm_level, motor4_pwm_level);
             }
             else {
                 rc_read();
@@ -701,15 +721,13 @@ void main() {
                     }
                 }
                 else {
-                    pwm_set_gpio_level(PIN_MOTOR1, 0);
-                    pwm_set_gpio_level(PIN_MOTOR2, 0);
-                    pwm_set_gpio_level(PIN_MOTOR3, 0);
-                    pwm_set_gpio_level(PIN_MOTOR4, 0);
+                    pwm_set_gpio_level(PIN_MOTOR1, wrap_num);
+                    pwm_set_gpio_level(PIN_MOTOR2, wrap_num);
+                    pwm_set_gpio_level(PIN_MOTOR3, wrap_num);
+                    pwm_set_gpio_level(PIN_MOTOR4, wrap_num);
                 }
             }
-            // printf("Loop duration: %f seconds\n", ((float)time_us_64() - (float)start_timestamp)*0.000001);
-            // printf("X: %f    Y: %f    Z: %f\n", normalised_gyro_values[0], normalised_gyro_values[1], normalised_gyro_values[2]);
-            printf("%f    %f    %f    %f    %f    %f\n", normalised_rc_values[0], normalised_rc_values[1], normalised_rc_values[2], normalised_rc_values[3], normalised_rc_values[4], normalised_rc_values[5]);
+
             while (time_us_64() - start_timestamp < 4000); // Do nothing until 4 ms has passed since loop start
         } // End of main loop
     }

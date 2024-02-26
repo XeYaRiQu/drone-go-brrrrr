@@ -645,27 +645,27 @@ void main() {
                 prev_integ_yaw = pid_inte_yaw;
 
                 // Throttle calculations (cross configuration)
-                int motor1_throttle = (throttle + pid_roll - pid_pitch + pid_yaw) * 1000000;
-                int motor2_throttle = (throttle - pid_roll - pid_pitch - pid_yaw) * 1000000;
-                int motor3_throttle = (throttle - pid_roll + pid_pitch + pid_yaw) * 1000000;
-                int motor4_throttle = (throttle + pid_roll + pid_pitch - pid_yaw) * 1000000;
+                float motor1_throttle = throttle + pid_roll - pid_pitch + pid_yaw;
+                float motor2_throttle = throttle - pid_roll - pid_pitch - pid_yaw;
+                float motor3_throttle = throttle - pid_roll + pid_pitch + pid_yaw;
+                float motor4_throttle = throttle + pid_roll + pid_pitch - pid_yaw;
 
                 // Enforce throttle limits
-                int motor1_ns = ((motor1_throttle > 0) ? (motor1_throttle + 1000000) : 1000000);
-                int motor2_ns = ((motor2_throttle > 0) ? (motor2_throttle + 1000000) : 1000000);
-                int motor3_ns = ((motor3_throttle > 0) ? (motor3_throttle + 1000000) : 1000000);
-                int motor4_ns = ((motor4_throttle > 0) ? (motor4_throttle + 1000000) : 1000000);
+                float motor1_ns = ((motor1_throttle > 0.0f) ? (motor1_throttle + 1.0f) : 1.0f);
+                float motor2_ns = ((motor2_throttle > 0.0f) ? (motor2_throttle + 1.0f) : 1.0f);
+                float motor3_ns = ((motor3_throttle > 0.0f) ? (motor3_throttle + 1.0f) : 1.0f);
+                float motor4_ns = ((motor4_throttle > 0.0f) ? (motor4_throttle + 1.0f) : 1.0f);
 
-                motor1_ns = (motor1_ns > 2000000) ? 2000000 : motor1_ns;
-                motor2_ns = (motor2_ns > 2000000) ? 2000000 : motor2_ns;
-                motor3_ns = (motor3_ns > 2000000) ? 2000000 : motor3_ns;
-                motor4_ns = (motor4_ns > 2000000) ? 2000000 : motor4_ns;
+                motor1_ns = (motor1_ns > 2.0f) ? 2.0f : motor1_ns;
+                motor2_ns = (motor2_ns > 2.0f) ? 2.0f : motor2_ns;
+                motor3_ns = (motor3_ns > 2.0f) ? 2.0f : motor3_ns;
+                motor4_ns = (motor4_ns > 2.0f) ? 2.0f : motor4_ns;
 
                 // Calculate PWM levels
-                motor1_pwm_level = motor1_ns * 0.00000025f * wrap_num;
-                motor2_pwm_level = motor2_ns * 0.00000025f * wrap_num;
-                motor3_pwm_level = motor3_ns * 0.00000025f * wrap_num;
-                motor4_pwm_level = motor4_ns * 0.00000025f * wrap_num;
+                motor1_pwm_level = motor1_ns * 0.25f * wrap_num;
+                motor2_pwm_level = motor2_ns * 0.25f * wrap_num;
+                motor3_pwm_level = motor3_ns * 0.25f * wrap_num;
+                motor4_pwm_level = motor4_ns * 0.25f * wrap_num;
 
                 pwm_set_gpio_level(PIN_MOTOR1, motor1_pwm_level);
                 pwm_set_gpio_level(PIN_MOTOR2, motor2_pwm_level);

@@ -67,9 +67,7 @@ int GYRO_RANGE = RANGE_1000DPS;
 int ACCEL_RANGE = RANGE_4G;
 int LPF_CONFIG_BYTE = GYRO_98Hz;
 
-
-////////////////// PID //////////////////
-
+/* PID values */
 static const double KP_ROLL = 0.00043714285;
 static const double KP_PITCH = 0.00043714285;
 static const double KP_YAW = 0.001714287;
@@ -137,19 +135,17 @@ static const float I_LIMIT_NEG = -100.0f;
 
 ////////////////// Global variables //////////////////
 
-volatile float prev_error_roll = 0.0f;
-volatile float prev_error_pitch = 0.0f;
-volatile float prev_error_yaw = 0.0f;
-volatile float prev_integ_roll = 0.0f;
-volatile float prev_integ_pitch = 0.0f;
-volatile float prev_integ_yaw = 0.0f;
+float prev_error_roll = 0.0f;
+float prev_error_pitch = 0.0f;
+float prev_error_yaw = 0.0f;
+float prev_integ_roll = 0.0f;
+float prev_integ_pitch = 0.0f;
+float prev_integ_yaw = 0.0f;
 
 float gyro_multiplier, accel_multiplier;
 int gyro_config_byte, accel_config_byte;
 
-float normalised_rc_values[6];
-float normalised_gyro_values[3];
-float normalised_accel_values[3];
+float normalised_rc_values[6], normalised_gyro_values[3], normalised_accel_values[3];
 
 float gyro_x_bias = 0.0f;
 float gyro_y_bias = 0.0f; 
@@ -158,11 +154,7 @@ float accel_x_bias = 0.0f;
 float accel_y_bias = 0.0f;
 float accel_z_bias = 0.0f;
 
-uint16_t motor1_pwm_level = 0;
-uint16_t motor2_pwm_level = 0;
-uint16_t motor3_pwm_level = 0;
-uint16_t motor4_pwm_level = 0;
-uint16_t wrap_num;
+uint16_t motor1_pwm_level, motor2_pwm_level, motor3_pwm_level, motor4_pwm_level, wrap_num;
 
 ////////////////// Functions //////////////////
 
@@ -687,12 +679,12 @@ void main() {
                 // pwm_set_gpio_level(PIN_MOTOR3, motor3_pwm_level);
                 // pwm_set_gpio_level(PIN_MOTOR4, motor4_pwm_level);
 
-            /* DEBUG PRINTS */
-            // printf("Loop duration: %f seconds\n", ((float)time_us_64() - (float)start_timestamp)*0.000001);
-            // printf("X: %f    Y: %f    Z: %f\n", normalised_gyro_values[0], normalised_gyro_values[1], normalised_gyro_values[2]);
-            // printf("X: %f    Y: %f    Z: %f\n", normalised_accel_values[0], normalised_accel_values[1], normalised_accel_values[2]);
-            // printf("%f    %f    %f    %f    %f    %f\n", normalised_rc_values[0], normalised_rc_values[1], normalised_rc_values[2], normalised_rc_values[3], normalised_rc_values[4], normalised_rc_values[5]);
-            printf("%d  %d  %d  %d\n", motor1_pwm_level, motor2_pwm_level, motor3_pwm_level, motor4_pwm_level);
+                /* DEBUG PRINTS */
+                // printf("Loop duration: %f seconds\n", ((float)time_us_64() - (float)start_timestamp)*0.000001);
+                // printf("X: %f    Y: %f    Z: %f\n", normalised_gyro_values[0], normalised_gyro_values[1], normalised_gyro_values[2]);
+                // printf("X: %f    Y: %f    Z: %f\n", normalised_accel_values[0], normalised_accel_values[1], normalised_accel_values[2]);
+                // printf("%f    %f    %f    %f    %f    %f\n", normalised_rc_values[0], normalised_rc_values[1], normalised_rc_values[2], normalised_rc_values[3], normalised_rc_values[4], normalised_rc_values[5]);
+                printf("%d  %d  %d  %d\n", motor1_pwm_level, motor2_pwm_level, motor3_pwm_level, motor4_pwm_level);
             }
             else {
                 rc_read();

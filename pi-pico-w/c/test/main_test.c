@@ -283,7 +283,6 @@ void rc_read() {
     for (int attempt = 0; attempt < 6; ++attempt) {
         // Check if data is available in the UART buffer
         if (uart_is_readable(uart1)) {
-
             // Read start bytes
             uint8_t char1 = uart_getc(uart1);
 
@@ -386,8 +385,8 @@ void mpu_6050_cali() {
         gyro_x_sum += normalised_gyro_values[0];
         gyro_y_sum += normalised_gyro_values[1];
         gyro_z_sum += normalised_gyro_values[2];
-        //  printf("X: %f    Y: %f    Z: %f\n", normalised_accel_values[0], normalised_accel_values[1], normalised_accel_values[2]);
-        //  printf("X: %f    Y: %f    Z: %f\n", normalised_gyro_values[0], normalised_gyro_values[1], normalised_gyro_values[2]);
+        // printf("X: %f    Y: %f    Z: %f\n", normalised_accel_values[0], normalised_accel_values[1], normalised_accel_values[2]);
+        // printf("X: %f    Y: %f    Z: %f\n", normalised_gyro_values[0], normalised_gyro_values[1], normalised_gyro_values[2]);
         data_points = ++data_points;
         sleep_ms(3);
     }
@@ -568,7 +567,8 @@ void main() {
         uint64_t loop_end_time;
 
         printf("INFO  >>>>   Setup completed in %f seconds, looping.\n\n", ((time_us_64() - start_timestamp) * 0.000001f - 5.0f));
-        // cyw43_arch_gpio_put(PIN_LED, 1); // Only uncomment this when storing in flash
+        /* Only uncomment this when storing in flash */
+        // cyw43_arch_gpio_put(PIN_LED, 1);
 
         ////////////////// Loop //////////////////
         while (true) {
@@ -728,5 +728,13 @@ void main() {
     }
     else {
         printf("ERROR >>>>   Setup failed in %f seconds, exiting.\n\n", ((time_us_64() - start_timestamp) * 0.000001f - 5.0f));
+
+        /* Only uncomment this when storing in flash */
+        // while (true) {
+        //     cyw43_arch_gpio_put(PIN_LED, 1);
+        //     sleep_ms(250);
+        //     cyw43_arch_gpio_put(PIN_LED, 0);
+        //     sleep_ms(250);
+        // }
     }
 }

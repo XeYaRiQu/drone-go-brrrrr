@@ -357,13 +357,12 @@ void imu_read() {
         raw_gyro_data[i] = (gyro_buffer[i * 2] << 8 | gyro_buffer[(i * 2) + 1]);
     }
 
-    // Gyro is using NED frame but physical orientation is NWU so negative values are taken on the Y and Z axes
     normalised_accel_values[ACCEL_X] = (raw_accel_data[ACCEL_X] > 32767) ? ((raw_accel_data[ACCEL_X] - 65536) * accel_multiplier - accel_x_bias) : (raw_accel_data[ACCEL_X] * accel_multiplier - accel_x_bias);
     normalised_accel_values[ACCEL_Y] = (raw_accel_data[ACCEL_Y] > 32767) ? ((raw_accel_data[ACCEL_Y] - 65536) * accel_multiplier - accel_y_bias) : (raw_accel_data[ACCEL_Y] * accel_multiplier - accel_y_bias);
     normalised_accel_values[ACCEL_Z] = (raw_accel_data[ACCEL_Z] > 32767) ? ((raw_accel_data[ACCEL_Z] - 65536) * accel_multiplier - accel_z_bias) : (raw_accel_data[ACCEL_Z] * accel_multiplier - accel_z_bias);
     normalised_gyro_values[GYRO_ROLL] = (raw_gyro_data[GYRO_ROLL] > 32767) ? ((raw_gyro_data[GYRO_ROLL] - 65536) * gyro_multiplier - gyro_x_bias) : (raw_gyro_data[GYRO_ROLL] * gyro_multiplier - gyro_x_bias);
-    normalised_gyro_values[GYRO_PITCH] = (raw_gyro_data[GYRO_PITCH] > 32767) ? -((raw_gyro_data[GYRO_PITCH] - 65536) * gyro_multiplier + gyro_y_bias) : -(raw_gyro_data[GYRO_PITCH] * gyro_multiplier + gyro_y_bias);
-    normalised_gyro_values[GYRO_YAW] = (raw_gyro_data[GYRO_YAW] > 32767) ? -((raw_gyro_data[GYRO_YAW] - 65536) * gyro_multiplier + gyro_z_bias) : -(raw_gyro_data[GYRO_YAW] * gyro_multiplier + gyro_z_bias);
+    normalised_gyro_values[GYRO_PITCH] = (raw_gyro_data[GYRO_PITCH] > 32767) ? ((raw_gyro_data[GYRO_PITCH] - 65536) * gyro_multiplier - gyro_y_bias) : (raw_gyro_data[GYRO_PITCH] * gyro_multiplier - gyro_y_bias);
+    normalised_gyro_values[GYRO_YAW] = (raw_gyro_data[GYRO_YAW] > 32767) ? ((raw_gyro_data[GYRO_YAW] - 65536) * gyro_multiplier - gyro_z_bias) : (raw_gyro_data[GYRO_YAW] * gyro_multiplier - gyro_z_bias);
 }
 
 

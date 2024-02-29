@@ -8,6 +8,9 @@
 #include <stdbool.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
+#include <fastmath.h>
+#include <float.h>
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
 #include "pico/cyw43_arch.h" // WiFi chip on Pico W
@@ -93,6 +96,10 @@ static const float I_LIMIT_NEG = -100.0f;
 #define IMU_CONFIG       26
 #define IMU_GYRO_CONFIG  27
 #define IMU_ACCEL_CONFIG 28
+#define IMU_SELF_TEST_X  13
+#define IMU_SELF_TEST_Y  14
+#define IMU_SELF_TEST_Z  15
+#define IMU_SELF_TEST_A  16
 #define IMU_ACCE_X_H     59
 #define IMU_ACCE_X_L     60
 #define IMU_ACCE_Y_H     61
@@ -268,6 +275,104 @@ int mpu6050_init() {
 };
 
 
+int mpu_6050_self_test() {
+    /*
+    The self-test response (STR) is defined as follows:
+
+            STR = sensor_output_with_ST_enabled - sensor_output_with_ST_disabled
+
+    The maximum allowable deviation of the sensors from factory trim (FT) is ±14%
+    The change from FT of the STR is defined as follows:
+
+            Δ = (STR - FT) / FT
+
+    Before performing self-test, the accelerometer should be set to ±8 G and gyroscope ±250 dps.
+    */
+    int fail_flag = 0;
+    uint8_t raw_data[4];
+
+    // Configure sensors for self-test
+    write_register(i2c0, IMU_I2C_ADDRESS, IMU_ACCEL_CONFIG, 0b11110000);
+    sleep_ms(10);
+    write_register(i2c0, IMU_I2C_ADDRESS, IMU_GYRO_CONFIG, 0b11100000);
+    sleep_ms(250); // Delay for self-test to complete
+
+    // Grab self-test results
+    raw_data[0] = read_register(i2c0, IMU_I2C_ADDRESS, IMU_SELF_TEST_X);
+    raw_data[1] = read_register(i2c0, IMU_I2C_ADDRESS, IMU_SELF_TEST_Y);
+    raw_data[2] = read_register(i2c0, IMU_I2C_ADDRESS, IMU_SELF_TEST_Z);
+    raw_data[3] = read_register(i2c0, IMU_I2C_ADDRESS, IMU_SELF_TEST_A);
+
+    // Extract accelerometer test results
+    uint8_t xa_test = ((raw_data[0] & 0b11100000) >> 3) | ((raw_data[3] & 0b00110000) >> 4);
+    uint8_t ya_test = ((raw_data[1] & 0b11100000) >> 3) | ((raw_data[3] & 0b00001100) >> 2);
+    uint8_t za_test = ((raw_data[2] & 0b11100000) >> 3) | ((raw_data[3] & 0b00000011));
+
+    printf("INFO  >>>>   ACCELEROMETER SELF-TEST VALUES:\n");
+    printf("INFO  >>>>   X: %d   Y: %d   Z: %d\n", xa_test, ya_test, za_test);
+
+    // Extract gyroscope test results
+    uint8_t xg_test = raw_data[0] & 0b00011111;
+    uint8_t yg_test = raw_data[1] & 0b00011111;
+    uint8_t zg_test = raw_data[2] & 0b00011111;
+
+    printf("INFO  >>>>   GYROSCOPE SELF-TEST VALUES:\n");
+    printf("INFO  >>>>   X: %d   Y: %d   Z: %d\n\n", xg_test, yg_test, zg_test);
+
+    // Obtain factory-trim values
+    float xa_ft = 1392.64f * pow(0.92f / 0.34f, ((float) (xa_test - 1)) / 30);
+    float ya_ft = 1392.64f * pow(0.92f / 0.34f, ((float) (ya_test - 1)) / 30);
+    float za_ft = 1392.64f * pow(0.92f / 0.34f, ((float) (za_test - 1)) / 30);
+    float xg_ft = 3275.0f * pow(1.046f, (float) (xg_test - 1));
+    float yg_ft = -3275.0f * pow(1.046f, (float) (yg_test - 1));
+    float zg_ft = 3275.0f * pow(1.046f, (float) (zg_test - 1));
+
+    printf("INFO  >>>>   ACCELEROMETER FACTORY TRIM VALUES:\n");
+    printf("INFO  >>>>   X: %f   Y: %f   Z: %f\n", xa_ft, ya_ft, za_ft);
+    printf("INFO  >>>>   GYROSCOPE FACTORY TRIM VALUES:\n");
+    printf("INFO  >>>>   X: %f   Y: %f   Z: %f\n\n", xg_ft, yg_ft, zg_ft);
+
+    float xa_change = (xa_test - xa_ft) / xa_ft;
+    float ya_change = (ya_test - ya_ft) / ya_ft;
+    float za_change = (za_test - za_ft) / za_ft;
+    float xg_change = (xg_test - xg_ft) / xg_ft;
+    float yg_change = (yg_test - yg_ft) / yg_ft;
+    float zg_change = (zg_test - zg_ft) / zg_ft;
+
+    if (xa_change > 0.14f || xa_change < -0.14f) {
+        fail_flag = 1;
+        printf("ERROR >>>>   Deviation from FT_XA: %f\n", xa_change);
+    }
+
+    if (ya_change > 0.14f || ya_change < -0.14f) {
+        fail_flag = 1;
+        printf("ERROR >>>>   Deviation from FT_YA: %f\n", ya_change);
+    }
+
+    if (za_change > 0.14f || za_change < -0.14f) {
+        fail_flag = 1;
+        printf("ERROR >>>>   Deviation from FT_ZA: %f\n", za_change);
+    }
+
+    if (xg_change > 0.14f || xg_change < -0.14f) {
+        fail_flag = 1;
+        printf("ERROR >>>>   Deviation from FT_XG: %f\n", xg_change);
+    }
+
+    if (yg_change > 0.14f || yg_change < -0.14f) {
+        fail_flag = 1;
+        printf("ERROR >>>>   Deviation from FT_YG: %f\n", yg_change);
+    }
+
+    if (zg_change > 0.14f || zg_change < -0.14f) {
+        fail_flag = 1;
+        printf("ERROR >>>>   Deviation from FT_ZG: %f\n", zg_change);
+    }
+
+    return fail_flag;
+}
+
+
 void rc_read() {
     /*
     An iBus packet comprises 32 bytes:
@@ -318,7 +423,7 @@ void rc_read() {
                     normalised_rc_values[RC_THROTTLE] = raw_rc_values[RC_THROTTLE] * 0.001f - 1.0f; // Normalize from 1000-2000 to 0.0-1.0
                     normalised_rc_values[RC_ROLL] = (raw_rc_values[RC_ROLL] - 1500) * 0.002f;       // Normalize from 1000-2000 to -1-1
                     normalised_rc_values[RC_PITCH] = (raw_rc_values[RC_PITCH] - 1500) * 0.002f;     // Normalize from 1000-2000 to -1-1
-                    normalised_rc_values[RC_YAW] = -((raw_rc_values[RC_YAW] - 1500) * 0.002f);        // Normalize from 1000-2000 to -1-1
+                    normalised_rc_values[RC_YAW] = -((raw_rc_values[RC_YAW] - 1500) * 0.002f);      // Normalize from 1000-2000 to -1-1
                     normalised_rc_values[RC_SWA] = raw_rc_values[RC_SWA] * 0.001f - 1.0f;           // Normalize from 1000-2000 to 0-1
                     normalised_rc_values[RC_SWD] = raw_rc_values[RC_SWD] * 0.001f - 1.0f;           // Normalize from 1000-2000 to 0-1
 
@@ -366,7 +471,6 @@ void imu_read() {
 
 
 void mpu_6050_cali() {
-    // Add self-test function
     float gyro_x_sum = 0.0f;
     float gyro_y_sum = 0.0f; 
     float gyro_z_sum = 0.0f;
@@ -393,12 +497,12 @@ void mpu_6050_cali() {
 
     // Average bias offsets
     printf("INFO  >>>>   %d data points collected. Averaging bias values\n\n", data_points);
-    accel_x_bias = accel_x_sum/data_points;
-    accel_y_bias = accel_y_sum/data_points;
-    accel_z_bias = accel_z_sum/data_points;
-    gyro_x_bias = gyro_x_sum/data_points;
-    gyro_y_bias = gyro_y_sum/data_points;
-    gyro_z_bias = gyro_z_sum/data_points;
+    accel_x_bias = accel_x_sum / data_points;
+    accel_y_bias = accel_y_sum / data_points;
+    accel_z_bias = accel_z_sum / data_points;
+    gyro_x_bias = gyro_x_sum / data_points;
+    gyro_y_bias = gyro_y_sum / data_points;
+    gyro_z_bias = gyro_z_sum / data_points;
 
     printf("INFO  >>>>   ACCELEROMETER OFFSETS (G)\n");
     printf("INFO  >>>>   X: %f    Y: %f    Z: %f\n", accel_x_bias, accel_y_bias, accel_z_bias);
@@ -419,7 +523,7 @@ void motor_pwm_init() {
     To maximise resolution of duty cycles that can be set, the wrap number should be as
     high as possible (i.e. close to 65535).
     */
-    float clk_div = ((float) (F_SYS / (4096 * F_PWM) + 1)) / 16;
+    float clk_div = (((float) F_SYS / (4096 * F_PWM) + 1)) / 16;
     wrap_num = F_SYS / (clk_div * F_PWM) - 1;
     esc_max = wrap_num/2;
     int motor1_pwm_slice = pwm_gpio_to_slice_num(PIN_MOTOR1);
@@ -533,8 +637,17 @@ int setup() {
         printf("ERROR >>>>   Initialise MPU-6050 --> FAIL\n\n");
     }
 
+    // Perform IMU self-test
+    if (mpu_6050_self_test() == 0) {
+        printf("INFO  >>>>   Self-test MPU-6050 --> SUCCESS\n\n");
+    }
+    else {
+        fail_flag = 1;
+        printf("ERROR >>>>   Self-test MPU-6050 --> FAIL\n\n");
+    }
+
     if (fail_flag == 0) {
-        // Perform IMU self-test and calibration
+        // Calibrate IMU
         printf("INFO  >>>>   Calibrating MPU-6050\n\n");
         mpu_6050_cali();
 

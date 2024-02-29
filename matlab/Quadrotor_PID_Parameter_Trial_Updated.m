@@ -55,7 +55,7 @@ z_initial= 0.0; %Setting initial coordinate
 %Kzd = 0; 
 
 % Desired Conditions in Parameters
-roll_d = 0.10; % Desired Roll  - this replaces Phi Desired
+roll_d = 0.10; % Desired Roll  - this replaces Phi Desired - how to adjust roll desired on position control
 pitch_d = 0.09; %Desired Pitch - this replaces Theta Desired
 yaw_d = 0.05 ;%Desired Yaw - this replaces Psi Desired in the parameter
 altitude_d = 10; %Desired Altitude

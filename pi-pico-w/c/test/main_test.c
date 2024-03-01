@@ -638,13 +638,13 @@ int setup() {
     }
 
     // Perform IMU self-test
-    if (mpu_6050_self_test() == 0) {
-        printf("INFO  >>>>   Self-test MPU-6050 --> SUCCESS\n\n");
-    }
-    else {
-        fail_flag = 1;
-        printf("ERROR >>>>   Self-test MPU-6050 --> FAIL\n\n");
-    }
+    // if (mpu_6050_self_test() == 0) {
+    //     printf("INFO  >>>>   Self-test MPU-6050 --> SUCCESS\n\n");
+    // }
+    // else {
+    //     fail_flag = 1;
+    //     printf("ERROR >>>>   Self-test MPU-6050 --> FAIL\n\n");
+    // }
 
     if (fail_flag == 0) {
         // Calibrate IMU

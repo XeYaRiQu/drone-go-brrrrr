@@ -366,7 +366,6 @@ void imu_read() {
 
 
 void mpu_6050_cali() {
-    // Add self-test function
     float gyro_x_sum = 0.0f;
     float gyro_y_sum = 0.0f; 
     float gyro_z_sum = 0.0f;

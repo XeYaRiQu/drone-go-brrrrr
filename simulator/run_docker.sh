@@ -38,6 +38,7 @@ docker run \
     $VOLUMES \
     -v ${XSOCK}:${XSOCK} \
     -v ${XAUTH}:${XAUTH} \
+    -v ./data:/data \
     -e DISPLAY=${DISPLAY} \
     -e XAUTHORITY=${XAUTH} \
     --env=QT_X11_NO_MITSHM=1 \

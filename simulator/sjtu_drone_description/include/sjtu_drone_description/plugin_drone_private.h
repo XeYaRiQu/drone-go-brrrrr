@@ -70,7 +70,6 @@ public:
 
   void UpdateState(double dt);
   void UpdateDynamics(double dt);
-
   // Gazebo variables
   gazebo::physics::WorldPtr world;
   gazebo::physics::LinkPtr link;

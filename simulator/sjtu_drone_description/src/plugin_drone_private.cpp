@@ -306,7 +306,6 @@ void DroneSimpleControllerPrivate::LandCallback(const std_msgs::msg::Empty::Shar
     RCLCPP_INFO(ros_node_->get_logger(), "Quadrotor lands!!");
   }
 }
-
 /**
 * @brief Callback function for reset command
 * This function resets the controller and the drone's state.

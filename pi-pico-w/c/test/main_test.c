@@ -71,8 +71,8 @@ int ACCEL_RANGE = RANGE_4G;
 int LPF_CONFIG_BYTE = GYRO_98Hz;
 
 /* PID values */
-static const double KP_ROLL = 0.00043714285;
-static const double KP_PITCH = 0.00043714285;
+static const double KP_ROLL = 0.00083714285;
+static const double KP_PITCH = 0.00083714285;
 static const double KP_YAW = 0.001714287;
 
 static const double KI_ROLL = 0.00255;
@@ -461,13 +461,12 @@ void imu_read() {
         raw_gyro_data[i] = (gyro_buffer[i * 2] << 8 | gyro_buffer[(i * 2) + 1]);
     }
 
-    // Physical orientation of the IMU is North-West-Up for X-Y-Z. Take negative values on pitch and yaw to convert it to North-East-Down
     normalised_accel_values[ACCEL_X] = (raw_accel_data[ACCEL_X] > 32767) ? ((raw_accel_data[ACCEL_X] - 65536) * accel_multiplier - accel_x_bias) : (raw_accel_data[ACCEL_X] * accel_multiplier - accel_x_bias);
     normalised_accel_values[ACCEL_Y] = (raw_accel_data[ACCEL_Y] > 32767) ? ((raw_accel_data[ACCEL_Y] - 65536) * accel_multiplier - accel_y_bias) : (raw_accel_data[ACCEL_Y] * accel_multiplier - accel_y_bias);
     normalised_accel_values[ACCEL_Z] = (raw_accel_data[ACCEL_Z] > 32767) ? ((raw_accel_data[ACCEL_Z] - 65536) * accel_multiplier - accel_z_bias) : (raw_accel_data[ACCEL_Z] * accel_multiplier - accel_z_bias);
     normalised_gyro_values[GYRO_ROLL] = (raw_gyro_data[GYRO_ROLL] > 32767) ? ((raw_gyro_data[GYRO_ROLL] - 65536) * gyro_multiplier - gyro_x_bias) : (raw_gyro_data[GYRO_ROLL] * gyro_multiplier - gyro_x_bias);
-    normalised_gyro_values[GYRO_PITCH] = (raw_gyro_data[GYRO_PITCH] > 32767) ? -((raw_gyro_data[GYRO_PITCH] - 65536) * gyro_multiplier + gyro_y_bias) : -(raw_gyro_data[GYRO_PITCH] * gyro_multiplier + gyro_y_bias);
-    normalised_gyro_values[GYRO_YAW] = (raw_gyro_data[GYRO_YAW] > 32767) ? -((raw_gyro_data[GYRO_YAW] - 65536) * gyro_multiplier + gyro_z_bias) : (raw_gyro_data[GYRO_YAW] * gyro_multiplier - gyro_z_bias);
+    normalised_gyro_values[GYRO_PITCH] = (raw_gyro_data[GYRO_PITCH] > 32767) ? ((raw_gyro_data[GYRO_PITCH] - 65536) * gyro_multiplier - gyro_y_bias) : (raw_gyro_data[GYRO_PITCH] * gyro_multiplier - gyro_y_bias);
+    normalised_gyro_values[GYRO_YAW] = (raw_gyro_data[GYRO_YAW] > 32767) ? ((raw_gyro_data[GYRO_YAW] - 65536) * gyro_multiplier - gyro_z_bias) : (raw_gyro_data[GYRO_YAW] * gyro_multiplier - gyro_z_bias);
 }
 
 
@@ -731,9 +730,9 @@ void main() {
                 float pid_prop_yaw = pid_error_yaw * KP_YAW;
 
                 // Integral calculations (multiply by dt)
-                float pid_inte_roll = pid_error_roll * KI_ROLL + prev_integ_roll;
-                float pid_inte_pitch = pid_error_pitch * KI_PITCH + prev_integ_pitch;
-                float pid_inte_yaw = pid_error_yaw * KI_YAW + prev_integ_yaw;
+                float pid_inte_roll = pid_error_roll * KI_ROLL * 0.004f + prev_integ_roll;
+                float pid_inte_pitch = pid_error_pitch * KI_PITCH * 0.004f + prev_integ_pitch;
+                float pid_inte_yaw = pid_error_yaw * KI_YAW * 0.004f + prev_integ_yaw;
 
                 // Enforce integral limits
                 pid_inte_roll = (pid_inte_roll > I_LIMIT_POS) ? I_LIMIT_POS : ((pid_inte_roll < I_LIMIT_NEG) ? I_LIMIT_NEG : pid_inte_roll);
@@ -759,10 +758,10 @@ void main() {
                 prev_integ_yaw = pid_inte_yaw;
 
                 // Throttle calculations (cross configuration)
-                float motor1_throttle = throttle + pid_roll + pid_pitch + pid_yaw;
-                float motor2_throttle = throttle - pid_roll + pid_pitch - pid_yaw;
-                float motor3_throttle = throttle - pid_roll - pid_pitch + pid_yaw;
-                float motor4_throttle = throttle + pid_roll - pid_pitch - pid_yaw;
+                float motor1_throttle = throttle + pid_roll - pid_pitch - pid_yaw;
+                float motor2_throttle = throttle - pid_roll - pid_pitch + pid_yaw;
+                float motor3_throttle = throttle - pid_roll + pid_pitch - pid_yaw;
+                float motor4_throttle = throttle + pid_roll + pid_pitch + pid_yaw;
 
                 // Enforce throttle limits
                 float motor1_ns = ((motor1_throttle > 0.0f) ? (motor1_throttle + 1.0f) : 1.0f);
@@ -840,7 +839,7 @@ void main() {
             while (time_us_64() < loop_end_time); // Do nothing until 4 ms has passed since loop start
         } // End of main loop
     }
-    else {
+    else { // Setup failed
         printf("ERROR >>>>   Setup failed in %f seconds, exiting.\n\n", ((time_us_64() - start_timestamp) * 0.000001f - 5.0f));
 
         /* Only uncomment this when storing in flash */

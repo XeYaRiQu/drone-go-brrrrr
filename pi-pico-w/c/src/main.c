@@ -361,7 +361,7 @@ void imu_read() {
     normalised_accel_values[ACCEL_Z] = (raw_accel_data[ACCEL_Z] > 32767) ? ((raw_accel_data[ACCEL_Z] - 65536) * accel_multiplier - accel_z_bias) : (raw_accel_data[ACCEL_Z] * accel_multiplier - accel_z_bias);
     normalised_gyro_values[GYRO_ROLL] = (raw_gyro_data[GYRO_ROLL] > 32767) ? ((raw_gyro_data[GYRO_ROLL] - 65536) * gyro_multiplier - gyro_x_bias) : (raw_gyro_data[GYRO_ROLL] * gyro_multiplier - gyro_x_bias);
     normalised_gyro_values[GYRO_PITCH] = (raw_gyro_data[GYRO_PITCH] > 32767) ? ((raw_gyro_data[GYRO_PITCH] - 65536) * gyro_multiplier - gyro_y_bias) : (raw_gyro_data[GYRO_PITCH] * gyro_multiplier - gyro_y_bias);
-    normalised_gyro_values[GYRO_YAW] = (raw_gyro_data[GYRO_YAW] > 32767) ? -((raw_gyro_data[GYRO_YAW] - 65536) * gyro_multiplier + gyro_z_bias) : -(raw_gyro_data[GYRO_YAW] * gyro_multiplier + gyro_z_bias);
+    normalised_gyro_values[GYRO_YAW] = (raw_gyro_data[GYRO_YAW] > 32767) ? ((raw_gyro_data[GYRO_YAW] - 65536) * gyro_multiplier - gyro_z_bias) : (raw_gyro_data[GYRO_YAW] * gyro_multiplier - gyro_z_bias);
 }
 
 
@@ -393,12 +393,12 @@ void mpu_6050_cali() {
 
     // Average bias offsets
     printf("INFO  >>>>   %d data points collected. Averaging bias values\n\n", data_points);
-    accel_x_bias = accel_x_sum/data_points;
-    accel_y_bias = accel_y_sum/data_points;
-    accel_z_bias = accel_z_sum/data_points;
-    gyro_x_bias = gyro_x_sum/data_points;
-    gyro_y_bias = gyro_y_sum/data_points;
-    gyro_z_bias = gyro_z_sum/data_points;
+    accel_x_bias = accel_x_sum / data_points;
+    accel_y_bias = accel_y_sum / data_points;
+    accel_z_bias = accel_z_sum / data_points;
+    gyro_x_bias = gyro_x_sum / data_points;
+    gyro_y_bias = gyro_y_sum / data_points;
+    gyro_z_bias = gyro_z_sum / data_points;
 
     printf("INFO  >>>>   ACCELEROMETER OFFSETS (G)\n");
     printf("INFO  >>>>   X: %f    Y: %f    Z: %f\n", accel_x_bias, accel_y_bias, accel_z_bias);
@@ -419,7 +419,7 @@ void motor_pwm_init() {
     To maximise resolution of duty cycles that can be set, the wrap number should be as
     high as possible (i.e. close to 65535).
     */
-    float clk_div = ((float) (F_SYS / (4096 * F_PWM) + 1)) / 16;
+    float clk_div = (((float) F_SYS / (4096 * F_PWM) + 1)) / 16;
     wrap_num = F_SYS / (clk_div * F_PWM) - 1;
     esc_max = wrap_num/2;
     int motor1_pwm_slice = pwm_gpio_to_slice_num(PIN_MOTOR1);
@@ -567,7 +567,8 @@ void main() {
         uint64_t loop_end_time;
 
         printf("INFO  >>>>   Setup completed in %f seconds, looping.\n\n", ((time_us_64() - start_timestamp) * 0.000001f - 5.0f));
-        cyw43_arch_gpio_put(PIN_LED, 1); // Only uncomment this when storing in flash
+        /* Only uncomment this when storing in flash */
+        cyw43_arch_gpio_put(PIN_LED, 1);
 
         ////////////////// Loop //////////////////
         while (true) {
@@ -644,10 +645,10 @@ void main() {
                 prev_integ_yaw = pid_inte_yaw;
 
                 // Throttle calculations (cross configuration)
-                float motor1_throttle = throttle + pid_roll - pid_pitch + pid_yaw;
-                float motor2_throttle = throttle - pid_roll - pid_pitch - pid_yaw;
-                float motor3_throttle = throttle - pid_roll + pid_pitch + pid_yaw;
-                float motor4_throttle = throttle + pid_roll + pid_pitch - pid_yaw;
+                float motor1_throttle = throttle + pid_roll - pid_pitch - pid_yaw;
+                float motor2_throttle = throttle - pid_roll - pid_pitch + pid_yaw;
+                float motor3_throttle = throttle - pid_roll + pid_pitch - pid_yaw;
+                float motor4_throttle = throttle + pid_roll + pid_pitch + pid_yaw;
 
                 // Enforce throttle limits
                 float motor1_ns = ((motor1_throttle > 0.0f) ? (motor1_throttle + 1.0f) : 1.0f);
@@ -728,7 +729,7 @@ void main() {
     else { // Setup failed
         printf("ERROR >>>>   Setup failed in %f seconds, exiting.\n\n", ((time_us_64() - start_timestamp) * 0.000001f - 5.0f));
 
-        // Only uncomment this when storing in flash
+        /* Only uncomment this when storing in flash */
         while (true) {
             cyw43_arch_gpio_put(PIN_LED, 1);
             sleep_ms(250);

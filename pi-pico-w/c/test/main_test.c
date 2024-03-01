@@ -731,9 +731,9 @@ void main() {
                 float pid_prop_yaw = pid_error_yaw * KP_YAW;
 
                 // Integral calculations (multiply by dt)
-                float pid_inte_roll = pid_error_roll * KI_ROLL * 0.004f + prev_integ_roll;
-                float pid_inte_pitch = pid_error_pitch * KI_PITCH * 0.004f + prev_integ_pitch;
-                float pid_inte_yaw = pid_error_yaw * KI_YAW * 0.004f + prev_integ_yaw;
+                float pid_inte_roll = pid_error_roll * KI_ROLL + prev_integ_roll;
+                float pid_inte_pitch = pid_error_pitch * KI_PITCH + prev_integ_pitch;
+                float pid_inte_yaw = pid_error_yaw * KI_YAW + prev_integ_yaw;
 
                 // Enforce integral limits
                 pid_inte_roll = (pid_inte_roll > I_LIMIT_POS) ? I_LIMIT_POS : ((pid_inte_roll < I_LIMIT_NEG) ? I_LIMIT_NEG : pid_inte_roll);

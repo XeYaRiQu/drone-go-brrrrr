@@ -68,8 +68,8 @@ int ACCEL_RANGE = RANGE_4G;
 int LPF_CONFIG_BYTE = GYRO_98Hz;
 
 /* PID values */
-static const double KP_ROLL = 0.00043714285;
-static const double KP_PITCH = 0.00043714285;
+static const double KP_ROLL = 0.00083714285;
+static const double KP_PITCH = 0.00083714285;
 static const double KP_YAW = 0.001714287;
 
 static const double KI_ROLL = 0.00255;
@@ -361,7 +361,7 @@ void imu_read() {
     normalised_accel_values[ACCEL_Z] = (raw_accel_data[ACCEL_Z] > 32767) ? ((raw_accel_data[ACCEL_Z] - 65536) * accel_multiplier - accel_z_bias) : (raw_accel_data[ACCEL_Z] * accel_multiplier - accel_z_bias);
     normalised_gyro_values[GYRO_ROLL] = (raw_gyro_data[GYRO_ROLL] > 32767) ? ((raw_gyro_data[GYRO_ROLL] - 65536) * gyro_multiplier - gyro_x_bias) : (raw_gyro_data[GYRO_ROLL] * gyro_multiplier - gyro_x_bias);
     normalised_gyro_values[GYRO_PITCH] = (raw_gyro_data[GYRO_PITCH] > 32767) ? ((raw_gyro_data[GYRO_PITCH] - 65536) * gyro_multiplier - gyro_y_bias) : (raw_gyro_data[GYRO_PITCH] * gyro_multiplier - gyro_y_bias);
-    normalised_gyro_values[GYRO_YAW] = (raw_gyro_data[GYRO_YAW] > 32767) ? ((raw_gyro_data[GYRO_YAW] - 65536) * gyro_multiplier - gyro_z_bias) : (raw_gyro_data[GYRO_YAW] * gyro_multiplier - gyro_z_bias);
+    normalised_gyro_values[GYRO_YAW] = (raw_gyro_data[GYRO_YAW] > 32767) ? -((raw_gyro_data[GYRO_YAW] - 65536) * gyro_multiplier + gyro_z_bias) : -(raw_gyro_data[GYRO_YAW] * gyro_multiplier + gyro_z_bias);
 }
 
 

@@ -318,7 +318,7 @@ void rc_read() {
                     normalised_rc_values[RC_THROTTLE] = raw_rc_values[RC_THROTTLE] * 0.001f - 1.0f; // Normalize from 1000-2000 to 0.0-1.0
                     normalised_rc_values[RC_ROLL] = (raw_rc_values[RC_ROLL] - 1500) * 0.002f;       // Normalize from 1000-2000 to -1-1
                     normalised_rc_values[RC_PITCH] = (raw_rc_values[RC_PITCH] - 1500) * 0.002f;     // Normalize from 1000-2000 to -1-1
-                    normalised_rc_values[RC_YAW] = -((raw_rc_values[RC_YAW] - 1500) * 0.002f);        // Normalize from 1000-2000 to -1-1
+                    normalised_rc_values[RC_YAW] = -((raw_rc_values[RC_YAW] - 1500) * 0.002f);      // Normalize from 1000-2000 to -1-1
                     normalised_rc_values[RC_SWA] = raw_rc_values[RC_SWA] * 0.001f - 1.0f;           // Normalize from 1000-2000 to 0-1
                     normalised_rc_values[RC_SWD] = raw_rc_values[RC_SWD] * 0.001f - 1.0f;           // Normalize from 1000-2000 to 0-1
 

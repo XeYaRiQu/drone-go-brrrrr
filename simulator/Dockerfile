@@ -1,8 +1,8 @@
 FROM ros:humble-ros-core-jammy
 
 RUN apt-get update \
-    && apt-get install -y \
-    wget curl unzip \
+    && apt-get install -y \ 
+    wget curl unzip git \
     lsb-release \
     mesa-utils \
     build-essential \
@@ -22,9 +22,14 @@ RUN echo "deb http://packages.osrfoundation.org/gazebo/ubuntu `lsb_release -cs` 
     && apt-get clean
 RUN rosdep init && rosdep update
 
-RUN curl -L https://github.com/osrf/gazebo_models/archive/refs/heads/master.zip -o /tmp/gazebo_models.zip \
-    && unzip /tmp/gazebo_models.zip -d /tmp && mkdir -p ~/.gazebo/models/ && mv /tmp/gazebo_models-master/* ~/.gazebo/models/ \
-    && rm -r /tmp/gazebo_models.zip
+# RUN curl -L https://github.com/osrf/gazebo_models/archive/refs/heads/master.zip -o /tmp/gazebo_models.zip \
+#     && unzip /tmp/gazebo_models.zip -d /tmp && mkdir -p ~/.gazebo/models/ && mv /tmp/gazebo_models-master/* ~/.gazebo/models/ \
+#     && rm -r /tmp/gazebo_models.zip
+
+RUN mkdir -p ~/.gazebo/models \
+    && git clone https://github.com/leonhartyao/gazebo_models_worlds_collection.git /tmp/gazebo_models \
+    && mv /tmp/gazebo_models/models/* ~/.gazebo/models/ \
+    && rm -rf /tmp/gazebo_models
 
 RUN mkdir -p /ros2_ws/src
 COPY ./sjtu_drone_description /ros2_ws/src/sjtu_drone_description

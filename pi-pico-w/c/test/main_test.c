@@ -66,7 +66,7 @@ enum DLPF_BANDWIDTH {
     GYRO_5Hz,       // 18.6 ms delay
 };
 
-int GYRO_RANGE = RANGE_1000DPS;
+int GYRO_RANGE = RANGE_500DPS;
 int ACCEL_RANGE = RANGE_4G;
 int LPF_CONFIG_BYTE = GYRO_98Hz;
 
@@ -471,7 +471,8 @@ void imu_read() {
 
     normalised_accel_values[ACCEL_X] = (raw_accel_data[ACCEL_X] > 32767) ? ((raw_accel_data[ACCEL_X] - 65536) * accel_multiplier - accel_x_bias) : (raw_accel_data[ACCEL_X] * accel_multiplier - accel_x_bias);
     normalised_accel_values[ACCEL_Y] = (raw_accel_data[ACCEL_Y] > 32767) ? ((raw_accel_data[ACCEL_Y] - 65536) * accel_multiplier - accel_y_bias) : (raw_accel_data[ACCEL_Y] * accel_multiplier - accel_y_bias);
-    normalised_accel_values[ACCEL_Z] = (raw_accel_data[ACCEL_Z] > 32767) ? ((raw_accel_data[ACCEL_Z] - 65536) * accel_multiplier - accel_z_bias) : (raw_accel_data[ACCEL_Z] * accel_multiplier - accel_z_bias);
+    // normalised_accel_values[ACCEL_Z] = (raw_accel_data[ACCEL_Z] > 32767) ? ((raw_accel_data[ACCEL_Z] - 65536) * accel_multiplier - accel_z_bias) : (raw_accel_data[ACCEL_Z] * accel_multiplier - accel_z_bias);
+    normalised_accel_values[ACCEL_Z] = (raw_accel_data[ACCEL_Z] > 32767) ? ((raw_accel_data[ACCEL_Z] - 65536) * accel_multiplier) : (raw_accel_data[ACCEL_Z] * accel_multiplier);
     normalised_gyro_values[GYRO_ROLL] = (raw_gyro_data[GYRO_ROLL] > 32767) ? ((raw_gyro_data[GYRO_ROLL] - 65536) * gyro_multiplier - gyro_x_bias) : (raw_gyro_data[GYRO_ROLL] * gyro_multiplier - gyro_x_bias);
     normalised_gyro_values[GYRO_PITCH] = (raw_gyro_data[GYRO_PITCH] > 32767) ? ((raw_gyro_data[GYRO_PITCH] - 65536) * gyro_multiplier - gyro_y_bias) : (raw_gyro_data[GYRO_PITCH] * gyro_multiplier - gyro_y_bias);
     normalised_gyro_values[GYRO_YAW] = (raw_gyro_data[GYRO_YAW] > 32767) ? ((raw_gyro_data[GYRO_YAW] - 65536) * gyro_multiplier - gyro_z_bias) : (raw_gyro_data[GYRO_YAW] * gyro_multiplier - gyro_z_bias);
@@ -582,14 +583,13 @@ void motor_pwm_init() {
 
 
 void calculate_angles() {
-    gyro_x_angle = normalised_gyro_values[GYRO_ROLL] * 0.004f + gyro_x_angle;
-    gyro_y_angle = normalised_gyro_values[GYRO_PITCH] * 0.004f + gyro_y_angle;
-    accel_x_angle = atan(normalised_accel_values[ACCEL_Y] / sqrt(pow(normalised_accel_values[ACCEL_X], 2) + pow(normalised_accel_values[ACCEL_Z], 2))) * 180 / M_PI - accel_x_bias;
-    accel_y_angle = atan(-normalised_accel_values[ACCEL_X] / sqrt(pow(normalised_accel_values[ACCEL_Y], 2) + pow(normalised_accel_values[ACCEL_Z], 2))) * 180 / M_PI - accel_y_bias;
-    roll_angle = 0.96f * gyro_x_angle + 0.04f * accel_x_angle;
-    pitch_angle = 0.96f * gyro_y_angle + 0.04f * accel_y_angle;
-    // yaw_angle = normalised_gyro_values[GYRO_YAW] * 0.004f + yaw_angle;
-    // printf("X_gy: %f    X_ac: %f    Y_gy: %f    Y_ac: %f\n", gyro_x_angle, accel_x_angle, gyro_y_angle, accel_y_angle);
+    gyro_x_angle = normalised_gyro_values[GYRO_ROLL] * 0.004f + roll_angle;
+    gyro_y_angle = normalised_gyro_values[GYRO_PITCH] * 0.004f + pitch_angle;
+    accel_x_angle = atan(normalised_accel_values[ACCEL_Y] / sqrt(pow(normalised_accel_values[ACCEL_X], 2) + pow(normalised_accel_values[ACCEL_Z], 2))) * 57.2957795130823208768;
+    accel_y_angle = atan(-normalised_accel_values[ACCEL_X] / sqrt(pow(normalised_accel_values[ACCEL_Y], 2) + pow(normalised_accel_values[ACCEL_Z], 2))) * 57.2957795130823208768;
+    roll_angle = 0.98f * gyro_x_angle + 0.02f * accel_x_angle;
+    pitch_angle = 0.98f * gyro_y_angle + 0.02f * accel_y_angle;
+    yaw_angle = normalised_gyro_values[GYRO_YAW] * 0.004f + yaw_angle;
 }
 
 
@@ -733,16 +733,17 @@ void main() {
                 }
 
                 imu_read();
+
+                float desired_throttle = normalised_rc_values[RC_THROTTLE];             //   0.0 to 1.0
+                float desired_roll_angle = normalised_rc_values[RC_ROLL] * MAX_ROLL;    // -45.0 to 45.0
+                float desired_pitch_angle = normalised_rc_values[RC_PITCH] * MAX_PITCH; // -45.0 to 45.0
+                float desired_yaw_rate = normalised_rc_values[RC_YAW] * MAX_YAW_RATE;   // -30.0 to 30.0
+
                 calculate_angles();
 
-                float desired_throttle = normalised_rc_values[RC_THROTTLE];
-                float desired_roll = normalised_rc_values[RC_ROLL] * MAX_ROLL;
-                float desired_pitch = normalised_rc_values[RC_PITCH] * MAX_PITCH;
-                float desired_yaw_rate = normalised_rc_values[RC_YAW] * MAX_YAW_RATE;
-
                 // Error calculations (desired - actual)
-                pid_error_roll = desired_roll - roll_angle;
-                pid_error_pitch = desired_pitch - pitch_angle;
+                pid_error_roll = desired_roll_angle - roll_angle;
+                pid_error_pitch = desired_pitch_angle - pitch_angle;
                 pid_error_yaw = desired_yaw_rate - normalised_gyro_values[GYRO_YAW];
 
                 // Proportion calculations
@@ -808,10 +809,10 @@ void main() {
 
                 /* DEBUG PRINTS */
                 // printf("Loop duration: %f seconds\n", ((float)time_us_64() - (float)loop_end_time) * 0.000001 + 0.004f);
-                // printf("X: %f    Y: %f    Z: %f\n", normalised_gyro_values[0], normalised_gyro_values[1], normalised_gyro_values[2]);
-                printf("X: %f    Y: %f    Z: %f\n", normalised_accel_values[0], normalised_accel_values[1], normalised_accel_values[2]);
                 // printf("%f    %f    %f    %f    %f    %f\n", normalised_rc_values[0], normalised_rc_values[1], normalised_rc_values[2], normalised_rc_values[3], normalised_rc_values[4], normalised_rc_values[5]);
-                // printf("X_d: %f    X_a: %f    X_e: %f    Y_d: %f    Y_a: %f    Y_e: %f\n", desired_roll, roll_angle, pid_error_roll, desired_pitch, pitch_angle, pid_error_pitch);
+                // printf("%f    %f    %f\n", normalised_gyro_values[0], normalised_gyro_values[1], normalised_gyro_values[2]);
+                // printf("%f    %f    %f\n", normalised_accel_values[0], normalised_accel_values[1], normalised_accel_values[2]);
+                printf("%f    %f    %f        %f    %f    %f        %f    %f    %f\n", desired_roll_angle, roll_angle, pid_error_roll, desired_pitch_angle, pitch_angle, pid_error_pitch, desired_yaw_rate, normalised_gyro_values[GYRO_YAW], pid_error_yaw);
                 // printf("%d  %d  %d  %d\n", motor1_pwm_level, motor2_pwm_level, motor3_pwm_level, motor4_pwm_level);
             }
             else { // Motors not armed
@@ -850,6 +851,7 @@ void main() {
                         pid_error_yaw = 0.0f;
                         roll_angle = 0.0f;
                         pitch_angle = 0.0f;
+                        yaw_angle = 0.0f;
                     }
                 }
                 else {

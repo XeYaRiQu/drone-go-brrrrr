@@ -583,13 +583,18 @@ void motor_pwm_init() {
 
 
 void calculate_angles() {
+    float f_gravity = sqrt(pow(normalised_accel_values[ACCEL_X], 2) + pow(normalised_accel_values[ACCEL_Y], 2) + pow(normalised_accel_values[ACCEL_Z], 2));
+    accel_x_angle = atan(normalised_accel_values[ACCEL_Y] / normalised_accel_values[ACCEL_Z]) * 57.2957795130823208768;
+    accel_y_angle = asin(normalised_accel_values[ACCEL_X] / f_gravity) * 57.2957795130823208768;
     gyro_x_angle = normalised_gyro_values[GYRO_ROLL] * 0.004f + roll_angle;
     gyro_y_angle = normalised_gyro_values[GYRO_PITCH] * 0.004f + pitch_angle;
-    accel_x_angle = atan(normalised_accel_values[ACCEL_Y] / sqrt(pow(normalised_accel_values[ACCEL_X], 2) + pow(normalised_accel_values[ACCEL_Z], 2))) * 57.2957795130823208768;
-    accel_y_angle = atan(-normalised_accel_values[ACCEL_X] / sqrt(pow(normalised_accel_values[ACCEL_Y], 2) + pow(normalised_accel_values[ACCEL_Z], 2))) * 57.2957795130823208768;
+
+    // Apply complimentary filter for roll and pitch
     roll_angle = 0.98f * gyro_x_angle + 0.02f * accel_x_angle;
     pitch_angle = 0.98f * gyro_y_angle + 0.02f * accel_y_angle;
     yaw_angle = normalised_gyro_values[GYRO_YAW] * 0.004f + yaw_angle;
+
+    // printf("%f    %f    %f\n", roll_angle, pitch_angle, yaw_angle);
 }
 
 
@@ -734,10 +739,10 @@ void main() {
 
                 imu_read();
 
-                float desired_throttle = normalised_rc_values[RC_THROTTLE];             //   0.0 to 1.0
-                float desired_roll_angle = normalised_rc_values[RC_ROLL] * MAX_ROLL;    // -45.0 to 45.0
-                float desired_pitch_angle = normalised_rc_values[RC_PITCH] * MAX_PITCH; // -45.0 to 45.0
-                float desired_yaw_rate = normalised_rc_values[RC_YAW] * MAX_YAW_RATE;   // -30.0 to 30.0
+                float desired_throttle = normalised_rc_values[RC_THROTTLE] * THROTTLE_RANGE + MIN_THROTTLE; //  0.07 to 1.0
+                float desired_roll_angle = normalised_rc_values[RC_ROLL] * MAX_ROLL;                        // -45.0 to 45.0
+                float desired_pitch_angle = -normalised_rc_values[RC_PITCH] * MAX_PITCH;                    //  45.0 to -45.0
+                float desired_yaw_rate = normalised_rc_values[RC_YAW] * MAX_YAW_RATE;                       // -30.0 to 30.0
 
                 calculate_angles();
 
@@ -766,7 +771,7 @@ void main() {
                 float pid_deri_pitch = (pid_error_pitch - prev_error_pitch) * KD_PITCH * 250;
                 float pid_deri_yaw = (pid_error_yaw - prev_error_yaw) * KD_YAW * 250;
 
-                float throttle = desired_throttle * THROTTLE_RANGE + MIN_THROTTLE;
+                // Overall PID response
                 float pid_roll = pid_prop_roll + pid_inte_roll + pid_deri_roll;
                 float pid_pitch = pid_prop_pitch + pid_inte_pitch + pid_deri_pitch;
                 float pid_yaw = pid_prop_yaw + pid_inte_yaw + pid_deri_yaw;
@@ -780,10 +785,10 @@ void main() {
                 prev_integ_yaw = pid_inte_yaw;
 
                 // Throttle calculations (cross configuration)
-                float motor1_throttle = throttle + pid_roll - pid_pitch - pid_yaw;
-                float motor2_throttle = throttle - pid_roll - pid_pitch + pid_yaw;
-                float motor3_throttle = throttle - pid_roll + pid_pitch - pid_yaw;
-                float motor4_throttle = throttle + pid_roll + pid_pitch + pid_yaw;
+                float motor1_throttle = desired_throttle + pid_roll + pid_pitch - pid_yaw;
+                float motor2_throttle = desired_throttle - pid_roll + pid_pitch + pid_yaw;
+                float motor3_throttle = desired_throttle - pid_roll - pid_pitch - pid_yaw;
+                float motor4_throttle = desired_throttle + pid_roll - pid_pitch + pid_yaw;
 
                 // Enforce throttle limits
                 float motor1_ns = ((motor1_throttle > 0.0f) ? (motor1_throttle + 1.0f) : 1.0f);

@@ -143,7 +143,7 @@ static const float I_LIMIT_NEG = -100.0f;
 ////////////////// Global variables //////////////////
 
 float gyro_multiplier, accel_multiplier;
-int gyro_config_byte, accel_config_byte;
+uint8_t gyro_config_byte, accel_config_byte;
 
 float normalised_rc_values[6] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 float normalised_gyro_values[3], normalised_accel_values[3];
@@ -400,7 +400,7 @@ void rc_read() {
             uint8_t char1 = uart_getc(uart1);
 
             if (char1 == 0) {
-                break; // Prevents exception when only 1 char is avail in UART1
+                break; // Prevents exception when only 1 char is avail to read in UART
             }
 
             uint8_t char2 = uart_getc(uart1);
@@ -421,7 +421,7 @@ void rc_read() {
                 // Validate checksum
                 if (checksum == ((buffer[29] << 8) | buffer[28])) { // Convert to big endian
                     // Process raw RC values
-                    int raw_rc_values[6];
+                    uint16_t raw_rc_values[6];
 
                     for (int channel = 0; channel < 6; ++channel) {
                         raw_rc_values[channel] = (buffer[channel * 2 + 1] << 8) + buffer[channel * 2];
@@ -486,7 +486,7 @@ void mpu_6050_cali() {
     float accel_x_sum = 0.0f;
     float accel_y_sum = 0.0f;
     float accel_z_sum = 0.0f;
-    int data_points = 0;
+    uint16_t data_points = 0;
     uint64_t calibration_time = time_us_64() + 3000000;
 
     while (time_us_64() < calibration_time) {
@@ -534,7 +534,7 @@ void motor_pwm_init() {
     */
     float clk_div = (((float) F_SYS / (4096 * F_PWM) + 1)) / 16;
     wrap_num = F_SYS / (clk_div * F_PWM) - 1;
-    esc_max = wrap_num/2;
+    esc_max = wrap_num / 2;
     int motor1_pwm_slice = pwm_gpio_to_slice_num(PIN_MOTOR1);
     int motor2_pwm_slice = pwm_gpio_to_slice_num(PIN_MOTOR2);
     int motor3_pwm_slice = pwm_gpio_to_slice_num(PIN_MOTOR3);
@@ -627,7 +627,7 @@ int setup() {
     }
 
     // Initialise UART for RC
-    int baud = uart_init(uart1, 115200);
+    uint32_t baud = uart_init(uart1, 115200);
     if (baud > 115100 && baud < 115300) {
         gpio_set_function(PIN_RC_RX, GPIO_FUNC_UART);
         gpio_set_function(PIN_RC_TX, GPIO_FUNC_UART);

@@ -6,7 +6,7 @@ Welcome to our GitHub repository for EE4002D AY23/24!
 
 Hardware design - @XeYaRiQu
 
-Software implementation - @ShreshthSarda
+Software implementation - @ShreshthSarda / @XeYaRiQu
 
 Simulation & tuning - @ieaxls
 
@@ -59,6 +59,8 @@ https://www.mathworks.com/videos/how-to-design-and-model-a-quadcopter-prototype-
 https://forum.pjrc.com/index.php?threads/teensy-3-1-flightcontroller-quadcopter-mavlink.27793/
 
 https://timhanewich.medium.com/how-i-developed-the-scout-flight-controller-part-7-full-flight-controller-code-4269c83b3b48
+
+https://vanhunteradams.com/Pico/ReactionWheel/ReactionWheel.html
 
 ## Given literature:
 

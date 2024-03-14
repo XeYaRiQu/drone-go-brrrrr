@@ -29,6 +29,7 @@
 #define MAX_YAW_RATE   30
 #define MAX_ROLL       45
 #define MAX_PITCH      45
+#define ERROR_BOUNDS   2.0f
 
 /* Pin placement */
 #define PIN_LED     0  // The LED pin is tied to CYW43
@@ -83,8 +84,8 @@ static const double KD_ROLL = 0.00002571429;
 static const double KD_PITCH = 0.00002571429;
 static const double KD_YAW = 0.0;
 
-static const float I_LIMIT_POS = 100.0f;
-static const float I_LIMIT_NEG = -100.0f;
+static const float I_LIMIT_POS = 10.0f;
+static const float I_LIMIT_NEG = -10.0f;
 
 
 ////////////////// Constants //////////////////
@@ -702,11 +703,14 @@ void main() {
         float prev_integ_roll = 0.0f;
         float prev_integ_pitch = 0.0f;
         float prev_integ_yaw = 0.0f;
+        float pid_inte_roll = 0.0f;
+        float pid_inte_pitch = 0.0f;
+        float pid_inte_yaw = 0.0f;
         uint64_t loop_end_time;
 
         printf("INFO  >>>>   Setup completed in %f seconds, looping.\n\n", ((time_us_64() - start_timestamp) * 0.000001f - 5.0f));
         /* Only uncomment this when storing in flash */
-        // cyw43_arch_gpio_put(PIN_LED, 1);
+        cyw43_arch_gpio_put(PIN_LED, 1);
 
         ////////////////// Loop //////////////////
         while (true) {
@@ -757,14 +761,32 @@ void main() {
                 float pid_prop_yaw = pid_error_yaw * KP_YAW;
 
                 // Integral calculations (multiply by dt)
-                float pid_inte_roll = pid_error_roll * KI_ROLL * 0.004f + prev_integ_roll;
-                float pid_inte_pitch = pid_error_pitch * KI_PITCH * 0.004f + prev_integ_pitch;
-                float pid_inte_yaw = pid_error_yaw * KI_YAW * 0.004f + prev_integ_yaw;
+                if (pid_error_roll < ERROR_BOUNDS | pid_error_roll > -ERROR_BOUNDS) {
+                    pid_inte_roll = pid_error_roll * KI_ROLL * 0.004f + prev_integ_roll;
+                    pid_inte_roll = (pid_inte_roll > I_LIMIT_POS) ? I_LIMIT_POS : ((pid_inte_roll < I_LIMIT_NEG) ? I_LIMIT_NEG : pid_inte_roll);
+                }
+                else {
+                    // pid_inte_roll = prev_error_roll;
+                    pid_inte_roll = 0.0f;
+                }
 
-                // Enforce integral limits
-                pid_inte_roll = (pid_inte_roll > I_LIMIT_POS) ? I_LIMIT_POS : ((pid_inte_roll < I_LIMIT_NEG) ? I_LIMIT_NEG : pid_inte_roll);
-                pid_inte_pitch = (pid_inte_pitch > I_LIMIT_POS) ? I_LIMIT_POS : ((pid_inte_pitch < I_LIMIT_NEG) ? I_LIMIT_NEG : pid_inte_pitch);
-                pid_inte_yaw = (pid_inte_yaw > I_LIMIT_POS) ? I_LIMIT_POS : ((pid_inte_yaw < I_LIMIT_NEG) ? I_LIMIT_NEG : pid_inte_yaw);
+                if (pid_error_pitch < ERROR_BOUNDS | pid_error_pitch > -ERROR_BOUNDS) {
+                    pid_inte_pitch = pid_error_pitch * KI_PITCH * 0.004f + prev_integ_pitch;
+                    pid_inte_pitch = (pid_inte_pitch > I_LIMIT_POS) ? I_LIMIT_POS : ((pid_inte_pitch < I_LIMIT_NEG) ? I_LIMIT_NEG : pid_inte_pitch);
+                }
+                else {
+                    // pid_inte_pitch = prev_error_roll;
+                    pid_inte_pitch = 0.0f;
+                }
+
+                if (pid_error_yaw < ERROR_BOUNDS | pid_error_yaw > -ERROR_BOUNDS) {
+                    pid_inte_yaw = pid_error_yaw * KI_YAW * 0.004f + prev_integ_yaw;
+                    pid_inte_yaw = (pid_inte_yaw > I_LIMIT_POS) ? I_LIMIT_POS : ((pid_inte_yaw < I_LIMIT_NEG) ? I_LIMIT_NEG : pid_inte_yaw);
+                }
+                else {
+                    // pid_inte_yaw = prev_error_roll;
+                    pid_inte_yaw = 0.0f;
+                }
 
                 // Derivative calculations (divide by dt)
                 float pid_deri_roll = (pid_error_roll - prev_error_roll) * KD_ROLL * 250;
@@ -791,33 +813,29 @@ void main() {
                 float motor4_throttle = desired_throttle + pid_roll - pid_pitch + pid_yaw;
 
                 // Enforce throttle limits
-                float motor1_ns = ((motor1_throttle > 0.0f) ? (motor1_throttle + 1.0f) : 1.0f);
-                float motor2_ns = ((motor2_throttle > 0.0f) ? (motor2_throttle + 1.0f) : 1.0f);
-                float motor3_ns = ((motor3_throttle > 0.0f) ? (motor3_throttle + 1.0f) : 1.0f);
-                float motor4_ns = ((motor4_throttle > 0.0f) ? (motor4_throttle + 1.0f) : 1.0f);
+                float motor1_ms = (motor1_throttle < 0.0f) ? 1.0f : (motor1_throttle + 1.0f);
+                float motor2_ms = (motor2_throttle < 0.0f) ? 1.0f : (motor2_throttle + 1.0f);
+                float motor3_ms = (motor3_throttle < 0.0f) ? 1.0f : (motor3_throttle + 1.0f);
+                float motor4_ms = (motor4_throttle < 0.0f) ? 1.0f : (motor4_throttle + 1.0f);
 
-                motor1_ns = (motor1_ns > 2.0f) ? 2.0f : motor1_ns;
-                motor2_ns = (motor2_ns > 2.0f) ? 2.0f : motor2_ns;
-                motor3_ns = (motor3_ns > 2.0f) ? 2.0f : motor3_ns;
-                motor4_ns = (motor4_ns > 2.0f) ? 2.0f : motor4_ns;
+                motor1_ms = (motor1_ms > 2.0f) ? 2.0f : motor1_ms;
+                motor2_ms = (motor2_ms > 2.0f) ? 2.0f : motor2_ms;
+                motor3_ms = (motor3_ms > 2.0f) ? 2.0f : motor3_ms;
+                motor4_ms = (motor4_ms > 2.0f) ? 2.0f : motor4_ms;
 
                 // Calculate PWM levels
-                motor1_pwm_level = motor1_ns * 0.25f * wrap_num;
-                motor2_pwm_level = motor2_ns * 0.25f * wrap_num;
-                motor3_pwm_level = motor3_ns * 0.25f * wrap_num;
-                motor4_pwm_level = motor4_ns * 0.25f * wrap_num;
-
-                pwm_set_gpio_level(PIN_MOTOR1, motor1_pwm_level);
-                pwm_set_gpio_level(PIN_MOTOR2, motor2_pwm_level);
-                pwm_set_gpio_level(PIN_MOTOR3, motor3_pwm_level);
-                pwm_set_gpio_level(PIN_MOTOR4, motor4_pwm_level);
+                // At 250 Hz, T = 4 ms and the ESCs take 1-2 ms PWM signal (25-50% duty cycle)
+                pwm_set_gpio_level(PIN_MOTOR1, motor1_ms * 0.25f * wrap_num);
+                pwm_set_gpio_level(PIN_MOTOR2, motor2_ms * 0.25f * wrap_num);
+                pwm_set_gpio_level(PIN_MOTOR3, motor3_ms * 0.25f * wrap_num);
+                pwm_set_gpio_level(PIN_MOTOR4, motor4_ms * 0.25f * wrap_num);
 
                 /* DEBUG PRINTS */
                 // printf("Loop duration: %f seconds\n", ((float)time_us_64() - (float)loop_end_time) * 0.000001 + 0.004f);
                 // printf("%f    %f    %f    %f    %f    %f\n", normalised_rc_values[0], normalised_rc_values[1], normalised_rc_values[2], normalised_rc_values[3], normalised_rc_values[4], normalised_rc_values[5]);
                 // printf("%f    %f    %f\n", normalised_gyro_values[0], normalised_gyro_values[1], normalised_gyro_values[2]);
                 // printf("%f    %f    %f\n", normalised_accel_values[0], normalised_accel_values[1], normalised_accel_values[2]);
-                printf("%f    %f    %f        %f    %f    %f        %f    %f    %f\n", desired_roll_angle, roll_angle, pid_error_roll, desired_pitch_angle, pitch_angle, pid_error_pitch, desired_yaw_rate, normalised_gyro_values[GYRO_YAW], pid_error_yaw);
+                // printf("%f    %f    %f        %f    %f    %f        %f    %f    %f\n", desired_roll_angle, roll_angle, pid_error_roll, desired_pitch_angle, pitch_angle, pid_error_pitch, desired_yaw_rate, normalised_gyro_values[GYRO_YAW], pid_error_yaw);
                 // printf("%d  %d  %d  %d\n", motor1_pwm_level, motor2_pwm_level, motor3_pwm_level, motor4_pwm_level);
             }
             else { // Motors not armed
@@ -874,11 +892,11 @@ void main() {
         printf("ERROR >>>>   Setup failed in %f seconds, exiting.\n\n", ((time_us_64() - start_timestamp) * 0.000001f - 5.0f));
 
         /* Only uncomment this when storing in flash */
-        // while (true) {
-        //     cyw43_arch_gpio_put(PIN_LED, 1);
-        //     sleep_ms(250);
-        //     cyw43_arch_gpio_put(PIN_LED, 0);
-        //     sleep_ms(250);
-        // }
+        while (true) {
+            cyw43_arch_gpio_put(PIN_LED, 1);
+            sleep_ms(250);
+            cyw43_arch_gpio_put(PIN_LED, 0);
+            sleep_ms(250);
+        }
     }
 }

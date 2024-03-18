@@ -454,7 +454,6 @@ void DroneSimpleControllerPrivate::UpdateDynamics(double dt)
 
   //publish the velocity
   geometry_msgs::msg::Twist tw;
-  tw.linear.x = body_vel.X();
   tw.linear.y = body_vel.Y();
   tw.linear.z = body_vel.Z();
   pub_gt_vec_->publish(tw);
@@ -491,31 +490,84 @@ void DroneSimpleControllerPrivate::UpdateDynamics(double dt)
   if (m_posCtrl) {
     //position control
     if (navi_state == FLYING_MODEL) {
-      double vx = controllers_.pos_x.update(cmd_vel.linear.x, position[0], poschange[0], dt);
-      double vy = controllers_.pos_y.update(cmd_vel.linear.y, position[1], poschange[1], dt);
-      double vz = controllers_.pos_z.update(cmd_vel.linear.z, position[2], poschange[2], dt);
 
-      ignition::math::v6::Vector3<double> vb = heading_quaternion.RotateVectorReverse(
-        ignition::math::v6::Vector3<double>(
-          vx, vy,
-          vz));
+      // Define PID controller gains for roll
+      const float KP_ROLL = 0.1f;
+      const float KI_ROLL = 0.01f;
+      const float KD_ROLL = 0.05f;
 
-      double pitch_command = controllers_.velocity_x.update(
-        vb[0], velocity_xy[0],
-        acceleration_xy[0], dt) / gravity;
-      double roll_command = -controllers_.velocity_y.update(
-        vb[1], velocity_xy[1],
-        acceleration_xy[1], dt) / gravity;
-      torque[0] = inertia[0] * controllers_.roll.update(
-        roll_command, euler[0],
-        angular_velocity_body[0], dt);
-      torque[1] = inertia[1] * controllers_.pitch.update(
-        pitch_command, euler[1],
-        angular_velocity_body[1], dt);
-      force[2] = mass *
-        (controllers_.velocity_z.update(
-          vz, velocity[2], acceleration[2],
-          dt) + load_factor * gravity);
+      // Define variables to store previous errors and integrals for roll PID control
+      float prev_error_roll = 0.0f;
+      float prev_integ_roll = 0.0f;
+
+      // Define PID controller gains for pitch
+      const float KP_PITCH = 0.1f; // Adjust as needed
+      const float KI_PITCH = 0.01f; // Adjust as needed
+      const float KD_PITCH = 0.05f; // Adjust as needed
+
+      // Define variables to store previous errors and integrals for pitch PID control
+      float prev_error_pitch = 0.0f;
+      float prev_integ_pitch = 0.0f;
+
+      // Define PID controller gains for yaw
+      const float KP_YAW = 0.1f; // Adjust as needed
+      const float KI_YAW = 0.01f; // Adjust as needed
+      const float KD_YAW = 0.05f; // Adjust as needed
+
+      // Define variables to store previous errors and integrals for yaw PID control
+      float prev_error_yaw = 0.0f;
+      float prev_integ_yaw = 0.0f;
+
+      static const float I_LIMIT_POS = 100.0f;
+      static const float I_LIMIT_NEG = -100.0f;
+
+      // Calculate desired rates based on position or velocity commands
+      float desired_roll_rate = cmd_vel.linear.x; // Adjust as needed
+      float desired_pitch_rate = cmd_vel.linear.z; // Adjust as needed
+      float desired_yaw_rate = cmd_vel.angular.z; // Adjust as needed
+
+      // Calculate error between desired rates and actual rates (from sensors)
+      float error_roll = desired_roll_rate - angular_velocity_body[0];
+      float error_pitch = desired_pitch_rate - angular_velocity_body[1];
+      float error_yaw = desired_yaw_rate - angular_velocity_body[2];
+
+      // Proportional calculations
+      float pid_prop_roll = error_roll * KP_ROLL;
+      float pid_prop_pitch = error_pitch * KP_PITCH;
+      float pid_prop_yaw = error_yaw * KP_YAW;
+
+      // Integral calculations
+      float pid_inte_roll = error_roll * KI_ROLL * 0.004f + prev_integ_roll;
+      float pid_inte_pitch = error_pitch * KI_PITCH * 0.004f + prev_integ_pitch;
+      float pid_inte_yaw = error_yaw * KI_YAW * 0.004f + prev_integ_yaw;
+
+      // Enforce integral limits
+      pid_inte_roll = (pid_inte_roll > I_LIMIT_POS) ? I_LIMIT_POS : ((pid_inte_roll < I_LIMIT_NEG) ? I_LIMIT_NEG : pid_inte_roll);
+      pid_inte_pitch = (pid_inte_pitch > I_LIMIT_POS) ? I_LIMIT_POS : ((pid_inte_pitch < I_LIMIT_NEG) ? I_LIMIT_NEG : pid_inte_pitch);
+      pid_inte_yaw = (pid_inte_yaw > I_LIMIT_POS) ? I_LIMIT_POS : ((pid_inte_yaw < I_LIMIT_NEG) ? I_LIMIT_NEG : pid_inte_yaw);
+
+      // Derivative calculations
+      float pid_deri_roll = (error_roll - prev_error_roll) * KD_ROLL * 250;
+      float pid_deri_pitch = (error_pitch - prev_error_pitch) * KD_PITCH * 250;
+      float pid_deri_yaw = (error_yaw - prev_error_yaw) * KD_YAW * 250;
+
+      // Calculate PID output
+      float pid_roll = pid_prop_roll + pid_inte_roll + pid_deri_roll;
+      float pid_pitch = pid_prop_pitch + pid_inte_pitch + pid_deri_pitch;
+      float pid_yaw = pid_prop_yaw + pid_inte_yaw + pid_deri_yaw;
+
+      // Apply PID output to control the drone's attitude
+      torque[0] = inertia[0] * pid_roll;
+      torque[2] = inertia[1] * pid_pitch;
+      torque[1] = inertia[2] * pid_yaw;
+
+      // Save PID values for subsequent calculations
+      prev_error_roll = error_roll;
+      prev_error_pitch = error_pitch;
+      prev_error_yaw = error_yaw;
+      prev_integ_roll = pid_inte_roll;
+      prev_integ_pitch = pid_inte_pitch;
+      prev_integ_yaw = pid_inte_yaw;
     }
   } else {
     //normal control

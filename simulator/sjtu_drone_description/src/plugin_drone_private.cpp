@@ -537,9 +537,9 @@ void DroneSimpleControllerPrivate::UpdateDynamics(double dt)
       float pid_prop_yaw = error_yaw * KP_YAW;
 
       // Integral calculations
-      float pid_inte_roll = error_roll * KI_ROLL * 0.004f + prev_integ_roll;
-      float pid_inte_pitch = error_pitch * KI_PITCH * 0.004f + prev_integ_pitch;
-      float pid_inte_yaw = error_yaw * KI_YAW * 0.004f + prev_integ_yaw;
+      float pid_inte_roll = error_roll * KI_ROLL * dt + prev_integ_roll;
+      float pid_inte_pitch = error_pitch * KI_PITCH * dt + prev_integ_pitch;
+      float pid_inte_yaw = error_yaw * KI_YAW * dt + prev_integ_yaw;
 
       // Enforce integral limits
       pid_inte_roll = (pid_inte_roll > I_LIMIT_POS) ? I_LIMIT_POS : ((pid_inte_roll < I_LIMIT_NEG) ? I_LIMIT_NEG : pid_inte_roll);
@@ -547,9 +547,9 @@ void DroneSimpleControllerPrivate::UpdateDynamics(double dt)
       pid_inte_yaw = (pid_inte_yaw > I_LIMIT_POS) ? I_LIMIT_POS : ((pid_inte_yaw < I_LIMIT_NEG) ? I_LIMIT_NEG : pid_inte_yaw);
 
       // Derivative calculations
-      float pid_deri_roll = (error_roll - prev_error_roll) * KD_ROLL * 250;
-      float pid_deri_pitch = (error_pitch - prev_error_pitch) * KD_PITCH * 250;
-      float pid_deri_yaw = (error_yaw - prev_error_yaw) * KD_YAW * 250;
+      float pid_deri_roll = (error_roll - prev_error_roll) * KD_ROLL / dt;
+      float pid_deri_pitch = (error_pitch - prev_error_pitch) * KD_PITCH / dt;
+      float pid_deri_yaw = (error_yaw - prev_error_yaw) * KD_YAW / dt;
 
       // Calculate PID output
       float pid_roll = pid_prop_roll + pid_inte_roll + pid_deri_roll;
